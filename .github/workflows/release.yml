@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v1.0.0"
+
+          if gh release view "$TAG" &>/dev/null; then
+            # Release exists — update the asset in place
+            gh release upload "$TAG" snap-tap-done.mp4 --clobber
+            gh release edit "$TAG" --latest
+          else
+            # Create the release with the asset
+            gh release create "$TAG" \
+              --title "DriveOne Design System" \
+              --notes "DriveOne video assets" \
+              --latest \
+              snap-tap-done.mp4
+          fi

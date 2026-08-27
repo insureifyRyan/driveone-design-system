@@ -64,12 +64,14 @@ URL-encoded and a space becomes `%20` in your reports.
 Meta gives you impressions, clicks, CTR and spend per ad with no UTMs at all.
 For ranking creative on clicks that is enough.
 
-What it does not give you is what happened after the click. As of the last
-check, the pixel on driveonedirect.com **has never fired**, so Meta currently
-knows nothing about quotes at all. Even once it does, it will miss iOS ATT
-opt-outs and cross-device journeys. `utm_content` arriving at the quote flow is
-what tells you which creative produced a sale. The two answer different
-questions, and the second one is the one worth spending against.
+What it does not give you is what happened after the click. The Drive One
+Direct Pixel (`925372106600745`) is live and firing, last event 26 Aug 2026, but
+Meta still only sees what the pixel catches: it misses iOS ATT opt-outs and
+cross-device journeys, and until a Quote Started custom conversion exists in
+Events Manager there is no quote event to optimize against. `utm_content`
+arriving at the quote flow is what tells you which creative produced a sale.
+The two answer different questions, and the second one is the one worth
+spending against.
 
 ## The set
 

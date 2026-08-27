@@ -1,0 +1,18 @@
+/* ============================================================
+   DriveOne Direct — Type scale, at 1080px canvas width.
+   Display sizes are drawn tight; the export adds a further
+   0.006em of negative tracking above 96px.
+   ============================================================ */
+:root {
+  --t-eyebrow: 600 22px/1 var(--font-body);
+  --t-display-xl: 800 118px/0.92 var(--font-display);
+  --t-display-l: 800 96px/0.94 var(--font-display);
+  --t-display-m: 800 76px/0.98 var(--font-display);
+  --t-support: 400 32px/1.42 var(--font-body);
+  --t-row-title: 700 30px/1.2 var(--font-display);
+  --t-row-sub: 400 23px/1.35 var(--font-body);
+  --t-strip: 600 23px/1.3 var(--font-body);
+  --t-qualifier: 400 19px/1.35 var(--font-body);
+  --t-legal: 400 20px/1.38 var(--font-body);
+  --t-cta: 800 33px/1 var(--font-display);
+}

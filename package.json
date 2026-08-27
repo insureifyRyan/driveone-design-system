@@ -1,0 +1,18 @@
+{
+  "name": "driveone-direct-design-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DriveOne Direct paid-social creative: design canvas, export pipeline and compliance source.",
+  "scripts": {
+    "canvas:build": "node --experimental-strip-types scripts/build-canvas.mts",
+    "ads:export": "npm run canvas:build && node --experimental-strip-types scripts/export-ads.mts",
+    "ads:export:2x": "npm run canvas:build && EXPORT_SCALE=2 node --experimental-strip-types scripts/export-ads.mts",
+    "ads:all": "npm run ads:export && npm run ads:export:2x",
+    "links:check": "node --experimental-strip-types scripts/check-links.mts",
+    "test": "node --experimental-strip-types --test tests/*.test.mts"
+  },
+  "dependencies": {
+    "playwright-core": "^1.62.1"
+  }
+}

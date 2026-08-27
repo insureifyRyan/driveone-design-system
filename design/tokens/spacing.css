@@ -1,0 +1,12 @@
+/* ============================================================
+   DriveOne Direct — Spacing, at 1080px canvas width.
+   ============================================================ */
+:root {
+  --pad-x: 84px;
+  --pad-top: 64px;
+  --pad-bottom: 56px;
+  --gap-row: 26px;
+  --gap-block: 40px;
+  --radius-pill: 999px;
+  --hairline: 1px;
+}

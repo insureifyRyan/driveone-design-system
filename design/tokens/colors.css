@@ -1,0 +1,18 @@
+/* ============================================================
+   DriveOne Direct — Colour
+   Three colours only. Anything else on a canvas is a bug.
+   ============================================================ */
+:root {
+  --cyan: #1FBFEC;
+  --ink: #0E1B2C;
+  --cyan-soft: #E8F8FE;
+
+  /* Ground-relative aliases. Set on the canvas, not used globally. */
+  --on-ink-primary: #FFFFFF;
+  --on-ink-secondary: rgba(255, 255, 255, 0.72);
+  --on-ink-rule: rgba(255, 255, 255, 0.16);
+
+  --on-soft-primary: #0E1B2C;
+  --on-soft-secondary: rgba(14, 27, 44, 0.68);
+  --on-soft-rule: rgba(14, 27, 44, 0.14);
+}

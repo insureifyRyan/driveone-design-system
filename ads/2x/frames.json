@@ -1,0 +1,186 @@
+[
+  {
+    "id": "A1",
+    "width": 2160,
+    "height": 2700,
+    "label": "A1 · Coverage gap",
+    "file": "A1.png",
+    "cta": true
+  },
+  {
+    "id": "A2",
+    "width": 2160,
+    "height": 2700,
+    "label": "A2 · Repair economics, transmission",
+    "file": "A2.png",
+    "cta": true
+  },
+  {
+    "id": "A3",
+    "width": 2160,
+    "height": 2700,
+    "label": "A3 · Nobody is going to call you",
+    "file": "A3.png",
+    "cta": true
+  },
+  {
+    "id": "A4",
+    "width": 2160,
+    "height": 2700,
+    "label": "A4 · Nobody budgets for a water pump",
+    "file": "A4.png",
+    "cta": true
+  },
+  {
+    "id": "A5",
+    "width": 2160,
+    "height": 2700,
+    "label": "A5 · Pick the shop",
+    "file": "A5.png",
+    "cta": true
+  },
+  {
+    "id": "A6",
+    "width": 2160,
+    "height": 2700,
+    "label": "A6 · Roadside",
+    "file": "A6.png",
+    "cta": true
+  },
+  {
+    "id": "A7",
+    "width": 2160,
+    "height": 2700,
+    "label": "A7 · Thirty days",
+    "file": "A7.png",
+    "cta": true
+  },
+  {
+    "id": "B1",
+    "width": 2160,
+    "height": 2700,
+    "label": "B1 · Coverage gap",
+    "file": "B1.png",
+    "cta": true
+  },
+  {
+    "id": "B2",
+    "width": 2160,
+    "height": 2700,
+    "label": "B2 · Repair economics, transmission",
+    "file": "B2.png",
+    "cta": true
+  },
+  {
+    "id": "B3",
+    "width": 2160,
+    "height": 2700,
+    "label": "B3 · Nobody is going to call you",
+    "file": "B3.png",
+    "cta": true
+  },
+  {
+    "id": "B4",
+    "width": 2160,
+    "height": 2700,
+    "label": "B4 · Nobody budgets for a water pump",
+    "file": "B4.png",
+    "cta": true
+  },
+  {
+    "id": "B5",
+    "width": 2160,
+    "height": 2700,
+    "label": "B5 · Pick the shop",
+    "file": "B5.png",
+    "cta": true
+  },
+  {
+    "id": "B6",
+    "width": 2160,
+    "height": 2700,
+    "label": "B6 · Roadside",
+    "file": "B6.png",
+    "cta": true
+  },
+  {
+    "id": "B7",
+    "width": 2160,
+    "height": 2700,
+    "label": "B7 · Thirty days",
+    "file": "B7.png",
+    "cta": true
+  },
+  {
+    "id": "S1",
+    "width": 2160,
+    "height": 2160,
+    "label": "S1 · Coverage gap",
+    "file": "S1.png",
+    "cta": true
+  },
+  {
+    "id": "S2",
+    "width": 2160,
+    "height": 2160,
+    "label": "S2 · Repair economics, transmission",
+    "file": "S2.png",
+    "cta": true
+  },
+  {
+    "id": "S3",
+    "width": 2160,
+    "height": 2160,
+    "label": "S3 · Nobody is going to call you",
+    "file": "S3.png",
+    "cta": true
+  },
+  {
+    "id": "R1",
+    "width": 2160,
+    "height": 3840,
+    "label": "R1 · Coverage gap",
+    "file": "R1.png",
+    "cta": true
+  },
+  {
+    "id": "R2",
+    "width": 2160,
+    "height": 3840,
+    "label": "R2 · Nobody budgets for a water pump",
+    "file": "R2.png",
+    "cta": true
+  },
+  {
+    "id": "R3",
+    "width": 2160,
+    "height": 3840,
+    "label": "R3 · Thirty days",
+    "file": "R3.png",
+    "cta": true
+  },
+  {
+    "id": "V1",
+    "width": 2160,
+    "height": 3840,
+    "label": "V1 · Nobody is going to call you (Reels, no in-image CTA)",
+    "file": "V1.png",
+    "cta": false
+  },
+  {
+    "id": "V2",
+    "width": 2160,
+    "height": 3840,
+    "label": "V2 · Pick the shop (Reels, no in-image CTA)",
+    "file": "V2.png",
+    "cta": false
+  },
+  {
+    "id": "V3",
+    "width": 2160,
+    "height": 3840,
+    "label": "V3 · Roadside (Reels, no in-image CTA)",
+    "file": "V3.png",
+    "cta": false
+  }
+]

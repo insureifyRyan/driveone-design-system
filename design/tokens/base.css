@@ -1,0 +1,6 @@
+/* ============================================================
+   DriveOne Direct — Base
+   ============================================================ */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-body); }
+img { display: block; }

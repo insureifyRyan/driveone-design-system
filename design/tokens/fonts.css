@@ -1,0 +1,14 @@
+/* ============================================================
+   DriveOne Direct — Webfonts
+   Display: Inter Tight        Body: Inter
+   Both are on Google Fonts, so there is no licensed substitute
+   step here the way there was on the Vista system.
+   For an offline export, drop the woff2 files into ads/fonts/
+   and scripts/export-ads.mts injects them instead.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-display: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}

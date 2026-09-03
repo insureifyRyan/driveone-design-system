@@ -37,3 +37,25 @@ vanish on the next container.
 - Live campaign and ad set ids for the Instagram and Facebook rebuilds.
 
 Keep this file in step with the skill whenever either changes.
+
+## Field notes, 27 Aug to 3 Sep 2026
+
+**`InitiateCheckout` fires on driveonedirect.com.** First observed 2 to 3 Sep 2026, ten events
+in a ten-hour window. It is absent from every earlier pixel sample (27 Aug, 31 Aug, 2 Sep), so it
+arrived with a site change rather than having been there all along. It is a far better retargeting
+signal than PageView, and a better optimization target than `Lead` once volume supports it, because
+it sits deeper in the funnel than a quote start.
+
+**The conversion dip, and what it was.** As paid spend ramped from about $6/day to about $112/day,
+the pageview-to-Lead rate fell 3.8% (27 Aug) to 0.6% (30 to 31 Aug) to 0.38% (1 to 2 Sep), with
+absolute Lead volume dropping from roughly 10/day to about 2/day. Absolute volume falling, not just
+the rate, is what separates a broken funnel from merely low-intent traffic; low intent alone leaves
+the raw count flat. It recovered to 1.06% and about 10/day on 2 to 3 Sep, alongside the appearance
+of `InitiateCheckout`.
+
+Lesson for future alerts: **watch absolute conversion counts, not only the rate.** A falling rate
+under rising traffic is normal. A falling count is not.
+
+**Spend reference.** 27 Aug to 2 Sep: $775.03 total, old Facebook campaign $466.49, Instagram
+$334.11. The old Facebook campaign was paused by Ryan on or before 3 Sep, taking the run rate from
+about $112/day to about $50/day.

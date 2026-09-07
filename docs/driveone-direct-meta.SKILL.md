@@ -52,6 +52,43 @@ Page linkage, and what is running all change. `get_meta_campaign_performance`,
 Current-state notes live in the Notion page **"Meta Build State — DriveOne Direct (live)"**
 under DriveOne → Facebook Ads. Read it first; it is the source of truth.
 
+**Account gotcha, confirmed 7 Sep 2026: pass `ad_account_id` explicitly on every Adspirer call.**
+The Adspirer default account is `564668939074102` ("MyFamilyInsurance"), which is not DriveOne.
+Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `833315373680570`.
+Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
+like the audience was deleted. It was not. It is on the other account.
+
+**State as of 7 Sep 2026:**
+
+| Campaign | ID | Status |
+|---|---|---|
+| Leads, IG Feed (created 5 Sep by someone else) | `120248711195770575` | PAUSED, OUTCOME_LEADS |
+| TOF Prospecting FB (rebuild) | `120248591880460575` | PAUSED, awaiting Ryan's go |
+| TOF Prospecting IG | `120248577865220575` | **ACTIVE** |
+| TOF Prospecting (old) | `120248438101950575` | PAUSED by Ryan |
+| Promoting Drive One Direct | `120248437199330575` | PAUSED, PAGE_LIKES |
+
+Fourteen-day totals to 5 Sep: $925.84, 170,548 impressions, 2,092 clicks, 1.23% CTR, $0.44 CPC.
+Instagram $467.98, old Facebook $457.86. After Ryan paused Facebook the daily fell $103.00 (2 Sep)
+to $63.40, $41.98, $41.07 (5 Sep), so the Instagram budget is now running about $9/day short.
+Meta's reporting feed runs roughly two days behind.
+
+**Custom audiences on `833315373680570`:**
+
+| Audience | ID | Size |
+|---|---|---|
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep) |
+| Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
+| Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
+
+DOD is growing about 100/day on Instagram-only spend, down from ~150/day when Facebook was also
+running. It reaches the ~3,000 mark where retargeting starts working around 16 Sep.
+
+**Do not switch an ad set to conversion optimization on `Lead` yet.** An ad set needs roughly
+7 Leads a day on its own for a week to leave learning. Site-wide Lead volume across all sources
+sits about there, so Meta's share alone cannot sustain it and the ad set would never exit
+learning. Run LANDING_PAGE_VIEWS until the pixel is producing real volume.
+
 ## Known traps
 
 - **Page Likes is not a growth objective.** A boost-style PAGE_LIKES campaign buys the cheapest

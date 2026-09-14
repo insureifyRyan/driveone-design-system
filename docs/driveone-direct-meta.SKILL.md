@@ -58,6 +58,25 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 14 Sep 2026: the setup was reversed by someone else.** The old `120248438101950575`
+went ACTIVE at **$100/day** (double its prior budget) around 13 Sep and the Instagram campaign was
+paused. Read the delivery numbers carefully before calling that an improvement: 12 Sep bought
+4,807 impressions for $54.36 (CPM $11.31, CPC $0.78), 13 Sep bought 15,863 for $96.41 (CPM $6.08,
+CPC $0.30). The cheaper click is the trap. Seven-day placement CPC was Facebook Reels $0.24,
+Instream Video $0.34, Instagram Feed $0.65, so lowest-cost CBO drains into Reels exactly as it did
+in August, when that traffic produced zero Leads.
+
+Fourteen days to 13 Sep: $1,017.85, 152,906 impressions, 2,105 clicks, 1.38% CTR, $0.48 CPC, zero
+conversions recorded by Meta. Instagram $713.73 at 1.68% CTR, old campaign $304.12 at 1.14%.
+
+**Compliance held.** C12 (the ASE certified shop claim) and C1A (the 0% payment plan claim) are
+still paused. Active ads C12v3, C4B and C4A carry corrected copy and their UTM tags. Re-verify
+this on every weekly check: a reactivated campaign can bring retired ads back with it.
+
+**Pixel Lead rate by sample:** 3.8%, 1.90%, 1.06%, 0.6%, 0.44%, 0.38%. Windows are different times
+of day and are not comparable to each other. **InitiateCheckout has been zero in every sample**
+since the pixel was verified. That is a site problem and no traffic mix fixes it.
+
 **State as of 7 Sep 2026:**
 
 | Campaign | ID | Status |
@@ -77,12 +96,14 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep) |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), **3,200 (14 Sep)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 
-DOD is growing about 100/day on Instagram-only spend, down from ~150/day when Facebook was also
-running. It reaches the ~3,000 mark where retargeting starts working around 16 Sep.
+DOD grew about 100/day on Instagram-only spend, down from ~150/day when Facebook was also
+running, then jumped to ~157/day once the cheap-reach campaign came back on. **It cleared the
+~3,000 retargeting threshold on 14 Sep.** Retargeting 3,200 people who already priced a quote is
+worth more than another 15,000 cheap Reels impressions.
 
 **Do not switch an ad set to conversion optimization on `Lead` yet.** An ad set needs roughly
 7 Leads a day on its own for a week to leave learning. Site-wide Lead volume across all sources

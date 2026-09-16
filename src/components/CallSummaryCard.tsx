@@ -60,15 +60,14 @@ export const CallSummaryCard = React.forwardRef<HTMLDivElement, CallSummaryCardP
           <span className="kv-call__name">{contact}</span>
           <span className="kv-call__line">
             <Icon name="phone" size={12} />
-            {direction === 'inbound' ? 'Inbound' : 'Outbound'}
-            {phone ? ` · ${phone}` : ''}
+            <span>{direction === 'inbound' ? 'Inbound' : 'Outbound'}</span>
+            {phone ? <span>&middot; {phone}</span> : null}
             {duration ? (
-              <>
-                {' · '}
-                <span className="kv-call__duration">{duration}</span>
-              </>
+              <span>
+                &middot; <span className="kv-call__duration">{duration}</span>
+              </span>
             ) : null}
-            {timestamp ? ` · ${timestamp}` : ''}
+            {timestamp ? <span>&middot; {timestamp}</span> : null}
           </span>
         </div>
         <Badge tone={OUTCOME[outcome].tone} pill>

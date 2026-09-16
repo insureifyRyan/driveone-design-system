@@ -1,0 +1,80 @@
+{
+  "pkg": "@kovara/design-system",
+  "globalName": "Kovara",
+  "shape": "package",
+  "buildCmd": "npm run build",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "dist/kovara-components.css",
+  "tokensGlob": "src/styles/tokens/*.css",
+  "extraFonts": [
+    "src/styles/fonts.css"
+  ],
+  "docsDir": "docs/components",
+  "componentSrcMap": {
+    "KOVARA_TAGLINE": null
+  },
+  "provider": {
+    "component": "KovaraProvider",
+    "props": {
+      "theme": "light"
+    }
+  },
+  "overrides": {
+    "Modal": {
+      "cardMode": "single",
+      "viewport": "900x640"
+    },
+    "Drawer": {
+      "cardMode": "single",
+      "viewport": "900x640"
+    },
+    "Menu": {
+      "cardMode": "single",
+      "viewport": "560x460"
+    },
+    "Sidebar": {
+      "cardMode": "single",
+      "viewport": "820x680"
+    },
+    "DataTable": {
+      "cardMode": "column"
+    },
+    "TopBar": {
+      "cardMode": "column"
+    },
+    "PageHeader": {
+      "cardMode": "column"
+    },
+    "Pagination": {
+      "cardMode": "column"
+    },
+    "QuoteCard": {
+      "cardMode": "column"
+    },
+    "Tabs": {
+      "cardMode": "column"
+    },
+    "ClaimTimeline": {
+      "cardMode": "column"
+    },
+    "OnboardingSteps": {
+      "cardMode": "column"
+    },
+    "WorkflowRunCard": {
+      "cardMode": "column"
+    },
+    "IntegrationTile": {
+      "cardMode": "column"
+    },
+    "PolicyRow": {
+      "cardMode": "column"
+    },
+    "Alert": {
+      "cardMode": "column"
+    },
+    "Icon": {
+      "cardMode": "column"
+    }
+  }
+}

@@ -61,9 +61,9 @@ export const AlignedToEnd = () => (
         {
           label: 'Switch partner',
           items: [
-            { label: 'Beacon Auto Group', icon: <Icon name="car" size={16} /> },
-            { label: 'Lakeshore Credit Union', icon: <Icon name="building" size={16} /> },
-            { label: 'Fairview Service Center', icon: <Icon name="settings" size={16} /> },
+            { label: 'Beacon Auto Group' },
+            { label: 'Lakeshore Credit Union' },
+            { label: 'Fairview Service Center' },
           ],
         },
         { items: [{ label: 'Partner settings', icon: <Icon name="settings" size={16} />, href: '#' }] },
@@ -80,13 +80,13 @@ export const ClaimRowActions = () => (
       {
         items: [
           { label: 'Open claim #2210', icon: <Icon name="file-text" size={16} /> },
-          { label: 'Call Marcus Reyes', icon: <Icon name="phone" size={16} /> },
-          { label: 'Assign to Luis Ferrer', icon: <Icon name="user" size={16} />, shortcut: '⌘A' },
+          { label: 'Call insured', icon: <Icon name="phone" size={16} /> },
+          { label: 'Assign adjuster', icon: <Icon name="user" size={16} />, shortcut: '⌘A' },
         ],
       },
       {
         items: [
-          { label: 'Reassign adjuster', icon: <Icon name="users" size={16} />, disabled: true },
+          { label: 'Reopen claim', icon: <Icon name="clock" size={16} />, disabled: true },
           { label: 'Deny claim', icon: <Icon name="x-circle" size={16} />, danger: true },
         ],
       },

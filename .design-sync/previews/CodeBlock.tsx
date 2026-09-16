@@ -64,14 +64,11 @@ export const Tones = () => {
   const payload = `{
   "id": "evt_7f21c8a3d90b",
   "type": "policy.bound",
-  "created": "2026-03-02T14:14:08Z",
   "data": {
     "policy_id": "KV-4471-0098",
     "quote_id": "KV-Q-8841",
     "carrier": "Centurion Mutual",
-    "vin": "1HGCM82633A004352",
-    "monthly_premium": "$118.40",
-    "term_total": "$1,842"
+    "monthly_premium": "$118.40"
   }
 }`;
   return (

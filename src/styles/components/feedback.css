@@ -59,6 +59,10 @@
   font-size: var(--kv-font-size-2xs);
   font-weight: var(--kv-font-weight-medium);
   line-height: var(--kv-line-height-snug);
+  /* Without an explicit width the absolutely-positioned tip shrink-to-fits against
+     whatever space the trigger leaves, collapsing to one word per line on icon-sized
+     triggers — which is the component's canonical usage. */
+  width: max-content;
   max-width: 240px;
   box-shadow: var(--kv-shadow-md);
   pointer-events: none;

@@ -42,14 +42,19 @@ export const PlainInsideCard = () => (
   </div>
 );
 
-export const AgentNotConnected = () => (
+export const NoSystemsConnected = () => (
   <div style={{ maxWidth: 560, display: 'grid', gap: 12 }}>
     <SearchInput placeholder="Search integrations" defaultValue="" />
     <EmptyState
       icon={<Icon name="plug" size={22} />}
       title="No systems connected yet"
       description="Connect CDK Drive, Symitar or Salesforce and Kōvara will start pulling deals in automatically."
-      actions={<Button variant="accent" leadingIcon={<Icon name="sparkles" />}>Connect a system</Button>}
+      actions={
+        <>
+          <Button leadingIcon={<Icon name="plug" />}>Connect a system</Button>
+          <Button variant="ghost" trailingIcon={<Icon name="external-link" />}>Browse integrations</Button>
+        </>
+      }
     />
   </div>
 );

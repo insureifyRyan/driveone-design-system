@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Tooltip, IconButton, Icon, Button, StatCard, Badge } from '@kovara/design-system';
 
 export const MetricDefinition = () => (
-  <div style={{ padding: '72px 24px', maxWidth: 460 }}>
+  <div style={{ padding: '190px 24px 24px', maxWidth: 460 }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
       <span style={{ fontSize: 13, fontWeight: 600 }}>Attach rate</span>
       <Tooltip open content="Share of eligible deals with a service contract attached.">
@@ -25,30 +25,30 @@ export const Placements = () => (
     style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: 56,
-      padding: '64px 96px',
+      gap: '150px 220px',
+      padding: '190px 180px',
       justifyItems: 'center',
       alignItems: 'center',
-      maxWidth: 720,
+      maxWidth: 860,
     }}
   >
-    <Tooltip open placement="top" content="Kōvara rated this quote 4 minutes ago.">
+    <Tooltip open placement="top" content="Rated 4 minutes ago.">
       <Button size="sm" variant="secondary">top</Button>
     </Tooltip>
-    <Tooltip open placement="bottom" content="Sends the quote to Marcus Reyes by email and SMS.">
+    <Tooltip open placement="bottom" content="Sends the quote to Marcus Reyes.">
       <Button size="sm" variant="secondary">bottom</Button>
     </Tooltip>
-    <Tooltip open placement="left" content="Syncs the deal back to CDK Drive.">
+    <Tooltip open placement="left" content="Syncs the deal to CDK Drive.">
       <Button size="sm" variant="secondary">left</Button>
     </Tooltip>
-    <Tooltip open placement="right" content="Claim #2210 is waiting on Luis Ferrer.">
+    <Tooltip open placement="right" content="Claim #2210 awaits Luis Ferrer.">
       <Button size="sm" variant="secondary">right</Button>
     </Tooltip>
   </div>
 );
 
 export const TruncatedValue = () => (
-  <div style={{ padding: '24px 24px 92px', maxWidth: 460, display: 'grid', gap: 14 }}>
+  <div style={{ padding: '24px 24px 120px', maxWidth: 460, display: 'grid', gap: 14 }}>
     <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--kv-color-text-muted)' }}>
       Administrator
     </span>
@@ -72,14 +72,14 @@ export const TruncatedValue = () => (
 );
 
 export const IconOnlyAction = () => (
-  <div style={{ padding: '76px 24px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+  <div style={{ padding: '190px 24px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
     <Badge tone="accent" icon={<Icon name="sparkles" size={12} />}>AI drafted</Badge>
-    <Tooltip open content="Re-run the Centurion Rating API for this VIN.">
+    <Tooltip open content="Re-run the Centurion Rating API.">
       <IconButton icon={<Icon name="zap" />} label="Re-rate quote" variant="outline" />
     </Tooltip>
     <Tooltip content="Download the signed contract PDF.">
       <IconButton icon={<Icon name="download" />} label="Download contract" variant="outline" />
     </Tooltip>
-    <span style={{ fontSize: 12, color: 'var(--kv-color-text-muted)' }}>(second tip shows on hover only)</span>
+    <span style={{ fontSize: 12, color: 'var(--kv-color-text-muted)' }}>(the second tip appears on hover)</span>
   </div>
 );

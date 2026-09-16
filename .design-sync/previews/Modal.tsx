@@ -1,8 +1,14 @@
 import * as React from 'react';
 import { Modal, Button, Badge, Icon, DescriptionList, TextField, Select } from '@kovara/design-system';
 
+// `Modal` renders inline rather than through a portal, so it covers whatever
+// element establishes its containing block. Give it a full-height page root,
+// the way the doc says to place it at the root of the page tree.
+const pageRoot: React.CSSProperties = { minHeight: 'calc(100vh - 48px)' };
+
 export const BindConfirmation = () => (
-  <Modal
+  <div style={pageRoot}>
+    <Modal
     open
     title="Bind this quote?"
     description="This issues the contract and charges the Beacon Auto Group dealer account."
@@ -28,7 +34,8 @@ export const BindConfirmation = () => (
 );
 
 export const CancelPolicyWarning = () => (
-  <Modal
+  <div style={pageRoot}>
+    <Modal
     open
     size="sm"
     hideCloseButton
@@ -48,7 +55,8 @@ export const CancelPolicyWarning = () => (
 );
 
 export const AgentDraftedQuoteDetail = () => (
-  <Modal
+  <div style={pageRoot}>
+    <Modal
     open
     size="lg"
     title="Quote KV-Q-8841"
@@ -60,7 +68,7 @@ export const AgentDraftedQuoteDetail = () => (
       </>
     }
   >
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16 }}>
       <Badge tone="accent" icon={<Icon name="sparkles" size={12} />}>Kōvara drafted</Badge>
       <DescriptionList
         columns={3}
@@ -81,7 +89,8 @@ export const AgentDraftedQuoteDetail = () => (
 );
 
 export const ShortForm = () => (
-  <Modal
+  <div style={pageRoot}>
+    <Modal
     open
     title="Add a driver to this contract?"
     description="Named drivers affect eligibility on Harbor Point Assurance products."

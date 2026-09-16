@@ -52,7 +52,7 @@ export const ListPage = () => (
   <div style={{ maxWidth: 820 }}>
     <PageHeader
       title="Quotes"
-      description="Every quote rated through the Centurion Rating API in the last 30 days."
+      description="Rated through the Centurion Rating API in the last 30 days."
       actions={
         <>
           <Button variant="secondary" leadingIcon={<Icon name="plug" size={16} />}>

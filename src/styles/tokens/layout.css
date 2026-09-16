@@ -1,0 +1,51 @@
+/* Kōvara AI — space, radius, elevation, motion, z-index. 4px base grid. */
+:root {
+  --kv-space-0: 0;
+  --kv-space-3xs: 0.125rem;
+  --kv-space-2xs: 0.25rem;
+  --kv-space-xs: 0.375rem;
+  --kv-space-sm: 0.5rem;
+  --kv-space-md: 0.75rem;
+  --kv-space-lg: 1rem;
+  --kv-space-xl: 1.5rem;
+  --kv-space-2xl: 2rem;
+  --kv-space-3xl: 3rem;
+  --kv-space-4xl: 4rem;
+
+  --kv-radius-none: 0;
+  --kv-radius-sm: 4px;
+  --kv-radius-md: 8px;
+  --kv-radius-lg: 12px;
+  --kv-radius-xl: 16px;
+  --kv-radius-2xl: 24px;
+  --kv-radius-pill: 999px;
+
+  --kv-border-width: 1px;
+  --kv-border-width-strong: 2px;
+
+  --kv-shadow-xs: 0 1px 2px rgba(18, 15, 54, 0.06);
+  --kv-shadow-sm: 0 1px 3px rgba(18, 15, 54, 0.08), 0 1px 2px rgba(18, 15, 54, 0.04);
+  --kv-shadow-md: 0 4px 12px rgba(18, 15, 54, 0.1), 0 1px 3px rgba(18, 15, 54, 0.06);
+  --kv-shadow-lg: 0 12px 28px rgba(18, 15, 54, 0.14), 0 2px 6px rgba(18, 15, 54, 0.06);
+  --kv-shadow-xl: 0 24px 56px rgba(18, 15, 54, 0.2);
+  --kv-shadow-focus: 0 0 0 3px rgba(123, 108, 246, 0.35);
+
+  --kv-duration-instant: 80ms;
+  --kv-duration-fast: 140ms;
+  --kv-duration-normal: 220ms;
+  --kv-duration-slow: 360ms;
+  --kv-ease-standard: cubic-bezier(0.2, 0, 0.1, 1);
+  --kv-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --kv-z-base: 0;
+  --kv-z-sticky: 100;
+  --kv-z-drawer: 300;
+  --kv-z-modal: 400;
+  --kv-z-toast: 500;
+  --kv-z-tooltip: 600;
+
+  --kv-sidebar-width: 256px;
+  --kv-sidebar-width-collapsed: 72px;
+  --kv-topbar-height: 60px;
+  --kv-container-max: 1280px;
+}

@@ -1,0 +1,39 @@
+/* Brand — BrandMark, Logo */
+.kv-brandmark { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+
+.kv-logo { display: inline-flex; align-items: center; gap: var(--kv-space-md); }
+.kv-logo--stacked { flex-direction: column; gap: var(--kv-space-sm); text-align: center; }
+.kv-logo__lockup { display: inline-flex; align-items: flex-start; }
+.kv-logo__wordmark {
+  font-family: var(--kv-font-display);
+  font-weight: var(--kv-font-weight-bold);
+  letter-spacing: var(--kv-letter-spacing-tight);
+  line-height: 1;
+  color: var(--kv-color-text-brand);
+}
+.kv-logo--on-brand .kv-logo__wordmark,
+.kv-logo--on-brand .kv-logo__suffix,
+.kv-logo--on-brand .kv-logo__tm { color: var(--kv-neutral-0); }
+.kv-logo--on-brand .kv-logo__tagline { color: rgba(255, 255, 255, 0.75); }
+.kv-logo__suffix {
+  font-family: var(--kv-font-display);
+  font-weight: var(--kv-font-weight-bold);
+  letter-spacing: var(--kv-letter-spacing-wide);
+  color: var(--kv-color-text-brand);
+  align-self: flex-start;
+  line-height: 1;
+}
+.kv-logo__tm {
+  font-family: var(--kv-font-sans);
+  font-weight: var(--kv-font-weight-medium);
+  color: var(--kv-color-text-brand);
+  align-self: flex-start;
+  line-height: 1;
+}
+.kv-logo__tagline {
+  font-family: var(--kv-font-sans);
+  font-weight: var(--kv-font-weight-medium);
+  color: var(--kv-color-text-secondary);
+  letter-spacing: var(--kv-letter-spacing-snug);
+  line-height: var(--kv-line-height-snug);
+}

@@ -1,0 +1,37 @@
+/* Kōvara AI — typography tokens.
+   Display = Plus Jakarta Sans (matches the kōvara wordmark's geometric-humanist build).
+   Text    = Inter (dense agency dashboards, long policy prose).
+   Mono    = JetBrains Mono (VINs, policy numbers, premiums, contract IDs). */
+:root {
+  --kv-font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --kv-font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --kv-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  --kv-font-weight-regular: 400;
+  --kv-font-weight-medium: 500;
+  --kv-font-weight-semibold: 600;
+  --kv-font-weight-bold: 700;
+
+  /* Type scale — 12 / 13 / 14 / 16 / 18 / 20 / 24 / 30 / 38 / 48 */
+  --kv-font-size-2xs: 0.75rem;
+  --kv-font-size-xs: 0.8125rem;
+  --kv-font-size-sm: 0.875rem;
+  --kv-font-size-md: 1rem;
+  --kv-font-size-lg: 1.125rem;
+  --kv-font-size-xl: 1.25rem;
+  --kv-font-size-2xl: 1.5rem;
+  --kv-font-size-3xl: 1.875rem;
+  --kv-font-size-4xl: 2.375rem;
+  --kv-font-size-5xl: 3rem;
+
+  --kv-line-height-tight: 1.15;
+  --kv-line-height-snug: 1.3;
+  --kv-line-height-normal: 1.5;
+  --kv-line-height-relaxed: 1.65;
+
+  --kv-letter-spacing-tight: -0.02em;
+  --kv-letter-spacing-snug: -0.011em;
+  --kv-letter-spacing-normal: 0;
+  --kv-letter-spacing-wide: 0.04em;
+  --kv-letter-spacing-caps: 0.08em;
+}

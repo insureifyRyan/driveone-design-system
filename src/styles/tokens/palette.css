@@ -1,0 +1,94 @@
+/* Kōvara AI — primitive palette.
+   Derived from the Kōvara brandmark: indigo canvas, cyan spark, periwinkle facet.
+   Primitives are raw values. Never reference them directly in component CSS —
+   use the semantic tokens in theme-light.css / theme-dark.css. */
+:root {
+  /* Indigo — the Kōvara brand core. 700 is the logo indigo. */
+  --kv-indigo-50: #eeedfa;
+  --kv-indigo-100: #dad8f4;
+  --kv-indigo-200: #b7b3e9;
+  --kv-indigo-300: #9089db;
+  --kv-indigo-400: #6a61c8;
+  --kv-indigo-500: #4a40ae;
+  --kv-indigo-600: #3a3199;
+  --kv-indigo-700: #2e2a8c;
+  --kv-indigo-800: #271f72;
+  --kv-indigo-900: #1e1856;
+  --kv-indigo-950: #120f36;
+
+  /* Cyan — the accent spark. 400 is the logo cyan. */
+  --kv-cyan-50: #e6fbff;
+  --kv-cyan-100: #c2f5ff;
+  --kv-cyan-200: #8dedff;
+  --kv-cyan-300: #4fe2fe;
+  --kv-cyan-400: #17d7fb;
+  --kv-cyan-500: #06b6d9;
+  --kv-cyan-600: #0691af;
+  --kv-cyan-700: #0b738b;
+  --kv-cyan-800: #115c70;
+  --kv-cyan-900: #134c5e;
+  --kv-cyan-950: #073241;
+
+  /* Periwinkle — the secondary facet. 400 is the logo periwinkle. */
+  --kv-peri-50: #f0effe;
+  --kv-peri-100: #e3e0fd;
+  --kv-peri-200: #cbc6fb;
+  --kv-peri-300: #ada5f8;
+  --kv-peri-400: #7b6cf6;
+  --kv-peri-500: #6350ee;
+  --kv-peri-600: #5439df;
+  --kv-peri-700: #472dc0;
+  --kv-peri-800: #3b279d;
+  --kv-peri-900: #33257c;
+  --kv-peri-950: #1f1548;
+
+  /* Neutrals — cooled toward indigo so greys sit on brand. */
+  --kv-neutral-0: #ffffff;
+  --kv-neutral-50: #f7f7fb;
+  --kv-neutral-100: #efeff6;
+  --kv-neutral-200: #e2e2ee;
+  --kv-neutral-300: #cbcbde;
+  --kv-neutral-400: #9c9cb8;
+  --kv-neutral-500: #6f6f8c;
+  --kv-neutral-600: #55556f;
+  --kv-neutral-700: #414156;
+  --kv-neutral-800: #2c2c3c;
+  --kv-neutral-900: #1b1b27;
+  --kv-neutral-950: #101018;
+
+  /* Success — bound policies, paid claims, healthy metrics. */
+  --kv-green-50: #e8f8f1;
+  --kv-green-100: #c7eede;
+  --kv-green-200: #8eddbe;
+  --kv-green-300: #4fc79a;
+  --kv-green-400: #21b07d;
+  --kv-green-500: #11a36b;
+  --kv-green-600: #0d8255;
+  --kv-green-700: #0b6845;
+  --kv-green-800: #0a5238;
+  --kv-green-900: #07402c;
+
+  /* Warning — expiring quotes, documents pending. */
+  --kv-amber-50: #fdf5e4;
+  --kv-amber-100: #fbe9c1;
+  --kv-amber-200: #f6d488;
+  --kv-amber-300: #efb949;
+  --kv-amber-400: #e2a013;
+  --kv-amber-500: #d98a00;
+  --kv-amber-600: #ac6c00;
+  --kv-amber-700: #8a5600;
+  --kv-amber-800: #6e4500;
+  --kv-amber-900: #573700;
+
+  /* Danger — declined, lapsed, cancelled. */
+  --kv-red-50: #fdeef0;
+  --kv-red-100: #fbd6db;
+  --kv-red-200: #f5adb7;
+  --kv-red-300: #ee7d8d;
+  --kv-red-400: #e44f66;
+  --kv-red-500: #d92d45;
+  --kv-red-600: #b81f36;
+  --kv-red-700: #97182c;
+  --kv-red-800: #791425;
+  --kv-red-900: #5f111e;
+}

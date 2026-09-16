@@ -1,0 +1,132 @@
+/* Kōvara AI — semantic theme tokens.
+   These are the ONLY color tokens component CSS may reference.
+   Light is the default (agency staff work in bright offices all day).
+   Dark is opt-in: <html data-kv-theme="dark"> or any <div data-kv-theme="dark">,
+   which is exactly what <KovaraProvider theme="dark"> sets. */
+:root,
+[data-kv-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --kv-color-bg-canvas: var(--kv-neutral-50);
+  --kv-color-bg-surface: var(--kv-neutral-0);
+  --kv-color-bg-raised: var(--kv-neutral-0);
+  --kv-color-bg-subtle: var(--kv-neutral-100);
+  --kv-color-bg-inset: var(--kv-neutral-100);
+  --kv-color-bg-hover: var(--kv-neutral-100);
+  --kv-color-bg-active: var(--kv-neutral-200);
+  --kv-color-bg-overlay: rgba(18, 15, 54, 0.55);
+  --kv-color-bg-disabled: var(--kv-neutral-100);
+
+  /* Brand surfaces */
+  --kv-color-bg-brand: var(--kv-indigo-700);
+  --kv-color-bg-brand-hover: var(--kv-indigo-800);
+  --kv-color-bg-brand-active: var(--kv-indigo-900);
+  --kv-color-bg-brand-subtle: var(--kv-indigo-50);
+  --kv-color-bg-accent: var(--kv-cyan-400);
+  --kv-color-bg-accent-hover: var(--kv-cyan-500);
+  --kv-color-bg-accent-subtle: var(--kv-cyan-50);
+  --kv-color-bg-secondary: var(--kv-peri-400);
+  --kv-color-bg-secondary-subtle: var(--kv-peri-50);
+
+  /* Status surfaces */
+  --kv-color-bg-success: var(--kv-green-500);
+  --kv-color-bg-success-subtle: var(--kv-green-50);
+  --kv-color-bg-warning: var(--kv-amber-500);
+  --kv-color-bg-warning-subtle: var(--kv-amber-50);
+  --kv-color-bg-danger: var(--kv-red-500);
+  --kv-color-bg-danger-hover: var(--kv-red-600);
+  --kv-color-bg-danger-subtle: var(--kv-red-50);
+  --kv-color-bg-info-subtle: var(--kv-cyan-50);
+
+  /* Text */
+  --kv-color-text-primary: var(--kv-neutral-900);
+  --kv-color-text-secondary: var(--kv-neutral-600);
+  --kv-color-text-muted: var(--kv-neutral-500);
+  --kv-color-text-disabled: var(--kv-neutral-400);
+  --kv-color-text-inverse: var(--kv-neutral-0);
+  --kv-color-text-brand: var(--kv-indigo-700);
+  --kv-color-text-accent: var(--kv-cyan-700);
+  --kv-color-text-secondary-brand: var(--kv-peri-600);
+  --kv-color-text-success: var(--kv-green-700);
+  --kv-color-text-warning: var(--kv-amber-700);
+  --kv-color-text-danger: var(--kv-red-600);
+  --kv-color-text-link: var(--kv-indigo-600);
+  --kv-color-text-on-brand: var(--kv-neutral-0);
+  --kv-color-text-on-accent: var(--kv-indigo-900);
+
+  /* Borders */
+  --kv-color-border-subtle: var(--kv-neutral-200);
+  --kv-color-border: var(--kv-neutral-300);
+  --kv-color-border-strong: var(--kv-neutral-400);
+  --kv-color-border-brand: var(--kv-indigo-700);
+  --kv-color-border-accent: var(--kv-cyan-400);
+  --kv-color-border-success: var(--kv-green-300);
+  --kv-color-border-warning: var(--kv-amber-300);
+  --kv-color-border-danger: var(--kv-red-300);
+  --kv-color-border-focus: var(--kv-peri-400);
+
+  --kv-color-focus-ring: rgba(123, 108, 246, 0.4);
+  --kv-shadow-card: var(--kv-shadow-sm);
+}
+
+[data-kv-theme='dark'] {
+  color-scheme: dark;
+
+  --kv-color-bg-canvas: var(--kv-indigo-950);
+  --kv-color-bg-surface: #191545;
+  --kv-color-bg-raised: #221c58;
+  --kv-color-bg-subtle: #221c58;
+  --kv-color-bg-inset: #14103d;
+  --kv-color-bg-hover: #271f72;
+  --kv-color-bg-active: #2e2a8c;
+  --kv-color-bg-overlay: rgba(9, 7, 28, 0.7);
+  --kv-color-bg-disabled: #201b4f;
+
+  --kv-color-bg-brand: var(--kv-peri-400);
+  --kv-color-bg-brand-hover: var(--kv-peri-300);
+  --kv-color-bg-brand-active: var(--kv-peri-500);
+  --kv-color-bg-brand-subtle: rgba(123, 108, 246, 0.16);
+  --kv-color-bg-accent: var(--kv-cyan-400);
+  --kv-color-bg-accent-hover: var(--kv-cyan-300);
+  --kv-color-bg-accent-subtle: rgba(23, 215, 251, 0.14);
+  --kv-color-bg-secondary: var(--kv-peri-500);
+  --kv-color-bg-secondary-subtle: rgba(123, 108, 246, 0.16);
+
+  --kv-color-bg-success: var(--kv-green-400);
+  --kv-color-bg-success-subtle: rgba(33, 176, 125, 0.16);
+  --kv-color-bg-warning: var(--kv-amber-400);
+  --kv-color-bg-warning-subtle: rgba(226, 160, 19, 0.16);
+  --kv-color-bg-danger: var(--kv-red-400);
+  --kv-color-bg-danger-hover: var(--kv-red-300);
+  --kv-color-bg-danger-subtle: rgba(228, 79, 102, 0.16);
+  --kv-color-bg-info-subtle: rgba(23, 215, 251, 0.14);
+
+  --kv-color-text-primary: #f2f1fb;
+  --kv-color-text-secondary: #b7b3e9;
+  --kv-color-text-muted: #8d88c4;
+  --kv-color-text-disabled: #625d9b;
+  --kv-color-text-inverse: var(--kv-indigo-950);
+  --kv-color-text-brand: var(--kv-peri-300);
+  --kv-color-text-accent: var(--kv-cyan-300);
+  --kv-color-text-secondary-brand: var(--kv-peri-300);
+  --kv-color-text-success: var(--kv-green-300);
+  --kv-color-text-warning: var(--kv-amber-300);
+  --kv-color-text-danger: var(--kv-red-300);
+  --kv-color-text-link: var(--kv-cyan-300);
+  --kv-color-text-on-brand: var(--kv-indigo-950);
+  --kv-color-text-on-accent: var(--kv-indigo-950);
+
+  --kv-color-border-subtle: rgba(183, 179, 233, 0.14);
+  --kv-color-border: rgba(183, 179, 233, 0.24);
+  --kv-color-border-strong: rgba(183, 179, 233, 0.4);
+  --kv-color-border-brand: var(--kv-peri-400);
+  --kv-color-border-accent: var(--kv-cyan-400);
+  --kv-color-border-success: rgba(33, 176, 125, 0.45);
+  --kv-color-border-warning: rgba(226, 160, 19, 0.45);
+  --kv-color-border-danger: rgba(228, 79, 102, 0.45);
+  --kv-color-border-focus: var(--kv-cyan-400);
+
+  --kv-color-focus-ring: rgba(23, 215, 251, 0.4);
+  --kv-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

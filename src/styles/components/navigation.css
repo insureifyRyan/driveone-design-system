@@ -182,7 +182,9 @@
 .kv-menu__shortcut { margin-left: auto; font-family: var(--kv-font-mono); font-size: var(--kv-font-size-2xs); color: var(--kv-color-text-muted); }
 .kv-menu__divider { height: 1px; margin: var(--kv-space-2xs) 0; background-color: var(--kv-color-border-subtle); border: none; }
 .kv-menu-root { position: relative; display: inline-flex; }
-.kv-menu-root__panel { position: absolute; top: calc(100% + 6px); }
+/* The panel is absolutely positioned inside an inline-flex root, so without an
+   explicit width it shrink-to-fits against the trigger and wraps ordinary labels. */
+.kv-menu-root__panel { position: absolute; top: calc(100% + 6px); width: max-content; }
 .kv-menu-root__panel--start { left: 0; }
 .kv-menu-root__panel--end { right: 0; }
 

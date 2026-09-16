@@ -2,7 +2,7 @@ import * as React from 'react';
 import { TopBar, SearchInput, IconButton, Icon, Avatar, Badge, KovaraProvider } from '@kovara/design-system';
 
 export const WorkspaceHeader = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <TopBar
       title="Quotes"
       center={<SearchInput placeholder="Search policies, VINs, claim IDs…" shortcut="⌘K" />}
@@ -17,7 +17,7 @@ export const WorkspaceHeader = () => (
 );
 
 export const WithRailToggleAndAgentStatus = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <TopBar
       start={<IconButton variant="ghost" icon={<Icon name="grid" />} label="Collapse navigation" />}
       title="Claims"
@@ -36,7 +36,7 @@ export const WithRailToggleAndAgentStatus = () => (
 );
 
 export const TitleOnly = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <TopBar
       title="Beacon Auto Group"
       end={
@@ -51,7 +51,7 @@ export const TitleOnly = () => (
 
 export const DarkChrome = () => (
   <KovaraProvider theme="dark">
-    <div style={{ maxWidth: 720, padding: 16 }}>
+    <div style={{ maxWidth: 820, padding: 16 }}>
       <TopBar
         title="Workflows"
         center={<SearchInput placeholder="Search runs, triggers, integrations…" shortcut="⌘K" />}

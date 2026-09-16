@@ -36,12 +36,10 @@ export const IntegrationTile = React.forwardRef<HTMLDivElement, IntegrationTileP
   { name, description, logoSrc, status = 'active', statusLabel, lastSync, direction = 'bidirectional', action, className, ...rest },
   ref
 ) {
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
+  // One initial per word, but single-word systems (Symitar, Salesforce) take their
+  // first two letters — otherwise every one-word connector collides on one glyph.
+  const words = name.trim().split(/\s+/);
+  const initials = (words.length > 1 ? words.slice(0, 2).map((w) => w[0]).join('') : name.slice(0, 2)).toUpperCase();
   const arrow = direction === 'inbound' ? 'arrow-down' : direction === 'outbound' ? 'arrow-up' : 'plug';
   return (
     <div ref={ref} className={cx('kv-integration', className)} {...rest}>

@@ -92,14 +92,14 @@ export const LifecycleStates = () => (
       owner="Dana Whitfield"
     />
     <PolicyRow
-      holder="Dana Whitfield"
-      policyNumber="KV-4471-0203"
+      holder="Priya Raman"
+      policyNumber="KV-Q-8863"
       subject="2018 Honda Civic · Ridgeline Specialty"
       premium="$88.10"
       cadence="monthly"
       status="declined"
       statusLabel="Declined — mileage"
-      owner="Luis Ferrer"
+      owner="Dana Whitfield"
     />
   </div>
 );

@@ -21,14 +21,14 @@ const rows = [
 ];
 
 export const UnderATable = () => (
-  <div style={{ maxWidth: 720, display: 'grid', gap: 16 }}>
+  <div style={{ maxWidth: 820, display: 'grid', gap: 16 }}>
     <DataTable density="compact" columns={columns} rows={rows} getRowId={(r) => r.policy} />
     <Pagination page={3} pageCount={18} totalItems={348} pageSize={20} />
   </div>
 );
 
 export const PagePositions = () => (
-  <div style={{ maxWidth: 720, display: 'grid', gap: 22 }}>
+  <div style={{ maxWidth: 820, display: 'grid', gap: 22 }}>
     <Pagination page={1} pageCount={18} totalItems={348} pageSize={20} />
     <Pagination page={9} pageCount={18} totalItems={348} pageSize={20} />
     <Pagination page={18} pageCount={18} totalItems={348} pageSize={20} />
@@ -36,13 +36,13 @@ export const PagePositions = () => (
 );
 
 export const ShortList = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <Pagination page={2} pageCount={5} totalItems={87} pageSize={20} />
   </div>
 );
 
 export const WithoutTotalCount = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <Pagination page={7} pageCount={18} />
   </div>
 );

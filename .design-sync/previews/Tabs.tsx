@@ -21,7 +21,7 @@ const quoteRows = [
 ];
 
 export const RecordSections = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <Tabs
       items={[
         { id: 'coverage', label: 'Coverage' },
@@ -46,7 +46,7 @@ export const RecordSections = () => (
 );
 
 export const ListFilters = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <Tabs
       variant="pills"
       defaultValue="open"
@@ -63,7 +63,7 @@ export const ListFilters = () => (
 );
 
 export const UnderlineVersusPills = () => (
-  <div style={{ maxWidth: 720, display: 'grid', gap: 28 }}>
+  <div style={{ maxWidth: 820, display: 'grid', gap: 28 }}>
     <div style={{ display: 'grid', gap: 8 }}>
       <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#6b7280' }}>
         underline — sections of one record
@@ -96,7 +96,7 @@ export const UnderlineVersusPills = () => (
 );
 
 export const DisabledSection = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <Tabs
       defaultValue="coverage"
       items={[

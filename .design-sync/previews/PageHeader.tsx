@@ -2,7 +2,7 @@ import * as React from 'react';
 import { PageHeader, Breadcrumbs, Button, StatusPill, Badge, Icon, Tabs } from '@kovara/design-system';
 
 export const PolicyDetail = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <PageHeader
       breadcrumbs={<Breadcrumbs items={[{ label: 'Policies', href: '#' }, { label: 'KV-4471-0098' }]} />}
       title="KV-4471-0098"
@@ -19,7 +19,7 @@ export const PolicyDetail = () => (
 );
 
 export const WithTabsRow = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <PageHeader
       breadcrumbs={
         <Breadcrumbs
@@ -49,7 +49,7 @@ export const WithTabsRow = () => (
 );
 
 export const ListPage = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <PageHeader
       title="Quotes"
       description="Every quote rated through the Centurion Rating API in the last 30 days."
@@ -66,7 +66,7 @@ export const ListPage = () => (
 );
 
 export const AgentDraftedRecord = () => (
-  <div style={{ maxWidth: 720 }}>
+  <div style={{ maxWidth: 820 }}>
     <PageHeader
       breadcrumbs={<Breadcrumbs items={[{ label: 'Quotes', href: '#' }, { label: 'KV-Q-8841' }]} />}
       title="KV-Q-8841"
@@ -78,7 +78,7 @@ export const AgentDraftedRecord = () => (
           </Badge>
         </>
       }
-      description="Marcus Reyes · 1HGCM82633A004352 · $34,995 vehicle price · 3 carriers rated"
+      description="Marcus Reyes · VIN 1HGCM82633A004352 · $34,995"
       actions={
         <>
           <Button variant="ghost">Discard</Button>

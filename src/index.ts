@@ -118,3 +118,19 @@ export { IntegrationTile } from './components/IntegrationTile';
 export type { IntegrationTileProps } from './components/IntegrationTile';
 export { OnboardingSteps } from './components/OnboardingSteps';
 export type { OnboardingStepsProps, OnboardingStep, OnboardingStepState } from './components/OnboardingSteps';
+
+// Developer — the platform surfaces: APIs, embeds, keys, webhook activity
+export { CodeBlock } from './components/CodeBlock';
+export type { CodeBlockProps } from './components/CodeBlock';
+export { EndpointRow } from './components/EndpointRow';
+export type { EndpointRowProps, HttpMethod } from './components/EndpointRow';
+export { ApiKeyField } from './components/ApiKeyField';
+export type { ApiKeyFieldProps } from './components/ApiKeyField';
+export { WebhookEventRow } from './components/WebhookEventRow';
+export type { WebhookEventRowProps, DeliveryState } from './components/WebhookEventRow';
+
+// Marketing — the surfaces the public site is built from
+export { Eyebrow } from './components/Eyebrow';
+export type { EyebrowProps } from './components/Eyebrow';
+export { ProductCard } from './components/ProductCard';
+export type { ProductCardProps } from './components/ProductCard';

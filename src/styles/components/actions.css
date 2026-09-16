@@ -8,7 +8,7 @@
   font-weight: var(--kv-font-weight-semibold);
   letter-spacing: var(--kv-letter-spacing-snug);
   border: var(--kv-border-width) solid transparent;
-  border-radius: var(--kv-radius-md);
+  border-radius: var(--kv-radius-control);
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -22,9 +22,9 @@
   cursor: not-allowed;
   opacity: 0.55;
 }
-.kv-btn--sm { height: 32px; padding: 0 var(--kv-space-md); font-size: var(--kv-font-size-xs); }
-.kv-btn--md { height: 38px; padding: 0 var(--kv-space-lg); font-size: var(--kv-font-size-sm); }
-.kv-btn--lg { height: 46px; padding: 0 var(--kv-space-xl); font-size: var(--kv-font-size-md); border-radius: var(--kv-radius-lg); }
+.kv-btn--sm { height: 32px; padding: 0 var(--kv-space-lg); font-size: var(--kv-font-size-xs); }
+.kv-btn--md { height: 40px; padding: 0 var(--kv-space-xl); font-size: var(--kv-font-size-sm); }
+.kv-btn--lg { height: 46px; padding: 0 var(--kv-space-2xl); font-size: var(--kv-font-size-md); }
 .kv-btn--block { width: 100%; }
 
 .kv-btn--primary { background-color: var(--kv-color-bg-brand); color: var(--kv-color-text-on-brand); }
@@ -54,6 +54,7 @@
   padding: 0;
   height: auto;
   border-radius: var(--kv-radius-sm);
+  font-weight: var(--kv-font-weight-semibold);
 }
 .kv-btn--link:hover:not(:disabled) { text-decoration: underline; }
 

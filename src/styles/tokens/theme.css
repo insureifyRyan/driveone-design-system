@@ -8,21 +8,21 @@
   color-scheme: light;
 
   /* Surfaces */
-  --kv-color-bg-canvas: var(--kv-neutral-50);
+  --kv-color-bg-canvas: var(--kv-ink-50);
   --kv-color-bg-surface: var(--kv-neutral-0);
   --kv-color-bg-raised: var(--kv-neutral-0);
-  --kv-color-bg-subtle: var(--kv-neutral-100);
-  --kv-color-bg-inset: var(--kv-neutral-100);
-  --kv-color-bg-hover: var(--kv-neutral-100);
-  --kv-color-bg-active: var(--kv-neutral-200);
-  --kv-color-bg-overlay: rgba(18, 15, 54, 0.55);
-  --kv-color-bg-disabled: var(--kv-neutral-100);
+  --kv-color-bg-subtle: var(--kv-ink-50);
+  --kv-color-bg-inset: var(--kv-ink-100);
+  --kv-color-bg-hover: var(--kv-ink-50);
+  --kv-color-bg-active: var(--kv-ink-100);
+  --kv-color-bg-overlay: rgba(17, 24, 56, 0.6);
+  --kv-color-bg-disabled: var(--kv-ink-50);
 
   /* Brand surfaces */
-  --kv-color-bg-brand: var(--kv-indigo-700);
-  --kv-color-bg-brand-hover: var(--kv-indigo-800);
-  --kv-color-bg-brand-active: var(--kv-indigo-900);
-  --kv-color-bg-brand-subtle: var(--kv-indigo-50);
+  --kv-color-bg-brand: var(--kv-ink-900);
+  --kv-color-bg-brand-hover: var(--kv-ink-800);
+  --kv-color-bg-brand-active: var(--kv-ink-950);
+  --kv-color-bg-brand-subtle: var(--kv-ink-50);
   --kv-color-bg-accent: var(--kv-cyan-400);
   --kv-color-bg-accent-hover: var(--kv-cyan-500);
   --kv-color-bg-accent-subtle: var(--kv-cyan-50);
@@ -40,26 +40,26 @@
   --kv-color-bg-info-subtle: var(--kv-cyan-50);
 
   /* Text */
-  --kv-color-text-primary: var(--kv-neutral-900);
-  --kv-color-text-secondary: var(--kv-neutral-600);
-  --kv-color-text-muted: var(--kv-neutral-500);
-  --kv-color-text-disabled: var(--kv-neutral-400);
+  --kv-color-text-primary: var(--kv-ink-900);
+  --kv-color-text-secondary: var(--kv-ink-500);
+  --kv-color-text-muted: var(--kv-ink-400);
+  --kv-color-text-disabled: var(--kv-ink-300);
   --kv-color-text-inverse: var(--kv-neutral-0);
-  --kv-color-text-brand: var(--kv-indigo-700);
+  --kv-color-text-brand: var(--kv-ink-900);
   --kv-color-text-accent: var(--kv-cyan-700);
   --kv-color-text-secondary-brand: var(--kv-peri-600);
   --kv-color-text-success: var(--kv-green-700);
   --kv-color-text-warning: var(--kv-amber-700);
   --kv-color-text-danger: var(--kv-red-600);
-  --kv-color-text-link: var(--kv-indigo-600);
+  --kv-color-text-link: var(--kv-ink-700);
   --kv-color-text-on-brand: var(--kv-neutral-0);
   --kv-color-text-on-accent: var(--kv-indigo-900);
 
   /* Borders */
-  --kv-color-border-subtle: var(--kv-neutral-200);
-  --kv-color-border: var(--kv-neutral-300);
-  --kv-color-border-strong: var(--kv-neutral-400);
-  --kv-color-border-brand: var(--kv-indigo-700);
+  --kv-color-border-subtle: var(--kv-ink-100);
+  --kv-color-border: var(--kv-ink-200);
+  --kv-color-border-strong: var(--kv-ink-300);
+  --kv-color-border-brand: var(--kv-ink-900);
   --kv-color-border-accent: var(--kv-cyan-400);
   --kv-color-border-success: var(--kv-green-300);
   --kv-color-border-warning: var(--kv-amber-300);

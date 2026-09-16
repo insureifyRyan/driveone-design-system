@@ -5,7 +5,7 @@
   flex-direction: column;
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
   overflow: hidden;
 }
@@ -99,7 +99,7 @@
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
   border-left: 3px solid var(--kv-color-border-brand);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
 }
 .kv-run--running { border-left-color: var(--kv-color-bg-accent); }
@@ -125,7 +125,7 @@
   padding: var(--kv-space-lg);
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
 }
 .kv-call__head { display: flex; align-items: center; gap: var(--kv-space-md); }
@@ -146,7 +146,7 @@
   padding: var(--kv-space-lg);
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
 }
 .kv-integration__logo {

@@ -3,7 +3,7 @@
 .kv-card {
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
   overflow: hidden;
 }
@@ -44,7 +44,7 @@
   padding: var(--kv-space-xl);
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   box-shadow: var(--kv-shadow-card);
 }
 .kv-stat__head { display: flex; align-items: center; justify-content: space-between; gap: var(--kv-space-md); }
@@ -83,7 +83,7 @@
 .kv-table-wrap {
   background-color: var(--kv-color-bg-surface);
   border: var(--kv-border-width) solid var(--kv-color-border-subtle);
-  border-radius: var(--kv-radius-lg);
+  border-radius: var(--kv-radius-card);
   overflow: hidden;
   box-shadow: var(--kv-shadow-card);
 }

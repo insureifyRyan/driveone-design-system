@@ -42,6 +42,26 @@
   --kv-peri-900: #33257c;
   --kv-peri-950: #1f1548;
 
+
+  /* Ink — the near-black navy the live site uses for headlines, body text and
+     primary CTAs. Deeper and less violet than the logo indigo, which stays a
+     brand/accent color rather than the UI chrome color. */
+  --kv-ink-950: #111838;
+  --kv-ink-900: #1b2350;
+  --kv-ink-800: #26305f;
+  --kv-ink-700: #333e73;
+  --kv-ink-600: #444f88;
+  --kv-ink-500: #5b6486;
+  --kv-ink-400: #7b83a3;
+  --kv-ink-300: #a6acc4;
+  --kv-ink-200: #cfd3e3;
+  --kv-ink-100: #e6e8f3;
+  --kv-ink-50: #f2f3fb;
+
+  /* Tinted canvases lifted from the site's hero and section backgrounds. */
+  --kv-tint-lavender: #f2f2fb;
+  --kv-tint-cyan: #eaf6fb;
+
   /* Neutrals — cooled toward indigo so greys sit on brand. */
   --kv-neutral-0: #ffffff;
   --kv-neutral-50: #f7f7fb;

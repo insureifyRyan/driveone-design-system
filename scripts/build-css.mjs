@@ -25,6 +25,7 @@ const COMPONENTS = [
   'navigation.css',
   'overlay.css',
   'platform.css',
+  'developer.css',
 ];
 
 const banner = `/*!

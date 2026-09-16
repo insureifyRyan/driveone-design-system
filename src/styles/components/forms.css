@@ -96,8 +96,8 @@
   border-radius: var(--kv-radius-pill);
   background-color: var(--kv-color-text-on-brand);
 }
-.kv-check__control:indeterminate { background-color: var(--kv-color-bg-brand); border-color: var(--kv-color-bg-brand); }
-.kv-check__control:indeterminate::after {
+.kv-check__control--box:indeterminate { background-color: var(--kv-color-bg-brand); border-color: var(--kv-color-bg-brand); }
+.kv-check__control--box:indeterminate::after {
   content: '';
   width: 10px;
   height: 2px;

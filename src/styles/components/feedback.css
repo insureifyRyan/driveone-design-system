@@ -39,7 +39,7 @@
 .kv-toast--success .kv-toast__accent { background-color: var(--kv-color-bg-success); }
 .kv-toast--warning .kv-toast__accent { background-color: var(--kv-color-bg-warning); }
 .kv-toast--danger .kv-toast__accent { background-color: var(--kv-color-bg-danger); }
-.kv-toast__content { display: flex; flex-direction: column; gap: var(--kv-space-3xs); flex: 1; min-width: 0; }
+.kv-toast__content { display: flex; flex-direction: column; align-items: flex-start; gap: var(--kv-space-3xs); flex: 1; min-width: 0; }
 .kv-toast__title { font-size: var(--kv-font-size-sm); font-weight: var(--kv-font-weight-bold); color: var(--kv-color-text-primary); }
 .kv-toast__body { font-size: var(--kv-font-size-xs); color: var(--kv-color-text-secondary); line-height: var(--kv-line-height-normal); }
 .kv-toast__icon { flex-shrink: 0; display: inline-flex; margin-top: 1px; }

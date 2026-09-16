@@ -65,3 +65,48 @@ Repo-specific gotchas for future syncs. Read this before re-running the driver.
 - Playwright must match the cached chromium build: this environment cached `chromium-1194`,
   which is pinned by **playwright 1.56.0**. A newer playwright fails with
   `browserType.launch: Executable doesn't exist`.
+
+## Authoring previews (folded from wave 1)
+
+- **Capture geometry**: the capture viewport is 900×700 and card chrome eats ~74px, leaving
+  ~826 usable CSS px. Wrap `cardMode: "column"` components (tables, top bars, page headers) in
+  `maxWidth: 820`, and card-like components in `maxWidth: 460`. At 720 a 7-column table squeezes
+  its columns below their declared widths and breaks mono identifiers mid-token.
+- `DataTable` column `width` is a hint, not a floor — a wrapping mono column means the container
+  is over-constrained, not that the width is wrong.
+- `DataTable`'s `empty` slot keeps the header row; pass `<EmptyState plain />` or the dashed frame
+  double-borders against the table.
+- `Skeleton`'s single-shape branch renders an intrinsically-sized span, so a `width: 100%` child
+  can measure ~0 inside a flex/grid parent — pass an explicit numeric `width` or wrap in
+  `<div style={{ flex: 1 }}>`. The multi-line branch is safe. Its shimmer is near-invisible on the
+  bare canvas; compositions inside a `Card` are what make those cells legible.
+- A closed native `<select>` cannot show a variant axis that only exists in its open popup. Sweep
+  something visible instead (unfilled-with-placeholder vs. a real selection).
+- `RadioGroup` injects no `name` — grouping is the author's job, and two same-`name` radios both
+  carrying `defaultChecked` silently collapse to the last one.
+- Scoped capture re-reads every component in the run, so re-Read each sheet before re-grading,
+  not just the ones edited.
+
+## Deliberate behaviours — do not "fix" these
+- `StatCard` `trend="up"` on a negative delta (manual touches down 38%) renders a green up arrow
+  beside a falling number. `trend` is the judgement, not the arrow direction — that is the
+  documented intent and has its own `FallingIsGood` preview cell.
+- `Avatar`'s circle-vs-square distinction is unreadable at review-sheet scale because the sheet
+  downsamples a 900px page. The CSS is correct; verify before touching it.
+- `optional` is a `FormField`-only prop. `TextField`/`Textarea`/`Select` forward only
+  `label`/`hint`/`error`/`required`, and they spread `...rest` onto the control, so passing
+  `optional` to them would leak the attribute to the DOM.
+- `FormField` does not style a raw child control — add `kv-input kv-input--md` yourself, plus
+  `kv-input--invalid` when passing `error`, or the message goes red while the input stays neutral.
+- `Spinner`'s `label` is screen-reader-only by design; visible status text must sit beside it.
+- `IconButton` sizes its box, not its glyph — pass a larger `<Icon size>` for `size="lg"`.
+- `Textarea` has a 96px `min-height`, so `rows={3}` and `rows={4}` render identically.
+
+## Component fixes made during preview review (wave 1)
+- `.kv-check__control:indeterminate` was unscoped, and per spec **every radio in a group with no
+  checked member matches `:indeterminate`** — so an untouched `RadioGroup` drew every option as
+  filled-indigo checked. Now scoped to `.kv-check__control--box:indeterminate`.
+- `.kv-avatar-group` used a fixed `-8px` overlap, which swallowed the initials of `xs` avatars.
+  Overlap is now per size (xs −5, sm −7, default −8, lg −12).
+- `.kv-toast__content` had no `align-items`, so a `Toast` `action` button stretched full width and
+  centered its label. Now `flex-start`.

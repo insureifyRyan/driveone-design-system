@@ -189,7 +189,11 @@
 .kv-avatar--accent { background-color: var(--kv-color-bg-accent-subtle); color: var(--kv-color-text-accent); }
 .kv-avatar--secondary { background-color: var(--kv-color-bg-secondary-subtle); color: var(--kv-color-text-secondary-brand); }
 .kv-avatar-group { display: inline-flex; align-items: center; }
+/* Overlap scales with the avatar: a fixed offset swallows xs initials. */
 .kv-avatar-group > * + * { margin-left: -8px; }
+.kv-avatar-group > .kv-avatar--xs + .kv-avatar--xs { margin-left: -5px; }
+.kv-avatar-group > .kv-avatar--sm + .kv-avatar--sm { margin-left: -7px; }
+.kv-avatar-group > .kv-avatar--lg + .kv-avatar--lg { margin-left: -12px; }
 .kv-avatar-group__overflow { background-color: var(--kv-color-bg-subtle); color: var(--kv-color-text-secondary); }
 
 .kv-dl { display: grid; gap: var(--kv-space-md) var(--kv-space-xl); }

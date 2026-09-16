@@ -1,13 +1,25 @@
 import * as React from 'react';
 import { Avatar, Badge, Card, DataTable, StatusPill } from '@kovara/design-system';
 
-/** The size axis, xs through lg, on one producer. */
+/** The size axis, xs through lg — circles for people, squares for organizations. */
 export const Sizes = () => (
-  <div style={{ display: 'flex', gap: 16, alignItems: 'center', maxWidth: 460 }}>
-    <Avatar name="Dana Whitfield" size="xs" />
-    <Avatar name="Dana Whitfield" size="sm" />
-    <Avatar name="Dana Whitfield" size="md" />
-    <Avatar name="Dana Whitfield" size="lg" />
+  <div style={{ display: 'grid', gap: 20, maxWidth: 460 }}>
+    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
+      {(['xs', 'sm', 'md', 'lg'] as const).map((size) => (
+        <div key={size} style={{ display: 'grid', justifyItems: 'center', gap: 6 }}>
+          <Avatar name="Dana Whitfield" size={size} />
+          <span style={{ fontSize: 12, opacity: 0.7 }}>{size}</span>
+        </div>
+      ))}
+    </div>
+    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
+      {(['xs', 'sm', 'md', 'lg'] as const).map((size) => (
+        <div key={size} style={{ display: 'grid', justifyItems: 'center', gap: 6 }}>
+          <Avatar name="Centurion Mutual" square tone="accent" size={size} />
+          <span style={{ fontSize: 12, opacity: 0.7 }}>{size} square</span>
+        </div>
+      ))}
+    </div>
   </div>
 );
 
@@ -52,13 +64,27 @@ export const Organizations = () => (
   </div>
 );
 
-/** `initials` overrides the derived pair — useful for long legal names. */
+/** `initials` overrides the derived pair — for long legal names and for the agent itself. */
 export const InitialsOverride = () => (
-  <div style={{ display: 'flex', gap: 16, alignItems: 'center', maxWidth: 460 }}>
-    <Avatar name="Ridgeline Specialty Insurance Company" square initials="RS" tone="brand" size="md" />
-    <Avatar name="Kōvara Agent" tone="accent" initials="AI" size="md" />
-    <Avatar name="Marcus Reyes" tone="secondary" size="md" />
-    <Avatar name="Grant Iwasaki" size="md" />
+  <div style={{ display: 'grid', gap: 14, maxWidth: 560 }}>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+      <Avatar name="Ridgeline Specialty Insurance Company" square initials="RS" tone="brand" size="md" />
+      <span style={{ fontSize: 13 }}>
+        <strong>Ridgeline Specialty Insurance Company</strong> — <code>initials="RS"</code>, not “RS(I)”
+      </span>
+    </div>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+      <Avatar name="Kōvara Agent" tone="accent" initials="AI" size="md" />
+      <span style={{ fontSize: 13 }}>
+        <strong>Kōvara Agent</strong> — cyan tone marks the agent as the actor
+      </span>
+    </div>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+      <Avatar name="Marcus Reyes" tone="secondary" size="md" />
+      <span style={{ fontSize: 13 }}>
+        <strong>Marcus Reyes</strong> — derived initials, no override
+      </span>
+    </div>
   </div>
 );
 

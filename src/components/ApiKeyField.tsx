@@ -49,7 +49,7 @@ export const ApiKeyField = React.forwardRef<HTMLDivElement, ApiKeyFieldProps>(fu
         <span className={cx('kv-key__value', !revealed && 'kv-key__value--masked')}>{masked}</span>
         <span className="kv-key__actions">
           <IconButton
-            icon={<Icon name={revealed ? 'x-circle' : 'search'} size={15} />}
+            icon={<Icon name={revealed ? 'eye-off' : 'eye'} size={15} />}
             label={revealed ? 'Hide key' : 'Reveal key'}
             size="sm"
             onClick={onReveal}

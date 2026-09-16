@@ -17,6 +17,8 @@ export type IconName =
   | 'plus'
   | 'minus'
   | 'search'
+  | 'eye'
+  | 'eye-off'
   | 'filter'
   | 'bell'
   | 'user'
@@ -113,6 +115,20 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />,
+  eye: (
+    <>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M10.6 5.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a18.4 18.4 0 0 1-2.9 3.9" />
+      <path d="M6.6 6.6A18.2 18.2 0 0 0 2 12s3.6 7 10 7a9.8 9.8 0 0 0 4.2-.9" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+      <line x1="3" y1="3" x2="21" y2="21" />
+    </>
+  ),
   bell: (
     <>
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />

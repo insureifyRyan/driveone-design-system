@@ -96,6 +96,19 @@
     },
     "KovaraProvider": {
       "cardMode": "column"
+    },
+    "CodeBlock": {
+      "cardMode": "column"
+    },
+    "EndpointRow": {
+      "cardMode": "column"
+    },
+    "WebhookEventRow": {
+      "cardMode": "column"
+    },
+    "ProductCard": {
+      "cardMode": "column"
     }
-  }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
 }

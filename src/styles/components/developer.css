@@ -74,7 +74,11 @@
   border-radius: var(--kv-radius-lg);
   background-color: var(--kv-color-bg-surface);
 }
-.kv-endpoint--bare { border: none; border-radius: 0; padding-inline: 0; background: transparent; border-bottom: var(--kv-border-width) solid var(--kv-color-border-subtle); }
+/* Bare rows stack flush inside a Card padding="none"; they keep their own inline
+   padding so the method chip never touches the card border, and the last row
+   drops its rule so it doesn't double up with the card edge. */
+.kv-endpoint--bare { border: none; border-radius: 0; background: transparent; border-bottom: var(--kv-border-width) solid var(--kv-color-border-subtle); }
+.kv-endpoint--bare:last-child { border-bottom: none; }
 .kv-endpoint__method {
   flex-shrink: 0;
   min-width: 56px;

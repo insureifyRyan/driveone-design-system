@@ -110,3 +110,63 @@ Repo-specific gotchas for future syncs. Read this before re-running the driver.
   Overlap is now per size (xs −5, sm −7, default −8, lg −12).
 - `.kv-toast__content` had no `align-items`, so a `Toast` `action` button stretched full width and
   centered its label. Now `flex-start`.
+
+## Authoring previews (folded from wave 2 and 3)
+
+- **Captures are viewport-clipped, not full-page**: every `?story=` shot is exactly 900x700, so
+  roughly 650px of usable height after body padding. A tall cell is silently sliced — this is the
+  most common failure mode when authoring, and it looks like a content bug rather than a crop.
+- `[CONFIG_STALE]` fires when a component's `viewport` override changes after the last full build
+  stamped `ds-bundle/.stories-map.json`. Only `viewport` trips it — `cardMode` and `primaryStory`
+  are stripped before hashing. The guard is whole-run, so a mixed `--components` rebuild aborts
+  having written nothing. Fix: run `package-build.mjs` once to re-stamp. Note that
+  `package-capture.mjs --components X` reports `0 component(s) — 0 captured, 0 with errors` when
+  no `_preview/X.js` exists; that is a silent no-op, never a pass.
+- **`position: fixed` overlays collapse in the capture wrapper.** `emit.mjs` wraps each solo story
+  in `.ds-single { transform: translateZ(0) }`, making it the containing block for fixed
+  descendants — but it has no intrinsic height, so `inset: 0` overlays collapse to a thin strip.
+  `Modal` and `Drawer` previews work around it with a `minHeight: calc(100vh - 48px)` page root,
+  which also matches the documented "place it at the root of your page tree" usage. This is a
+  harness limitation, not a component bug; do not "fix" the components for it.
+- `ClaimTimeline` and `OnboardingSteps` switch to the sparkles marker via
+  `actor.toLowerCase().includes('kōvara')` — **with the macron**. Writing ASCII "Kovara" silently
+  renders the person glyph and breaks the "cyan means the agent acted" rule.
+- `WorkflowRunCard`: `failedStep` wins over `completedSteps` at the same index, so set
+  `failedStep === completedSteps` or a grey gap opens between the green run and the red segment.
+  Don't pass `recordsProcessed={0}` — the guard is `!== undefined`, so a queued run prints "0 records".
+- `OnboardingSteps` horizontal gives roughly 165px per column at five steps; titles and owners
+  must be short or the wizard header goes ragged.
+
+## Component fixes made during preview review (wave 2 and 3)
+- `.kv-tooltip` had `max-width` but no `width`, so the absolutely-positioned tip shrink-to-fit
+  against a narrow trigger and rendered one word per line — on icon-sized triggers, which is the
+  component's canonical usage. Now `width: max-content`.
+- `.kv-menu-root__panel` had the same class of bug: absolutely positioned inside an inline-flex
+  root, so it sized to the trigger and wrapped ordinary labels. Now `width: max-content`.
+- `IntegrationTile`'s initials fallback took the first letter of each of the first two words, so
+  every single-word connector collided on one glyph (Symitar and Salesforce both rendered "S").
+  Single-word names now take their first two letters.
+- `.kv-endpoint--bare` set `padding-inline: 0`, so the documented composition (bare rows inside
+  `Card padding="none"`) put the method chip flush against the card border. Bare rows keep their
+  inline padding and the last row drops its rule.
+- `ApiKeyField`'s reveal toggle used `search` and `x-circle` glyphs, which read as "search this
+  key" and "revoke". Added real `eye` / `eye-off` glyphs to the icon set.
+
+## First-sync outcome (2026-09)
+
+53 components, all authored and graded `good`, render check clean (0 bad, 0 thin, 0 identical
+variants, 0 floor cards). The bundle in `ds-bundle/` validates and `.resync-verdict.json` reports
+`ok: true` on every stage.
+
+**The upload did not happen.** `DesignSync` needs design-system authorization, and `/design-login`
+cannot run in a non-interactive cloud session, so no Claude Design project exists yet and
+`cfg.projectId` is unset. The next run creates the project. Everything the sync needs is
+committed — config, conventions header, 53 previews, 53 docs, these notes — so the next run
+re-captures and re-grades (grades are machine-local, never committed) rather than re-authoring.
+
+To finish from an interactive session on a machine that can authorize:
+```
+npm ci && npm run build
+/design-login
+/design-sync
+```

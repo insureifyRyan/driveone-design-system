@@ -58,6 +58,33 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 21 Sep 2026: the account went dark, and InitiateCheckout finally fired.**
+
+**Delivery stopped after 16 Sep.** Daily spend ran $114.01 (14 Sep), $86.38 (15 Sep), $30.18
+(16 Sep), then $0.00 on 17 Sep and nothing after. Campaign, all three ad sets and all three ads
+read ACTIVE, no end dates, $100/day budget. Healthy statuses plus a mid-day stop that never
+resumes points at a billing failure or an account spending limit; both leave every status ACTIVE,
+so nothing looks wrong from the API. Billing is not visible through Adspirer. **Cross-check the
+cached feed against the live "Last 7 Days" block in `get_meta_campaign_details`** before calling a
+stop real: the cache ran 4 days behind here, and only the live figure ($230.57, exactly the 14 to
+16 Sep sum) proved the stop was genuine rather than stale data.
+
+**The placement prediction was confirmed.** Across 14 to 17 Sep the reversed campaign spent
+$230.23, and $168.38 of it (**73%**) went to Facebook Reels ($100.30), Reels Overlay ($51.39) and
+Right Hand Column ($16.69, at a 0.20% CTR). **Instagram Feed got $0 and did not appear in the
+placement list at all.** Lowest-cost CBO on automatic placements reproduces the August failure
+every time it is switched on. This is now observed twice.
+
+**InitiateCheckout fired for the first time on 20 Sep.** Over 08:00 to 18:00: 221 PageViews,
+6 Leads (**2.71%**), **24 InitiateCheckout**, 1 Purchase. It had been zero in every prior sample.
+Treat with care: 20 of the 24 landed in the single 15:00 hour against 43 PageViews alongside the
+Purchase, which reads more like instrumentation or a QA pass than 20 shoppers, and all of it was
+organic because the ads were dark. **The question for the next check is whether InitiateCheckout
+fires steadily across hours or was a one-off burst.** Sample a full day and read the hour shape.
+
+If the 2.71% Lead rate holds, the standing advice below not to optimize for `Lead` weakens
+materially and should be revisited rather than repeated.
+
 **State as of 14 Sep 2026: the setup was reversed by someone else.** The old `120248438101950575`
 went ACTIVE at **$100/day** (double its prior budget) around 13 Sep and the Instagram campaign was
 paused. Read the delivery numbers carefully before calling that an improvement: 12 Sep bought
@@ -73,9 +100,10 @@ conversions recorded by Meta. Instagram $713.73 at 1.68% CTR, old campaign $304.
 still paused. Active ads C12v3, C4B and C4A carry corrected copy and their UTM tags. Re-verify
 this on every weekly check: a reactivated campaign can bring retired ads back with it.
 
-**Pixel Lead rate by sample:** 3.8%, 1.90%, 1.06%, 0.6%, 0.44%, 0.38%. Windows are different times
-of day and are not comparable to each other. **InitiateCheckout has been zero in every sample**
-since the pixel was verified. That is a site problem and no traffic mix fixes it.
+**Pixel Lead rate by sample:** 3.8%, 2.71%, 1.90%, 1.06%, 0.6%, 0.44%, 0.38%. Windows are
+different times of day and are not comparable to each other. InitiateCheckout was zero in every
+sample from the pixel's verification until **20 Sep 2026**, when 24 fired in one day along with a
+Purchase. See the 21 Sep state block above for the caveats before treating the funnel as fixed.
 
 **State as of 7 Sep 2026:**
 
@@ -96,7 +124,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), **3,200 (14 Sep)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), **4,400 (21 Sep)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

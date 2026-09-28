@@ -1,0 +1,19 @@
+{
+  "$comment": "Product level offer facts. These become merge tag defaults. Anything marked VERIFY must be confirmed against the signed contract before send.",
+  "administrator": "Ascent Administration Services LLC",
+  "deductible_home": "$0",
+  "deductible_away": "$100",
+  "deductible_note": "VERIFY: contract language is $0 when the vehicle returns to the selling dealer and $100 otherwise. For a dealer sold contract the selling dealer is Bob Johnson, so $0 at store is correct. Confirm before send.",
+  "price_from": "$49",
+  "price_from_note": "VERIFY: a starting at price claim needs at least one genuinely available plan at this figure for a real vehicle in this audience. Substantiation must be on file.",
+  "term_months_max": "60",
+  "payment_plan_months": "36",
+  "down_payment_pct": "5%",
+  "rental_rate": "$35",
+  "rental_max": "$250",
+  "roadside_events": "3",
+  "coverage_tiers": "Silver, Gold and Platinum",
+  "shop_network": "any ASE certified shop nationwide",
+  "excluded_states": ["CA"],
+  "excluded_states_note": "VSCs are not sold in California. Suppress CA garaging addresses at the n8n eligibility step."
+}

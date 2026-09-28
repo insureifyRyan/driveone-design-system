@@ -1,0 +1,41 @@
+{
+  "$comment": "DEALER BRAND FILE. This is the ONLY file you edit to rebrand the whole 10-email campaign. Run `npm run build` after editing.",
+  "$status": "COLORS AND LOGOS ARE PLACEHOLDERS. bobjohnsonautogroup.com is blocked by this environment's network egress proxy, so nothing here was sampled from the live site. Replace every value marked PLACEHOLDER with the real asset before sending.",
+  "id": "bob-johnson",
+  "dealer": {
+    "name": "Bob Johnson",
+    "legalName": "Bob Johnson Auto Group",
+    "displayName": "Bob Johnson Auto Group",
+    "shortName": "Bob Johnson",
+    "possessive": "Bob Johnson's",
+    "website": "https://www.bobjohnsonautogroup.com",
+    "tagline": "PLACEHOLDER: pull the real tagline off the site",
+    "serviceArea": "Rochester and Western New York"
+  },
+  "color": {
+    "$note": "PLACEHOLDER palette. Bob Johnson reads as deep blue + red in market, but these exact values were NOT sampled. Swap them.",
+    "primary": "#003A70",
+    "primaryDark": "#002951",
+    "accent": "#C8102E",
+    "primarySoft": "#EAF0F7",
+    "onPrimary": "#FFFFFF"
+  },
+  "logo": {
+    "$note": "PLACEHOLDER paths. Host the real files on a CDN and paste absolute https URLs. Email clients will NOT render local or relative paths.",
+    "light": "https://REPLACE-ME.cdn/bob-johnson/logo-light.png",
+    "dark": "https://REPLACE-ME.cdn/bob-johnson/logo-dark.png",
+    "widthPx": 150,
+    "altText": "Bob Johnson Auto Group"
+  },
+  "contact": {
+    "storeName": "Bob Johnson Auto Group",
+    "addressLine1": "PLACEHOLDER: store street address",
+    "addressLine2": "Rochester, NY PLACEHOLDER",
+    "servicePhone": "PLACEHOLDER: service department phone",
+    "replyTo": "service@PLACEHOLDER.com"
+  },
+  "campaign": {
+    "quoteUrlBase": "https://REPLACE-ME.driveone.link/bob-johnson/quote",
+    "utm": "utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026"
+  }
+}

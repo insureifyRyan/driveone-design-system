@@ -1,0 +1,16 @@
+{
+  "name": "driveone-design-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DriveOne VSC co-branded dealer email design system and campaign automation",
+  "scripts": {
+    "build": "node email/build.mjs && node n8n/build-workflows.mjs",
+    "build:dealer": "node email/build.mjs",
+    "build:n8n": "node n8n/build-workflows.mjs",
+    "publish:static": "node scripts/publish-static.mjs",
+    "vercel-build": "npm run build && npm run publish:static",
+    "check": "node scripts/check.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

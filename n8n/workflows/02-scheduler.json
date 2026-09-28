@@ -1,0 +1,398 @@
+{
+  "name": "DriveOne VSC 02 Scheduler (Bob Johnson Auto Group)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "7 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "n013-every-hour",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -620,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "dealer_id",
+              "value": "bob-johnson",
+              "type": "string"
+            },
+            {
+              "id": "a1",
+              "name": "campaign_id",
+              "value": "bj_postro_vsc_2026",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n014-campaign-config",
+      "name": "Campaign Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Atomic lease. Claims up to 200 due rows and pushes next_send_at two hours\n-- out in the same statement, so two scheduler runs can never double send and a\n-- crashed run retries instead of stranding the contact.\nupdate vsc_enrollment e\nset next_send_at = now() + interval '2 hours', updated_at = now()\nwhere e.id in (\n  select id from vsc_enrollment\n  where status = 'active'\n    and next_send_at <= now()\n    and dealer_id = $1\n    and campaign_id = $2\n    -- suppression is re-checked here, not just at intake, because someone can\n    -- unsubscribe on day 11 of a 60 day campaign\n    and not exists (\n      select 1 from vsc_suppression s\n      where s.dealer_id = vsc_enrollment.dealer_id\n        and s.customer_key = vsc_enrollment.customer_key\n    )\n  order by next_send_at\n  limit 200\n  for update skip locked\n)\nreturning e.*;",
+        "options": {
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}"
+        }
+      },
+      "id": "n015-claim-due-enrollments",
+      "name": "Claim Due Enrollments",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -180,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cgd3rup",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "n016-anything-due",
+      "name": "Anything Due?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const SCHEDULE = [\n  {\n    \"step\": 1,\n    \"day\": 0,\n    \"slug\": \"01-missing-from-your-profile\",\n    \"subject\": \"{{first_name}}, one thing was missing from your file\",\n    \"subjectAlt\": \"Your {{vehicle_model}} is covered. You are not.\"\n  },\n  {\n    \"step\": 2,\n    \"day\": 3,\n    \"slug\": \"02-todays-visit-was-the-cheap-one\",\n    \"subject\": \"That visit was the cheap one\",\n    \"subjectAlt\": \"{{vehicle_model}} math, briefly\"\n  },\n  {\n    \"step\": 3,\n    \"day\": 7,\n    \"slug\": \"03-nobody-is-going-to-call-you\",\n    \"subject\": \"Nobody is going to call you\",\n    \"subjectAlt\": \"This email has no salesperson attached to it\"\n  },\n  {\n    \"step\": 4,\n    \"day\": 12,\n    \"slug\": \"04-the-disappearing-deductible\",\n    \"subject\": \"Your deductible disappears when you come back\",\n    \"subjectAlt\": \"A number that goes to zero\"\n  },\n  {\n    \"step\": 5,\n    \"day\": 18,\n    \"slug\": \"05-zero-percent-thirty-six-months\",\n    \"subject\": \"0% for 36 months, no credit check\",\n    \"subjectAlt\": \"Coverage, divided by 36\"\n  },\n  {\n    \"step\": 6,\n    \"day\": 25,\n    \"slug\": \"06-exclusionary-explained\",\n    \"subject\": \"The good kind of coverage has an ugly name\",\n    \"subjectAlt\": \"Exclusionary. Terrible word, excellent thing.\"\n  },\n  {\n    \"step\": 7,\n    \"day\": 32,\n    \"slug\": \"07-not-the-tv-people\",\n    \"subject\": \"We are not the people from the commercial\",\n    \"subjectAlt\": \"Your car's extended warranty, and other famous phone calls\"\n  },\n  {\n    \"step\": 8,\n    \"day\": 40,\n    \"slug\": \"08-the-stuff-you-forget-you-have\",\n    \"subject\": \"The parts of coverage nobody talks about\",\n    \"subjectAlt\": \"Roadside, rental, and the rest of it\"\n  },\n  {\n    \"step\": 9,\n    \"day\": 48,\n    \"slug\": \"09-the-window\",\n    \"subject\": \"Why we keep saying now\",\n    \"subjectAlt\": \"{{vehicle_model}} eligibility, plainly\"\n  },\n  {\n    \"step\": 10,\n    \"day\": 60,\n    \"slug\": \"10-we-will-stop\",\n    \"subject\": \"Last one from us on this\",\n    \"subjectAlt\": \"We are going to stop emailing you about this\"\n  }\n];\nconst LAST_STEP = 10;\n\n// Dealer local send window. Outside it we simply emit nothing; the two hour\n// lease from the claim query expires and the row is picked up in the next\n// window. No extra state, no queue to drain.\nconst TZ = $env.DEALER_TZ || 'America/New_York';\nconst WINDOW_START = 9;\nconst WINDOW_END = 19;\n\nconst localHour = parseInt(\n  new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', hour12: false }).format(new Date()),\n  10\n);\nconst inWindow = localHour >= WINDOW_START && localHour < WINDOW_END;\n\nif (!inWindow) return [];\n\nconst crypto = require('crypto');\nconst out = [];\n\nfor (const item of $input.all()) {\n  const r = item.json;\n  const nextStep = (r.current_step || 0) + 1;\n  if (nextStep > LAST_STEP) continue;\n\n  const plan = SCHEDULE.find((s) => s.step === nextStep);\n  if (!plan) continue;\n\n  // Deterministic subject line split. Same contact always gets the same arm,\n  // so results stay readable across the whole 60 days.\n  const bucket = parseInt(crypto.createHash('md5').update(r.customer_key + ':' + nextStep).digest('hex').slice(0, 2), 16);\n  const variant = bucket % 2 === 0 ? 'a' : 'b';\n  const subject = variant === \"a\" ? plan.subject : plan.subjectAlt;\n\n  // Compute the real next_send_at from enrolment date, not from \"now\", so a\n  // delayed run never compresses or stretches the rest of the cadence.\n  const created = new Date(r.created_at);\n  const following = SCHEDULE.find((s) => s.step === nextStep + 1);\n  const nextSendAt = following\n    ? new Date(created.getTime() + following.day * 86400000)\n    : null;\n  if (nextSendAt) nextSendAt.setHours(10, 0, 0, 0);\n\n  out.push({\n    json: {\n      enrollment_id: r.id,\n      dealer_id: r.dealer_id,\n      campaign_id: r.campaign_id,\n      customer_key: r.customer_key,\n      step: nextStep,\n      slug: plan.slug,\n      variant,\n      subject,\n      is_last_step: nextStep >= LAST_STEP,\n      next_send_at: nextSendAt ? nextSendAt.toISOString() : null,\n      merge: {\n        first_name: r.first_name || \"there\",\n        vehicle_year: r.vehicle_year || \"\",\n        vehicle_make: r.vehicle_make || \"\",\n        vehicle_model: r.vehicle_model || \"your vehicle\",\n        vehicle_mileage: r.vehicle_mileage ? Number(r.vehicle_mileage).toLocaleString(\"en-US\") : \"\",\n        last_ro_date: r.ro_closed_date\n          ? new Intl.DateTimeFormat(\"en-US\", { month: \"long\", day: \"numeric\", timeZone: \"UTC\" }).format(new Date(r.ro_closed_date))\n          : \"your last visit\",\n        last_ro_services: r.last_ro_services || \"Service visit\",\n        advisor_name: r.advisor_name || \"\",\n        quote_url: (r.quote_url || \"\") + \"&step=\" + nextStep + \"&\" + \"utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026\",\n        unsubscribe_url: $env.UNSUBSCRIBE_URL_BASE + \"?k=\" + r.customer_key + \"&d=\" + r.dealer_id,\n        preferences_url: $env.PREFERENCES_URL_BASE + \"?k=\" + r.customer_key + \"&d=\" + r.dealer_id,\n      },\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "n017-prepare-send",
+      "name": "Prepare Send",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TEMPLATE_BASE_URL }}/{{ $json.slug }}.html",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "n018-fetch-template-html",
+      "name": "Fetch Template HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge tag substitution. The templates ship with offer facts already baked in\n// by email/build.mjs, so only recipient level tags remain here.\nconst out = [];\nfor (const item of $input.all()) {\n  const prepared = $('Prepare Send').itemMatching(item.pairedItem ? item.pairedItem.item : 0).json;\n  let html = item.json.data || item.json.body || \"\";\n\n  if (typeof html !== \"string\" || html.length < 500) {\n    throw new Error(\"Template fetch returned no usable HTML for step \" + prepared.step + \" (\" + prepared.slug + \")\");\n  }\n\n  for (const [k, v] of Object.entries(prepared.merge)) {\n    html = html.split(\"{{\" + k + \"}}\").join(String(v == null ? \"\" : v));\n  }\n\n  const leftover = html.match(/\\{\\{[a-z_]+\\}\\}/g);\n  if (leftover) {\n    // Fail loudly. A merge tag reaching a customer inbox is worse than a missed send.\n    throw new Error(\"Unresolved merge tags in step \" + prepared.step + \": \" + [...new Set(leftover)].join(\", \"));\n  }\n\n  out.push({ json: { ...prepared, html } });\n}\nreturn out;"
+      },
+      "id": "n019-render-merge-tags",
+      "name": "Render Merge Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.RESEND_API_KEY }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.enrollment_id }}-{{ $json.step }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  from: $env.SEND_FROM,\n  reply_to: $env.SEND_REPLY_TO,\n  to: [$('Claim Due Enrollments').itemMatching($itemIndex).json.email],\n  subject: $json.subject,\n  html: $json.html,\n  headers: {\n    \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">, <mailto:\" + $env.UNSUBSCRIBE_MAILBOX + \">\",\n    \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\"\n  },\n  tags: [\n    { name: \"campaign\", value: $json.campaign_id },\n    { name: \"dealer\", value: $json.dealer_id },\n    { name: \"step\", value: String($json.step) },\n    { name: \"variant\", value: $json.variant }\n  ]\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "n020-send-via-resend",
+      "name": "Send via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -100
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into vsc_send_log (enrollment_id, dealer_id, campaign_id, step, subject, variant, provider_message_id)\nvalues ($1, $2, $3, $4, $5, $6, $7)\n-- vsc_send_log_once makes a retry after a partial failure safe.\non conflict (enrollment_id, step) do nothing;",
+        "options": {
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.dealer_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.campaign_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.subject }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.variant }}, {{ $json.id }}"
+        }
+      },
+      "id": "n021-log-send",
+      "name": "Log Send",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1140,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update vsc_enrollment\nset current_step = $2,\n    last_sent_at = now(),\n    updated_at  = now(),\n    status      = case when $3::boolean then 'completed' else 'active' end,\n    -- a completed row parks far in the future rather than being deleted,\n    -- so reporting and re-entry logic still have something to read\n    next_send_at = coalesce($4::timestamptz, now() + interval '100 years')\nwhere id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.is_last_step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.next_send_at }}"
+        }
+      },
+      "id": "n022-advance-state",
+      "name": "Advance State",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "n023-send-failed",
+      "name": "Send Failed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "n024-nothing-due",
+      "name": "Nothing Due",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        260,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Campaign Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Config": {
+      "main": [
+        [
+          {
+            "node": "Claim Due Enrollments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Due Enrollments": {
+      "main": [
+        [
+          {
+            "node": "Anything Due?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anything Due?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Send",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nothing Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Send": {
+      "main": [
+        [
+          {
+            "node": "Fetch Template HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Template HTML": {
+      "main": [
+        [
+          {
+            "node": "Render Merge Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Merge Tags": {
+      "main": [
+        [
+          {
+            "node": "Send via Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Resend": {
+      "main": [
+        [
+          {
+            "node": "Log Send",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Send": {
+      "main": [
+        [
+          {
+            "node": "Advance State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:bob-johnson"
+    }
+  ]
+}

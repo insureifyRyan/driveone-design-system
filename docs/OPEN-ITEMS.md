@@ -21,7 +21,23 @@ quote per visit, so `quotes.created_at` is the visit date and `customer_vehicles
 year, make, model and mileage. Op codes do not exist, so the services line was removed
 from the template.
 
-### 2. Where the monthly price comes from
+### 2. Three different names for the same plan
+
+The emails now say **Platinum**, your top coverage, per your direction. Three other names
+are in play for what looks like the same product:
+
+| Source | Name |
+|---|---|
+| Executed contract form | Elevate **Platinum** |
+| Rating API `policy_name` | DriveOne VSC |
+| Supabase `vsc_policies` | Century |
+
+Not blocking, and the emails are consistent with the contract the customer signs, which is
+the one that matters. But if the checkout page prints "DriveOne VSC" or the contract header
+says something else again, a customer who reads carefully will notice. Worth one pass to
+decide what this plan is called in front of customers, then making all four agree.
+
+### 3. Where the monthly price comes from
 
 The emails now show each recipient's real monthly figure in the card, no click needed. The
 plumbing is done; the source is not settled. Do not let anything compute it from the rate
@@ -32,7 +48,7 @@ covers them.
 **Closed:** the `$49` claim. It is gone, replaced by real per-recipient pricing. Observed
 monthlies run about 56 to 80 dollars, so it was not supportable.
 
-### 3. Assets and contact details
+### 4. Assets and contact details
 
 | Item | Status |
 |---|---|
@@ -52,7 +68,7 @@ black italic extrabold "BOB JOHNSON" over a gold rule with "AUTO GROUP" lettersp
 beneath. That is also exactly what recipients with images disabled will see, so it is
 worth a look either way.
 
-### 4. Consent, sender identity and deliverability
+### 5. Consent, sender identity and deliverability
 
 - `SEND_FROM` should be a Bob Johnson domain, not a DriveOne one, or the co-branding is
   undercut and deliverability suffers.
@@ -64,7 +80,7 @@ worth a look either way.
   `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented in the
   scheduler.
 
-### 5. n8n was not wired directly
+### 6. n8n was not wired directly
 
 The n8n MCP server needs OAuth and this session is non-interactive. Authorize it in
 claude.ai connector settings, or via `/mcp` in an interactive session, and the workflows

@@ -32,8 +32,8 @@
         },
         {
           "icon": "E",
-          "title": "Exclusionary Platinum coverage",
-          "subtitle": "The only plan in this program. Nothing stripped down."
+          "title": "Platinum, our best coverage",
+          "subtitle": "The top plan we offer, and the only one in this program. Exclusionary, not a stripped entry tier."
         },
         {
           "icon": "$",
@@ -217,18 +217,18 @@
       "subjectAlt": "Exclusionary. Terrible word, excellent thing.",
       "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
       "eyebrow": "ONE WORD, EXPLAINED",
-      "headline": "Exclusionary. [[Ugly word.]] Best coverage.",
-      "subhead": "Every contract in this program is exclusionary. We are not holding a better one back for a different customer.",
+      "headline": "Platinum. [[Our best.]] Also the only one here.",
+      "subhead": "We sell one plan in this program and it is the top one. Exclusionary coverage, which is the good kind and has the worst name in the business.",
       "body": [
         "A listed component plan names the parts it covers. If your part is not on the list, it is not covered, and the list is always shorter than the car.",
         "An exclusionary plan flips it. It names the short list of things it does not cover, and everything else is in. You are reading a page instead of a phone book, and the burden sits with us rather than with you.",
-        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell."
+        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell, because Platinum is the only plan in this program."
       ],
       "featureRows": [
         {
           "icon": "E",
           "title": "Platinum is the only plan here",
-          "subtitle": "We sell one coverage level in this program. It is the exclusionary one."
+          "subtitle": "Our highest tier. Not held back for a different customer, not upsold later."
         },
         {
           "icon": "L",

@@ -69,8 +69,8 @@
     "partner_type": "service-drive",
     "intake_window_days": 90,
     "intake_window_note": "Quotes for this rooftop run Feb to Sep 2026: 107 in the last 30 days, 458 within 90. A 30 day window would enroll only the newest 107 and strand the rest, so the backfill runs at 90.",
-    "max_mileage": 99999,
-    "max_mileage_note": "Matches the top of vsc_rate_mileage_bracket. Vehicles at 100k+ cannot be priced, so they are held out rather than emailed a blank. Of 432 otherwise eligible, 269 are quotable today and 163 are waiting on a high mileage bracket. Raise this the day that bracket exists and they enroll on the next sweep, no other change needed.",
+    "max_mileage": 999999,
+    "max_mileage_note": "Effectively off. The rating API is keyed on VIN and decides what it can rate, so a local ceiling would only second guess it. A vehicle it cannot price records a pricing_error, is never sent, and stops being retried after five attempts. Removing the ceiling took the list from 269 to 432.",
     "slug": "bob-johnson-auto",
     "slug_note": "partners.slug in Supabase and dealers.slug in MetricBridge agree. Short codes are globally unique across all 2,199 links, so the slug is probably a partner portal path rather than part of the quote link. If the link does carry it, put it in SHORT_LINK_BASE_URL and nothing in the workflow changes."
   },

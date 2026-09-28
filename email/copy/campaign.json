@@ -41,7 +41,7 @@
           "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears."
         }
       ],
-      "benefitStrip": "That number is for your {{vehicle_year}} {{vehicle_model}} at {{vehicle_mileage}} miles. Not an average, not a teaser rate.",
+      "benefitStrip": "That number is the lowest monthly we can do for your {{vehicle_year}} {{vehicle_model}} at {{vehicle_mileage}} miles. Longer terms and an unlimited mileage plan are on the quote page if you want them.",
       "cta": {
         "label": "See your free quote",
         "path": "welcome"
@@ -233,7 +233,7 @@
         {
           "icon": "L",
           "title": "A short list of exclusions",
-          "subtitle": "Printed in the contract, readable before you buy."
+          "subtitle": "Printed in the contract, readable before you buy. Term and mileage options, including unlimited mileage, are yours to pick."
         },
         {
           "icon": "P",

@@ -38,7 +38,7 @@ if (files.length !== deck.emails.length) fail.push(`Built ${files.length} templa
 
 const ALLOWED_TAGS = new Set([
   'first_name', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_mileage',
-  'last_ro_date', 'advisor_name', 'quote_url', 'monthly_payment', 'down_payment',
+  'last_ro_date', 'advisor_name', 'quote_url', 'monthly_payment', 'down_payment', 'coverage_label',
   'unsubscribe_url', 'preferences_url',
 ]);
 

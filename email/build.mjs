@@ -74,6 +74,7 @@ const SAMPLE = {
   vehicle_model: 'Equinox',
   vehicle_mileage: '61,400',
   monthly_payment: '$66.47',
+  coverage_label: 'Covered to 75,000 miles',
   down_payment: '$110.35',
   last_ro_date: 'September 19',
   advisor_name: 'Marcus',
@@ -189,8 +190,9 @@ const vehicleCard = () => `
     <tr><td style="padding:14px 20px 18px 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td valign="bottom" align="left">
-          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">YOUR PLATINUM COVERAGE</p>
-          <p style="margin:0;${font(F.body, 13, 500, C.bodyText, '1.4')}">{{down_payment}} down to start</p>
+          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">YOUR COVERAGE</p>
+          <p style="margin:0 0 2px 0;${font(F.display, 14, 700, C.ink, '1.35')}letter-spacing:-0.2px;">{{coverage_label}}</p>
+          <p style="margin:0;${font(F.body, 13, 400, C.mutedText, '1.4')}">{{down_payment}} down to start</p>
         </td>
         <td valign="bottom" align="right" style="white-space:nowrap;">
           <span style="${font(F.display, 34, 800, C.ink, '1')}letter-spacing:-1.4px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bob Johnson Auto Group VSC Campaign</title>
+<style>
+  :root{--cyan:#1FBFEC;--ink:#0E1B2C;--soft:#E8F8FE;--rule:#D9E4EE;--muted:#6B7C90;--primary:#000000;--accent:#F2B229;--paper:#F4F7FA;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter Tight','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;}
+  header{background:var(--ink);color:#fff;padding:44px 28px 38px;border-top:4px solid var(--cyan);}
+  .inner{max-width:1120px;margin:0 auto;}
+  header h1{margin:0 0 10px;font-size:34px;letter-spacing:-1px;font-weight:800;}
+  header h1 span{color:var(--cyan);}
+  header p{margin:0;color:rgba(255,255,255,.7);font-size:16px;line-height:1.6;max-width:65ch;}
+  .flag{margin:18px 0 0;padding:14px 16px;border-left:3px solid var(--accent);background:rgba(255,255,255,.06);border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:rgba(255,255,255,.85);max-width:78ch;}
+  main{padding:34px 28px 70px;}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));}
+  .card{display:block;background:#fff;border:1px solid var(--rule);border-radius:14px;padding:20px;text-decoration:none;color:inherit;transition:.15s;}
+  .card:hover{border-color:var(--cyan);transform:translateY(-2px);box-shadow:0 8px 24px rgba(14,27,44,.09);}
+  .step{display:flex;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:1.4px;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;}
+  .step span{color:var(--muted);}
+  .card h3{margin:0 0 8px;font-size:17px;line-height:1.35;letter-spacing:-.3px;font-weight:800;}
+  .pre{margin:0 0 12px;font-size:13px;line-height:1.55;color:var(--muted);}
+  .alt{margin:0 0 16px;font-size:12px;line-height:1.5;color:var(--muted);padding-top:12px;border-top:1px solid var(--rule);}
+  .alt b{color:var(--ink);}
+  .cta{display:inline-block;background:var(--soft);color:#0E9BC4;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;}
+</style></head>
+<body>
+<header><div class="inner">
+  <h1>Bob Johnson Auto Group <span>&times;</span> DriveOne VSC</h1>
+  <p>Post service "why buy now" campaign. Ten emails over 60 days to service customers with a recent closed repair order and no vehicle service contract on file.</p>
+  <div class="flag"><b>Brand assets are placeholders.</b> The dealership site is blocked by this environment's network egress proxy, so no colors or logos were sampled from it. Drop the real values into <code>brand/dealers/bob-johnson.json</code> and rebuild. Nothing else needs to change.</div>
+</div></header>
+<main><div class="inner"><div class="grid">
+  <a class="card" href="filled/01-missing-from-your-profile.html" target="_blank" rel="noopener">
+    <div class="step">Email 1<span>Day 0</span></div>
+    <h3>{{first_name}}, one thing was missing from your file</h3>
+    <p class="pre">No coverage on file. That is fixable in about four minutes, online, without talking to anybody.</p>
+    <p class="alt"><b>A/B:</b> Your {{vehicle_model}} is covered. You are not.</p>
+    <div class="cta">See your free quote</div>
+  </a>
+  <a class="card" href="filled/02-todays-visit-was-the-cheap-one.html" target="_blank" rel="noopener">
+    <div class="step">Email 2<span>Day 3</span></div>
+    <h3>That visit was the cheap one</h3>
+    <p class="pre">Modern cars are wonderful. Their parts are priced accordingly.</p>
+    <p class="alt"><b>A/B:</b> {{vehicle_model}} math, briefly</p>
+    <div class="cta">Price my coverage</div>
+  </a>
+  <a class="card" href="filled/03-nobody-is-going-to-call-you.html" target="_blank" rel="noopener">
+    <div class="step">Email 3<span>Day 7</span></div>
+    <h3>Nobody is going to call you</h3>
+    <p class="pre">That is not an oversight. That is the product.</p>
+    <p class="alt"><b>A/B:</b> This email has no salesperson attached to it</p>
+    <div class="cta">Open my quote</div>
+  </a>
+  <a class="card" href="filled/04-the-disappearing-deductible.html" target="_blank" rel="noopener">
+    <div class="step">Email 4<span>Day 12</span></div>
+    <h3>Your deductible disappears when you come back</h3>
+    <p class="pre">Bring the car back to Bob Johnson and the deductible on a covered repair goes away.</p>
+    <p class="alt"><b>A/B:</b> A number that goes to zero</p>
+    <div class="cta">See my plan options</div>
+  </a>
+  <a class="card" href="filled/05-zero-percent-thirty-six-months.html" target="_blank" rel="noopener">
+    <div class="step">Email 5<span>Day 18</span></div>
+    <h3>0% for 36 months, no credit check</h3>
+    <p class="pre">5% down. The rest spread out at zero percent. No credit pull.</p>
+    <p class="alt"><b>A/B:</b> Coverage, divided by 36</p>
+    <div class="cta">See my monthly number</div>
+  </a>
+  <a class="card" href="filled/06-exclusionary-explained.html" target="_blank" rel="noopener">
+    <div class="step">Email 6<span>Day 25</span></div>
+    <h3>The good kind of coverage has an ugly name</h3>
+    <p class="pre">Most plans list what is covered. Ours lists what is not. That gap is the whole game.</p>
+    <p class="alt"><b>A/B:</b> Exclusionary. Terrible word, excellent thing.</p>
+    <div class="cta">Read what is covered</div>
+  </a>
+  <a class="card" href="filled/07-not-the-tv-people.html" target="_blank" rel="noopener">
+    <div class="step">Email 7<span>Day 32</span></div>
+    <h3>We are not the people from the commercial</h3>
+    <p class="pre">You have had that call. This is not that. We are the store that fixed your car.</p>
+    <p class="alt"><b>A/B:</b> Your car's extended warranty, and other famous phone calls</p>
+    <div class="cta">Get my quote from Bob Johnson</div>
+  </a>
+  <a class="card" href="filled/08-the-stuff-you-forget-you-have.html" target="_blank" rel="noopener">
+    <div class="step">Email 8<span>Day 40</span></div>
+    <h3>The parts of coverage nobody talks about</h3>
+    <p class="pre">Coverage is not only for the day the transmission goes. Most of it is for smaller, more annoying days.</p>
+    <p class="alt"><b>A/B:</b> Roadside, rental, and the rest of it</p>
+    <div class="cta">See everything included</div>
+  </a>
+  <a class="card" href="filled/09-the-window.html" target="_blank" rel="noopener">
+    <div class="step">Email 9<span>Day 48</span></div>
+    <h3>Why we keep saying now</h3>
+    <p class="pre">Eligibility runs on mileage and model year. Both of yours are moving in one direction.</p>
+    <p class="alt"><b>A/B:</b> {{vehicle_model}} eligibility, plainly</p>
+    <div class="cta">Check what I qualify for</div>
+  </a>
+  <a class="card" href="filled/10-we-will-stop.html" target="_blank" rel="noopener">
+    <div class="step">Email 10<span>Day 60</span></div>
+    <h3>Last one from us on this</h3>
+    <p class="pre">Ten emails is a reasonable limit. Your quote link stays alive regardless.</p>
+    <p class="alt"><b>A/B:</b> We are going to stop emailing you about this</p>
+    <div class="cta">Open my quote one last time</div>
+  </a></div></div></main>
+</body></html>

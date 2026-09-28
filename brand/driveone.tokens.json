@@ -1,0 +1,32 @@
+{
+  "$comment": "DriveOne master brand tokens. Locked. Do not edit per dealer. Source: DriveOne Direct approved design system (three colors only).",
+  "brand": {
+    "name": "DriveOne",
+    "productName": "DriveOne VSC",
+    "productDescriptor": "EXTENDED SERVICE CONTRACT",
+    "productDescriptorNote": "CONFLICT FLAGGED: ads use EXTENDED SERVICE CONTRACT, the digital flyer / Notion logo page / signed VSC application print EXTENDED WARRANTY. Not silently resolved. See docs/OPEN-ITEMS.md.",
+    "administrator": "Ascent Administration Services LLC"
+  },
+  "color": {
+    "cyan": "#1FBFEC",
+    "cyanDark": "#0E9BC4",
+    "ink": "#0E1B2C",
+    "inkSoft": "#1B2C42",
+    "cyanSoft": "#E8F8FE",
+    "white": "#FFFFFF",
+    "paper": "#F4F7FA",
+    "rule": "#D9E4EE",
+    "bodyText": "#3A4A5E",
+    "mutedText": "#6B7C90",
+    "legalText": "#8A97A6"
+  },
+  "font": {
+    "display": "'Inter Tight', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "body": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  },
+  "layout": {
+    "emailWidth": 600,
+    "gutter": 32,
+    "radius": 14
+  }
+}

@@ -1,0 +1,134 @@
+# Open items before this campaign can send
+
+Most of the original list is now closed against the executed contract form
+(`Elevate_Platinum_VSC_Contract_1.pdf`, AAS VSC 1 11-2022, 16 pages). What is left is
+short and mostly operational.
+
+---
+
+## Still open
+
+### 1. The `$49` starting price needs substantiation
+
+Used in emails 1 and 5. A "starting at" claim needs at least one genuinely available
+Platinum contract at that figure, for a vehicle that actually exists in this audience,
+documented on file. Everything else in the campaign is now quoted from the form; this is
+the one number that is not.
+
+If it cannot be substantiated, change `price_from` in `brand/offer.json` and rebuild, or
+tell me and I will pull the price line out of both emails.
+
+### 2. Assets and contact details
+
+| Item | Status |
+|---|---|
+| Logo file | `REPLACE-ME` placeholder. Needs a hosted absolute `https` URL. |
+| Service phone | `PLACEHOLDER` |
+| Reply-to mailbox | `PLACEHOLDER` |
+| Postal address | Set to 3855 W Henrietta Rd, Rochester NY 14623. **Confirm.** That is the Imports address, and the group runs multiple rooftops. CAN-SPAM wants the address of the entity actually sending. |
+| Quote URL base | `REPLACE-ME` |
+
+Colors are now real, read off the screenshot you sent: black `#000000`, gold `#F2B229`,
+white. Worth confirming the gold against the brand sheet, since it was eyedropped from an
+image rather than the stylesheet.
+
+Until a logo URL is set, the header renders a type lockup that mirrors the wordmark:
+black italic extrabold "BOB JOHNSON" over a gold rule with "AUTO GROUP" letterspaced
+beneath. That is also exactly what recipients with images disabled will see, so it is
+worth a look either way.
+
+### 3. Consent, sender identity and deliverability
+
+- `SEND_FROM` should be a Bob Johnson domain, not a DriveOne one, or the co-branding is
+  undercut and deliverability suffers.
+- Confirm the service customer records carry a marketing email consent basis, and that
+  the DMS feed excludes anyone who already opted out at the dealership level. The
+  campaign's own suppression list cannot see unsubscribes that happened in the dealer's
+  other systems.
+- SPF, DKIM and a DMARC policy on the sending domain before any volume. One click
+  `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented in the
+  scheduler.
+
+### 4. n8n was not wired directly
+
+The n8n MCP server needs OAuth and this session is non-interactive. Authorize it in
+claude.ai connector settings, or via `/mcp` in an interactive session, and the workflows
+can be created through the API rather than imported by hand. The versioned JSON in
+`n8n/workflows/` is the better artifact regardless.
+
+---
+
+## Closed against the contract
+
+### New York is approved, and the obligor is ORIAS
+
+The form carries a full New York disclosure block, so NY is a covered state. From the
+DEFINITIONS section:
+
+> In New York, the Administrator/Obligor is ORIAS Warranty Services, 8282 S Memorial Dr.,
+> Ste. 202, Tulsa, OK 74133, 800-331-3780
+
+Not ORIC. The footer now resolves the obligor from the dealer's state, so Bob Johnson
+prints ORIAS while a Florida dealership would print Old Republic Insurance Company and
+everyone else prints Ascent Administration Services, LLC. The map is in
+`brand/offer.json` under `obligor_by_state`.
+
+NY also amends cancellation: mail delivered contracts get a 30 day cancellation window
+with full refund if no claim was made, and a 10% per month penalty if a refund owed is
+not paid within 30 days.
+
+### Platinum only, and Platinum is the exclusionary tier
+
+Confirmed, and it is the reason the exclusionary claim is safe here:
+
+> PLATINUM COVERAGE: Includes coverages listed in SILVER COVERAGE and GOLD COVERAGE, plus
+> ALL OF YOUR VEHICLE'S ORIGINAL FACTORY-EQUIPPED MECHANICAL AND ELECTRICAL PARTS, EXCEPT
+> those excluded by the TERMS AND CONDITIONS and the following PLATINUM COVERAGE
+> EXCLUSIONS
+
+And the inverse, which confirms Silver and Gold are listed component plans:
+
+> Unless You have chosen PLATINUM COVERAGE, components not listed on Your SCHEDULE OF
+> COVERAGE, regardless of failure.
+
+Silver and Gold are no longer named anywhere in the campaign.
+
+### The deductible language is exactly as briefed
+
+> Your Deductible is $0 per claim visit if You return the Vehicle to the selling Dealer
+> for repair. If You do not return to the Vehicle's selling Dealer for repair, Your
+> Deductible is $100 per claim visit.
+
+Bob Johnson is the selling dealer on these contracts, so `$0` at store is correct.
+
+### "Warranty"
+
+Your call, and the campaign follows it: vehicle service contract throughout. The only
+uses of the word are email 7 quoting the robocall on purpose, and the required footer
+disclosure that this is not a manufacturer warranty. `npm run check` enforces this.
+
+---
+
+## Claims removed because the form does not support them
+
+These came from other DriveOne material and are not in this contract. All are now out of
+the campaign and recorded in `brand/offer.json` under `not_included`.
+
+| Removed | Why |
+|---|---|
+| **Diminished value protection** | Appears nowhere in this contract. Was in email 8, now removed. |
+| **Protection Plus** (tire and wheel, key replacement, dent repair, windshield) | Not in this program. Tires, valve stems, wheels and rims are expressly excluded under Platinum, as are glass and windshields. Was in emails 6 and 8. |
+| **Openbay** scheduling and service discounts | Not part of this program, per your direction. Was in email 8. |
+| **"Any ASE certified shop nationwide"** | The form defines Repair Facility as "A licensed Repair Facility (licensed as a retail merchant to perform mechanical repairs) **authorized by the Administrator/Obligor**." Authorization is required, so the open network claim was overstated. Now reads "any licensed repair facility the administrator authorizes." Was in emails 4 and 7. |
+| **"Terms up to 60 months"** | Term is per contract on the Application Page, not a fixed ceiling in the form. Email 2 now says the term is set at purchase. |
+| Repair cost figures | Never used. The source numbers were corrupted in the brand record, and stale repair figures are a compliance problem. Email 2 makes the argument without a dollar amount. |
+
+## Claims added because the form does support them
+
+| Added | Where | Basis |
+|---|---|---|
+| 30 day full refund, no claims made | Email 3 | Cancellation section, and reinforced by the NY amendment. |
+| Transferable to a valid transferee | Email 6 | Term definition, and "You" includes "any valid transferee." |
+| Towing up to $100 per occurrence | Email 8 | Roadside section, Quest Towing Services. |
+| Seals and gaskets excluded past 125,000 miles | Email 9 | Platinum exclusions. This is a genuine, honest reason the window matters, which is better than manufacturing urgency. |
+| Rental needs proof of rental with an authorized claim | Email 8 P.S. | Rental benefits section. |

@@ -1,0 +1,48 @@
+{
+  "$comment": "DEALER BRAND FILE. The only file you edit to rebrand the whole campaign. Run `npm run build` after editing.",
+  "$status": "Colors and type lockup derived from a screenshot of bobjohnsonautogroup.com supplied by the client. The site itself is blocked by this environment's network egress proxy, so hex values were read off the image rather than the stylesheet. They are close; confirm against the real brand sheet.",
+  "id": "bob-johnson",
+  "dealer": {
+    "name": "Bob Johnson",
+    "legalName": "Bob Johnson Auto Group",
+    "displayName": "Bob Johnson Auto Group",
+    "shortName": "Bob Johnson",
+    "state": "NY",
+    "website": "https://www.bobjohnsonautogroup.com",
+    "tagline": "Low Payment Promise",
+    "serviceArea": "Rochester and Western New York"
+  },
+  "color": {
+    "$note": "Black, gold and white. Gold is eyedropped from the specials bar and the primary buttons.",
+    "primary": "#000000",
+    "primaryDark": "#1C1C1C",
+    "accent": "#F2B229",
+    "primarySoft": "#FFF7E6",
+    "onPrimary": "#FFFFFF"
+  },
+  "logo": {
+    "$note": "REPLACE with a hosted absolute https URL. Until then the header renders a type lockup that matches the wordmark: black italic extrabold name over a gold rule, with AUTO GROUP letterspaced beneath. That fallback is also what any recipient with images disabled will see, so it is worth keeping good.",
+    "light": "https://REPLACE-ME.cdn/bob-johnson/logo-light.png",
+    "dark": "https://REPLACE-ME.cdn/bob-johnson/logo-dark.png",
+    "widthPx": 160,
+    "altText": "Bob Johnson Auto Group",
+    "wordmark": {
+      "line1": "BOB JOHNSON",
+      "line2": "AUTO GROUP",
+      "italic": true,
+      "ruleColor": "#F2B229"
+    }
+  },
+  "contact": {
+    "storeName": "Bob Johnson Auto Group",
+    "addressLine1": "3855 W Henrietta Rd",
+    "addressLine2": "Rochester, NY 14623",
+    "addressNote": "CONFIRMED by client: Rochester is the first rooftop in this program. If a later dealership in the group is added, give it its own dealer file rather than changing this one.",
+    "servicePhone": "PLACEHOLDER: service department phone",
+    "replyTo": "service@PLACEHOLDER.com"
+  },
+  "campaign": {
+    "quoteUrlBase": "https://REPLACE-ME.driveone.link/bob-johnson/quote",
+    "utm": "utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026"
+  }
+}

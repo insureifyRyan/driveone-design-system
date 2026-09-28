@@ -1,0 +1,54 @@
+{
+  "$comment": "Product facts for the Elevate PLATINUM VSC as sold in the Bob Johnson post sale program. Every value below is quoted from or directly supported by the executed contract form AAS VSC 1 11-2022 (Ascent Administration Services). Line references are to that form.",
+  "$source": "Elevate_Platinum_VSC_Contract_1.pdf, 16 pages, AAS VSC 1 11-2022",
+
+  "program_tier": "Platinum",
+  "program_tier_note": "This program sells PLATINUM ONLY. Silver and Gold exist on the form but are not offered here, so never name them in copy.",
+
+  "exclusionary": true,
+  "exclusionary_basis": "Form: 'PLATINUM COVERAGE: Includes coverages listed in SILVER COVERAGE and GOLD COVERAGE, plus ALL OF YOUR VEHICLE'S ORIGINAL FACTORY-EQUIPPED MECHANICAL AND ELECTRICAL PARTS, EXCEPT those excluded...'. Platinum is the exclusionary tier; Silver and Gold are listed component. Since this program is Platinum only, 'exclusionary coverage on every plan' is accurate here.",
+
+  "administrator_default": "Ascent Administration Services, LLC",
+  "obligor_by_state": {
+    "$comment": "The footer obligor is resolved from the dealer's state at build time. Quoted from the DEFINITIONS section of the form.",
+    "NY": "ORIAS Warranty Services",
+    "CA": "Old Republic Insured Automotive Services, Inc.",
+    "FL": "Old Republic Insurance Company"
+  },
+
+  "deductible_home": "$0",
+  "deductible_away": "$100",
+  "deductible_basis": "Form: 'Your Deductible is $0 per claim visit if You return the Vehicle to the selling Dealer for repair. If You do not return to the Vehicle's selling Dealer for repair, Your Deductible is $100 per claim visit.' Bob Johnson is the selling dealer on these contracts, so $0 at store is correct.",
+
+  "repair_network": "any licensed repair facility authorized by the administrator",
+  "repair_network_note": "DO NOT say 'any ASE certified shop nationwide'. The form defines Repair Facility as 'A licensed Repair Facility (licensed as a retail merchant to perform mechanical repairs) authorized by the Administrator/Obligor'. Authorization is required.",
+
+  "refund_days": "30",
+  "refund_basis": "Form: full refund of the Service Contract Price if cancelled within the first thirty (30) days from the Service Contract Purchase Date provided no claims have been made. Pro rata after that.",
+
+  "transferable": true,
+  "transferable_basis": "Form Term definition: coverage lasts 'so long as You own the Vehicle, or You have properly transferred the Vehicle'. 'You' includes 'any valid transferee'.",
+
+  "roadside_events": "3",
+  "roadside_basis": "Form: Quest Towing Services covers up to three (3) emergency road or towing service events per year. Tow to nearest qualified Repair Facility limit $100.00 per occurrence. Flat tire assistance limit $50.00 per occurrence.",
+
+  "rental_rate": "$35",
+  "rental_max": "$250",
+  "rental_basis": "Form: '$35.00 for each six hours of Mitchell's ProDemand labor guide time... maximum benefit of $250.00 per claim visit if proof of rental is provided with an authorized claim.'",
+
+  "price_from": "$49",
+  "price_from_note": "STILL NEEDS SUBSTANTIATION. A 'starting at' price claim needs at least one genuinely available Platinum plan at this figure for a vehicle in this audience, documented on file.",
+
+  "payment_plan_months": "36",
+  "down_payment_pct": "5%",
+
+  "not_included": {
+    "$comment": "Claims that appear in other DriveOne material but are NOT in this form. Never use them in this program.",
+    "diminished_value": "Not present anywhere in this contract. Removed from all copy.",
+    "protection_plus": "No tire and wheel, key replacement, paintless dent repair or windshield coverage. Tires, valve stems, wheels and rims are expressly excluded, as are glass and windshields.",
+    "openbay": "Not part of this program per client direction. Removed from all copy."
+  },
+
+  "excluded_states": ["CA"],
+  "excluded_states_note": "VSCs are not sold in California. New York IS approved and carries its own disclosure block on the form, with ORIAS Warranty Services as Administrator/Obligor."
+}

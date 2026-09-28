@@ -28,6 +28,13 @@ Adding a tag means adding it to `ALLOWED_TAGS` in `scripts/check.mjs` and to the
 object in the scheduler's `Prepare Send` node. The check script fails the build otherwise,
 which is deliberate.
 
+## Where each field comes from
+
+Repair order and vehicle fields come from the **DMS**. MetricBridge carries dealer identity,
+opt-out suppression and purchase exits, but holds no repair orders and no vehicle
+attributes. See `docs/METRICBRIDGE.md` for what was verified against the live surface and
+what is still needed.
+
 ## Inbound repair order payload
 
 Workflow 01 accepts a single RO object, an array, or an object with `repair_orders`.

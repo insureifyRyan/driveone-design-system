@@ -4,13 +4,14 @@
   "id": "bob-johnson",
   "dealer": {
     "name": "Bob Johnson",
-    "legalName": "Bob Johnson Auto Group",
-    "displayName": "Bob Johnson Auto Group",
+    "legalName": "Bob Johnson Chrysler Dodge Jeep Ram of Watertown",
+    "displayName": "Bob Johnson Chrysler Dodge Jeep Ram",
     "shortName": "Bob Johnson",
     "state": "NY",
-    "website": "https://www.bobjohnsonautogroup.com",
+    "website": "https://www.bobjohnsoncdjr.com",
     "tagline": "Low Payment Promise",
-    "serviceArea": "Rochester and Western New York"
+    "serviceArea": "Watertown and the North Country",
+    "storeNote": "Rooftop for this campaign is the Watertown CDJR store, not the Rochester group office. State stays NY, so the ORIAS obligor in the footer is still correct."
   },
   "color": {
     "$note": "Black, gold and white. Gold is eyedropped from the specials bar and the primary buttons.",
@@ -21,28 +22,41 @@
     "onPrimary": "#FFFFFF"
   },
   "logo": {
-    "$note": "REPLACE with a hosted absolute https URL. Until then the header renders a type lockup that matches the wordmark: black italic extrabold name over a gold rule, with AUTO GROUP letterspaced beneath. That fallback is also what any recipient with images disabled will see, so it is worth keeping good.",
-    "light": "https://REPLACE-ME.cdn/bob-johnson/logo-light.png",
-    "dark": "https://REPLACE-ME.cdn/bob-johnson/logo-dark.png",
+    "$note": "Pulled from the dealer record in MetricBridge (elevate_service_drive), so it is the logo your own system already holds. NOT VISUALLY VERIFIED: this environment cannot reach supabase.co, so the aspect ratio, transparency and whether it reads on white were not checked. Open one preview and confirm, and adjust widthPx if it looks wrong.",
+    "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
+    "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
     "widthPx": 160,
-    "altText": "Bob Johnson Auto Group",
+    "altText": "Bob Johnson Chrysler Dodge Jeep Ram",
     "wordmark": {
       "line1": "BOB JOHNSON",
-      "line2": "AUTO GROUP",
+      "line2": "CHRYSLER DODGE JEEP RAM",
       "italic": true,
       "ruleColor": "#F2B229"
     }
   },
   "contact": {
-    "storeName": "Bob Johnson Auto Group",
-    "addressLine1": "3855 W Henrietta Rd",
-    "addressLine2": "Rochester, NY 14623",
-    "addressNote": "CONFIRMED by client: Rochester is the first rooftop in this program. If a later dealership in the group is added, give it its own dealer file rather than changing this one.",
-    "servicePhone": "PLACEHOLDER: service department phone",
-    "replyTo": "service@PLACEHOLDER.com"
+    "storeName": "Bob Johnson Chrysler Dodge Jeep Ram",
+    "addressLine1": "18712 US-11",
+    "addressLine2": "Watertown, NY 13601",
+    "addressNote": "Watertown CDJR store, confirmed by client as the first rooftop in this program.",
+    "servicePhone": "(315) 965-8072",
+    "replyTo": "service@PLACEHOLDER.com",
+    "phoneNote": "CONFIRM: taken from public dealer listings and may be the main line rather than the service department direct dial. It prints in every footer as \"Service:\", so verify before send."
   },
   "campaign": {
     "quoteUrlBase": "https://REPLACE-ME.driveone.link/bob-johnson/quote",
     "utm": "utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026"
+  },
+  "metricbridge": {
+    "$comment": "Dealer identity in MetricBridge. The n8n intake uses these to scope the feed to this rooftop.",
+    "source": "elevate_service_drive",
+    "dealer_id": "b9c46bf5-44c5-4a7b-9b53-9d3d9e5de308",
+    "source_id": "b8440db1-62ea-41ad-a676-684a75a3f550",
+    "slug": "bob-johnson-auto",
+    "business_name": "Bob Johnson Auto",
+    "program_contact": "Mike Perkins, mperkins@bobjohnsonauto.com, (315) 783-3874",
+    "program_contact_note": "This is the partner contact on the dealer record, not a customer facing service line. The footer uses the public service number instead.",
+    "down_payment_percentage": 0.05,
+    "down_payment_note": "Confirms the 5% down figure used in emails 1 and 5, straight from the system of record."
   }
 }

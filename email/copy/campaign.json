@@ -41,12 +41,12 @@
           "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears."
         }
       ],
-      "benefitStrip": "Plans start at {{price_from}} a month depending on your vehicle.",
+      "benefitStrip": "That number is for your {{vehicle_year}} {{vehicle_model}} at {{vehicle_mileage}} miles. Not an average, not a teaser rate.",
       "cta": {
         "label": "See your free quote",
         "path": "welcome"
       },
-      "ps": "You do not need to call us. You can if you want to. The whole thing works online, on your schedule, with nobody on the other end of it."
+      "ps": "You do not need to call us, and you did not need to click anything to see your price. It is at the top of this email. The rest works online, on your schedule, with nobody on the other end of it."
     },
     {
       "step": 2,
@@ -182,13 +182,13 @@
       "body": [
         "So we removed the number on the day. Coverage starts with 5% down. Whatever is left splits across up to 36 months at zero percent.",
         "There is no credit check and there is no interest. It is a payment plan, not a loan, and it does not touch your credit file.",
-        "Plans start at {{price_from}} a month depending on your vehicle and the term you choose. Your actual number is on the quote page, in plain type, before you agree to anything."
+        "Your {{vehicle_model}} comes out at {{monthly_payment}} a month. That figure is at the top of this email, it is specific to your vehicle and mileage, and it is the same number you will see at checkout."
       ],
       "featureRows": [
         {
           "icon": "5",
           "title": "5% down to activate",
-          "subtitle": "Coverage begins per your contract effective date."
+          "subtitle": "{{down_payment}} down on your plan, then the monthly figure above."
         },
         {
           "icon": "0",
@@ -206,7 +206,7 @@
         "label": "See my monthly number",
         "path": "payments"
       },
-      "ps": "Pricing varies by vehicle, mileage and term. Your quote shows your figure, not an average."
+      "ps": "Pricing is set by vehicle, mileage and term. {{monthly_payment}} is your figure, not a range and not an average."
     },
     {
       "step": 6,

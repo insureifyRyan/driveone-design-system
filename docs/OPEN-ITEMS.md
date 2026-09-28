@@ -21,15 +21,16 @@ quote per visit, so `quotes.created_at` is the visit date and `customer_vehicles
 year, make, model and mileage. Op codes do not exist, so the services line was removed
 from the template.
 
-### 2. The `$49` starting price needs substantiation
+### 2. Where the monthly price comes from
 
-Used in emails 1 and 5. A "starting at" claim needs at least one genuinely available
-Platinum contract at that figure, for a vehicle that actually exists in this audience,
-documented on file. Everything else in the campaign is now quoted from the form; this is
-the one number that is not.
+The emails now show each recipient's real monthly figure in the card, no click needed. The
+plumbing is done; the source is not settled. Do not let anything compute it from the rate
+tables: those do not reproduce real quotes and come out 10 to 20 percent low. See
+`docs/SUPABASE.md`. Related: 191 of 474 vehicles are over 100,000 miles and no rate bracket
+covers them.
 
-If it cannot be substantiated, change `price_from` in `brand/offer.json` and rebuild, or
-tell me and I will pull the price line out of both emails.
+**Closed:** the `$49` claim. It is gone, replaced by real per-recipient pricing. Observed
+monthlies run about 56 to 80 dollars, so it was not supportable.
 
 ### 3. Assets and contact details
 

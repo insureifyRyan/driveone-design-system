@@ -38,7 +38,7 @@ if (files.length !== deck.emails.length) fail.push(`Built ${files.length} templa
 
 const ALLOWED_TAGS = new Set([
   'first_name', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_mileage',
-  'last_ro_date', 'advisor_name', 'quote_url',
+  'last_ro_date', 'advisor_name', 'quote_url', 'monthly_payment', 'down_payment',
   'unsubscribe_url', 'preferences_url',
 ]);
 
@@ -48,6 +48,8 @@ for (const f of files) {
 
   if (kb > 100) fail.push(`${f} is ${kb.toFixed(1)}KB. Gmail clips above 102KB.`);
   if (!/unsubscribe_url/.test(html)) fail.push(`${f} has no unsubscribe link. CAN-SPAM requires one.`);
+  // The price is the whole point of the redesign: it must be visible without a click.
+  if (!/monthly_payment/.test(html)) fail.push(`${f} never shows {{monthly_payment}}. The price must be visible without clicking.`);
   if (!/vsc_|vehicle service contract/i.test(html) && !/service contract/i.test(html)) warn.push(`${f} never uses the phrase "vehicle service contract".`);
   if (!/<title>/.test(html)) warn.push(`${f} has no title element.`);
 

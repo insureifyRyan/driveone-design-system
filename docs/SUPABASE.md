@@ -80,6 +80,68 @@ if the DMS knows about outside coverage.
 `moto_file_import_data` looks like where it lands, and intake gets one more predicate), or
 did you mean the "no contract with us" proxy that is already in place?
 
+## Pricing: do not compute it locally
+
+The email now shows a real monthly figure in the personalization card, visible without a
+click. The pipe is built. The number's **source** is the open question, and it matters.
+
+### What the rate tables say
+
+Pricing is keyed on `(policy, make, mileage_bracket, term, financing_plan)`:
+
+- One policy, `Century`. Worth a look, since the contract form is `Elevate Platinum`.
+- Terms 48, 60, 72 months.
+- Mileage brackets `low` 0 to 49,999 and `mid` 50,000 to 99,999. **Nothing above 99,999.**
+- Financing plans pay over 18, 24 or 30 months at 5% down. Longer plan, lower monthly.
+
+The monthly arithmetic is confirmed exactly against six already-priced quotes:
+
+```
+monthly = contract_price * 0.95 / payment_term
+```
+
+e.g. 2007.00 * 0.95 / 30 = 63.56, matching to the cent.
+
+### Why the rate tables are not enough
+
+Recomputing `contract_price` from `vsc_rate_make_mileage_term_rates` **does not reproduce
+real quotes**. Chevrolet's rates are 1869, 1936, 2017, 2046, 2099 and 2234. A real
+Chevrolet quote priced at **2442**, which is not in that list. Across six sampled quotes a
+locally computed best price came out **10 to 20 percent below** what was actually quoted.
+
+Something sits between the rate table and `contract_price`: a markup, a partner
+adjustment, a fee, or a newer rate set (`vsc_rates_export` also holds 704 rows).
+
+Quoting someone 61 dollars a month by email when checkout says 77 is a bait, and it is a
+price claim. So the campaign does not compute prices.
+
+### How it is wired instead
+
+`vsc_enrollment` gained `monthly_payment`, `down_payment`, `contract_price`,
+`payment_term`, `contract_months` and `priced_at`, plus a check constraint that a row
+cannot advance past step 0 without a price. The scheduler skips any unpriced row rather
+than sending a blank. `npm run check` fails any template that does not show the price.
+
+**Needs an answer:** what should populate those columns? Options, best first.
+
+1. Run the existing pricing engine over the 474 pending quotes so `quotes.contract_price`
+   and `quotes.payment_term` get filled, then intake copies them across. One pricer, one
+   source of truth, and the email always agrees with checkout.
+2. Expose the pricer as an endpoint that n8n calls per enrollment.
+3. Tell me the missing markup rule and I will compute it, though I would rather not: two
+   implementations of a price will drift.
+
+### Two things to fix either way
+
+- **191 of 474 Bob Johnson vehicles are over 100,000 miles**, and no bracket covers them.
+  Today they cannot be priced at all. Either a high bracket is needed or those customers
+  must be excluded from the campaign, which is a big slice of the list.
+- Campaign eligibility currently allows up to 125,000 miles, which is looser than pricing
+  supports. It should match whatever the bracket table ends up covering.
+- The **$49 claim is gone** from the copy, replaced by each recipient's real figure. Real
+  monthlies observed sit around 56 to 80 dollars, so `$49` was not supportable anyway.
+  That closes the substantiation item.
+
 ## Still needed to run
 
 | Setting | Status |

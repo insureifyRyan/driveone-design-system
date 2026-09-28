@@ -48,7 +48,8 @@
   "campaign": {
     "quoteUrlBase": "SET VIA SHORT_LINK_BASE_URL IN n8n",
     "utm": "utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026",
-    "quoteUrlNote": "Quote links are built as SHORT_LINK_BASE_URL + \"/\" + quote_short_links.short_code, e.g. .../KwR8HW4m. Only the base is missing."
+    "quoteUrlNote": "Two shapes are supported, set by linkMode. \"short\" builds SHORT_LINK_BASE_URL + \"/\" + quote_short_links.short_code, e.g. .../KwR8HW4m. \"uuid\" builds SHORT_LINK_BASE_URL + \"/\" + the quote id. Only the customer facing base is missing. Note /api/partners/quotes/<uuid> is the partner API, key protected, so it is not what a customer can click.",
+    "linkMode": "short"
   },
   "metricbridge": {
     "$comment": "Dealer identity in MetricBridge. The n8n intake uses these to scope the feed to this rooftop.",

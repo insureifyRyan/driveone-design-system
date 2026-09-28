@@ -74,7 +74,7 @@ on import (n8n prompts for each on first open).
 | `DMS_VENDOR` | `generic` | Selects the field map in workflow 01. |
 | `DMS_API_BASE` | | Only for the nightly pull fallback. |
 | `SLACK_ALERT_WEBHOOK` | | Workflow 04. |
-| `RATING_API_URL` | | The rating endpoint. Workflow 05. |
+| `QUOTE_API_BASE` | `https://www.getelevatewarranty.com/api/partners` | Workflow 05. Defaults to this, so it only needs setting to point elsewhere. |
 | `RATING_API_KEY` | | Sent as the `captured-api-key` header. Never commit it. Workflow 05. |
 
 **4. Error workflow.** In each of workflows 01 to 03: Settings, Error Workflow, select

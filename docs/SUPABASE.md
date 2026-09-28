@@ -145,7 +145,25 @@ The key is supplied to n8n as `RATING_API_KEY` and referenced only as `$env.RATI
 It is not in this repository and must not be committed. It was shared in a chat transcript,
 so rotate it once the integration is confirmed working.
 
-### The contract, confirmed
+### One call gets the price and the link
+
+`GET /api/partners/quotes/{quote_id}` returns the whole quote: customer, vehicle, the
+embedded `rating` block, and three customer facing links, `short_link`, `quote_link` and
+`guided_purchase_link`.
+
+That single call replaced two problems at once. The price comes from `rating.quote_options`,
+and the Buy now destination comes from `guided_purchase_link`, preferred because it is the
+buy flow rather than a quote view, falling back to `short_link` then `quote_link`.
+
+**No link is ever built locally.** There is no `SHORT_LINK_BASE_URL` and the intake insert
+writes `quote_url` as null. A locally assembled URL could disagree with what checkout
+actually serves, and a Buy now button that 404s is worse than no email. If a row has no
+usable link the mapper records the reason and leaves it unpriced, so the scheduler skips it.
+
+The scheduler appends tracking to whatever the API returned rather than reconstructing it,
+choosing `?` or `&` by what is already in the URL.
+
+### The rating contract, confirmed
 
 ```
 POST https://www.getelevatewarranty.com/api/partners/rating
@@ -214,7 +232,7 @@ unpriced row is never sent.
 
 | Setting | Status |
 |---|---|
-| `SHORT_LINK_BASE_URL` | Unknown. Short codes are 8 characters, e.g. `KwR8HW4m`. Need the domain they resolve on so `{{quote_url}}` can be built. |
+| Quote and buy links | **Resolved.** Returned by the quote API. Nothing to configure. |
 | Sending server | Waiting on the warmed server details. |
 | Postgres credential in n8n | Service role connection to this project. |
 

@@ -53,7 +53,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Lease unpriced rows the same way the scheduler leases due rows, so two\n-- pricing runs cannot call the rating API for the same enrollment at once.\nupdate vsc_enrollment e\nset priced_at = now()\nwhere e.id in (\n  select id from vsc_enrollment\n  where status = 'active'\n    and monthly_payment is null\n    and dealer_id = $1 and campaign_id = $2\n    and (priced_at is null or priced_at < now() - interval '1 hour')\n  order by created_at\n  limit 100\n  for update skip locked\n)\nreturning e.id, e.vin, e.vehicle_mileage, e.vehicle_year, e.vehicle_make, e.vehicle_model;",
+        "query": "-- Lease unpriced rows the same way the scheduler leases due rows, so two\n-- pricing runs cannot call the rating API for the same enrollment at once.\nupdate vsc_enrollment e\nset priced_at = now()\nwhere e.id in (\n  select id from vsc_enrollment\n  where status = 'active'\n    and monthly_payment is null\n    and dealer_id = $1 and campaign_id = $2\n    and (priced_at is null or priced_at < now() - interval '1 hour')\n  order by created_at\n  limit 100\n  for update skip locked\n)\nreturning e.id, e.quote_id, e.vin, e.vehicle_mileage;",
         "options": {
           "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}"
         }
@@ -75,8 +75,8 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{ $env.RATING_API_URL || \"https://www.getelevatewarranty.com/api/partners/rating\" }}",
+        "method": "GET",
+        "url": "={{ $env.QUOTE_API_BASE || \"https://www.getelevatewarranty.com/api/partners\" }}/quotes/{{ $json.quote_id }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -90,9 +90,6 @@
             }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  vin: $json.vin,\n  mileage: $json.vehicle_mileage,\n  partner_slug: \"bob-johnson-auto\"\n}) }}",
         "options": {
           "response": {
             "response": {
@@ -101,8 +98,8 @@
           }
         }
       },
-      "id": "n031-get-rating",
-      "name": "Get Rating",
+      "id": "n031-get-quote",
+      "name": "Get Quote",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -116,7 +113,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Rating API response:\n//   { make, mileage, vehicle_class, quote_options: [ { contract_term,\n//     financing_term, quote_price, monthly_payment, down_payment,\n//     financed_amount, coverage_miles, plan_name, policy_name,\n//     bracket_name, rate_id } ] }\n//\n// We want the lowest monthly the customer can actually finance. Options with\n// financing_term 0 are pay in full, and any option quoting 0 is not a real\n// price, so both are discarded rather than shown as a bargain.\n\nconst out = [];\nfor (const item of $input.all()) {\n  const res = item.json || {};\n  const enrolment = $(\"Claim Unpriced Enrolments\").itemMatching($itemIndex).json;\n  const options = Array.isArray(res.quote_options) ? res.quote_options : [];\n\n  const financed = options.filter((o) =>\n    Number(o.financing_term) > 0 &&\n    Number(o.monthly_payment) > 0 &&\n    Number(o.quote_price) > 0\n  );\n\n  if (financed.length === 0) {\n    // No real financed option. Common for a vehicle outside the rate card,\n    // for example above the top mileage bracket. Leave it unpriced: the\n    // scheduler skips unpriced rows, so nobody is emailed a blank or a zero.\n    out.push({ json: {\n      enrollment_id: enrolment.id,\n      failed: true,\n      reason: \"no financed quote_options returned (\" + options.length + \" option(s), \" +\n              (res.vehicle_class || \"no class\") + \", \" + (res.make || \"no make\") + \")\",\n    } });\n    continue;\n  }\n\n  financed.sort((a, b) => Number(a.monthly_payment) - Number(b.monthly_payment));\n  const best = financed[0];\n\n  out.push({ json: {\n    enrollment_id:  enrolment.id,\n    failed:         false,\n    monthly:        Number(best.monthly_payment),\n    down:           Number(best.down_payment),\n    price:          Number(best.quote_price),\n    term:           Number(best.financing_term),\n    months:         Number(best.contract_term),\n    coverage_miles: best.coverage_miles === undefined ? null : Number(best.coverage_miles),\n    plan_name:      best.plan_name || null,\n    policy_name:    best.policy_name || null,\n    vehicle_class:  res.vehicle_class || null,\n    rate_id:        best.rate_id === undefined ? null : Number(best.rate_id),\n  } });\n}\nreturn out;"
+        "jsCode": "// GET /api/partners/quotes/{quote_id} returns the whole quote: customer,\n// vehicle, the embedded rating, and the customer facing links. We take the\n// cheapest genuinely financed option and the best available link.\n\nconst out = [];\nfor (const item of $input.all()) {\n  const q = item.json || {};\n  const enrolment = $(\"Claim Unpriced Enrolments\").itemMatching($itemIndex).json;\n  const options = (q.rating && Array.isArray(q.rating.quote_options)) ? q.rating.quote_options : [];\n\n  // guided_purchase_link is the buy flow, so it is what a Buy now button wants.\n  // Fall back to the short link, then the plain quote link.\n  const link = q.guided_purchase_link || q.short_link || q.quote_link || null;\n\n  const financed = options.filter((o) =>\n    Number(o.financing_term) > 0 &&\n    Number(o.monthly_payment) > 0 &&\n    Number(o.quote_price) > 0\n  );\n\n  if (financed.length === 0 || !link) {\n    // No real financed option, or nowhere to send them. Either way this row\n    // stays unpriced and the scheduler will not touch it, so nobody receives\n    // a blank price or a button that goes nowhere.\n    out.push({ json: {\n      enrollment_id: enrolment.id,\n      failed: true,\n      reason: (financed.length === 0\n        ? \"no financed quote_options (\" + options.length + \" returned)\"\n        : \"no customer facing link on the quote payload\"),\n    } });\n    continue;\n  }\n\n  financed.sort((a, b) => Number(a.monthly_payment) - Number(b.monthly_payment));\n  const best = financed[0];\n\n  out.push({ json: {\n    enrollment_id:  enrolment.id,\n    failed:         false,\n    monthly:        Number(best.monthly_payment),\n    down:           Number(best.down_payment),\n    price:          Number(best.quote_price),\n    term:           Number(best.financing_term),\n    months:         Number(best.contract_term),\n    coverage_miles: best.coverage_miles === undefined ? null : Number(best.coverage_miles),\n    plan_name:      best.plan_name || null,\n    policy_name:    best.policy_name || null,\n    vehicle_class:  (q.rating && q.rating.vehicle_class) || q.vehicle_class || null,\n    rate_id:        best.rate_id === undefined ? null : Number(best.rate_id),\n    quote_url:            link,\n    short_link:           q.short_link || null,\n    quote_link:           q.quote_link || null,\n    guided_purchase_link: q.guided_purchase_link || null,\n  } });\n}\nreturn out;"
       },
       "id": "n032-map-rating-to-enrolment",
       "name": "Map Rating To Enrolment",
@@ -130,9 +127,9 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- $2 is the failure flag. A failed rating records the reason and bumps the\n-- attempt counter; it never writes a price, so an unpriced row simply stays\n-- invisible to the scheduler.\nupdate vsc_enrollment\nset monthly_payment   = case when $2::boolean then monthly_payment else $3::numeric end,\n    down_payment      = case when $2::boolean then down_payment    else $4::numeric end,\n    contract_price    = case when $2::boolean then contract_price  else $5::numeric end,\n    payment_term      = case when $2::boolean then payment_term    else $6::integer end,\n    contract_months   = case when $2::boolean then contract_months else $7::integer end,\n    coverage_miles    = case when $2::boolean then coverage_miles  else $8::integer end,\n    plan_name         = case when $2::boolean then plan_name       else $9 end,\n    policy_name       = case when $2::boolean then policy_name     else $10 end,\n    vehicle_class     = case when $2::boolean then vehicle_class   else $11 end,\n    rate_id           = case when $2::boolean then rate_id         else $12::integer end,\n    pricing_attempts  = pricing_attempts + case when $2::boolean then 1 else 0 end,\n    pricing_error     = case when $2::boolean then $13 else null end,\n    priced_at         = now(),\n    updated_at        = now()\nwhere id = $1;",
+        "query": "-- $2 is the failure flag. A failed rating records the reason and bumps the\n-- attempt counter; it never writes a price, so an unpriced row simply stays\n-- invisible to the scheduler.\nupdate vsc_enrollment\nset monthly_payment   = case when $2::boolean then monthly_payment else $3::numeric end,\n    down_payment      = case when $2::boolean then down_payment    else $4::numeric end,\n    contract_price    = case when $2::boolean then contract_price  else $5::numeric end,\n    payment_term      = case when $2::boolean then payment_term    else $6::integer end,\n    contract_months   = case when $2::boolean then contract_months else $7::integer end,\n    coverage_miles    = case when $2::boolean then coverage_miles  else $8::integer end,\n    plan_name         = case when $2::boolean then plan_name       else $9 end,\n    policy_name       = case when $2::boolean then policy_name     else $10 end,\n    vehicle_class     = case when $2::boolean then vehicle_class   else $11 end,\n    rate_id           = case when $2::boolean then rate_id         else $12::integer end,\n    pricing_attempts  = pricing_attempts + case when $2::boolean then 1 else 0 end,\n    quote_url            = case when $2::boolean then quote_url            else $14 end,\n    short_link           = case when $2::boolean then short_link           else $15 end,\n    quote_link           = case when $2::boolean then quote_link           else $16 end,\n    guided_purchase_link = case when $2::boolean then guided_purchase_link else $17 end,\n    pricing_error     = case when $2::boolean then $13 else null end,\n    priced_at         = now(),\n    updated_at        = now()\nwhere id = $1;",
         "options": {
-          "queryReplacement": "={{ $json.enrollment_id }}, {{ $json.failed }}, {{ $json.monthly }}, {{ $json.down }}, {{ $json.price }}, {{ $json.term }}, {{ $json.months }}, {{ $json.coverage_miles }}, {{ $json.plan_name }}, {{ $json.policy_name }}, {{ $json.vehicle_class }}, {{ $json.rate_id }}, {{ $json.reason }}"
+          "queryReplacement": "={{ $json.enrollment_id }}, {{ $json.failed }}, {{ $json.monthly }}, {{ $json.down }}, {{ $json.price }}, {{ $json.term }}, {{ $json.months }}, {{ $json.coverage_miles }}, {{ $json.plan_name }}, {{ $json.policy_name }}, {{ $json.vehicle_class }}, {{ $json.rate_id }}, {{ $json.reason }}, {{ $json.quote_url }}, {{ $json.short_link }}, {{ $json.quote_link }}, {{ $json.guided_purchase_link }}"
         }
       },
       "id": "n033-store-price",
@@ -189,14 +186,14 @@
       "main": [
         [
           {
-            "node": "Get Rating",
+            "node": "Get Quote",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get Rating": {
+    "Get Quote": {
       "main": [
         [
           {

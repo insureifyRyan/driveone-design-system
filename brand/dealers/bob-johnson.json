@@ -4,20 +4,20 @@
   "id": "bob-johnson",
   "dealer": {
     "name": "Bob Johnson",
-    "legalName": "Bob Johnson Chrysler Dodge Jeep Ram of Watertown",
-    "displayName": "Bob Johnson Chrysler Dodge Jeep Ram",
+    "legalName": "Bob Johnson Dodge Jeep Ram of Watertown",
+    "displayName": "Bob Johnson Dodge Jeep Ram",
     "shortName": "Bob Johnson",
     "state": "NY",
     "website": "https://www.bobjohnsoncdjr.com",
     "tagline": "Low Payment Promise",
     "serviceArea": "Watertown and the North Country",
-    "storeNote": "Rooftop for this campaign is the Watertown CDJR store, not the Rochester group office. State stays NY, so the ORIAS obligor in the footer is still correct."
+    "storeNote": "Rooftop is the Watertown store. Its own page heading reads BOB JOHNSON DODGE JEEP RAM, so that is what the emails print, though the group site also lists it as Chrysler Dodge Jeep Ram and the page shows Chrysler among available makes. Say the word if it should read Chrysler. State stays NY, so the ORIAS obligor in the footer is still correct."
   },
   "color": {
-    "$note": "Black, gold and white. Gold is eyedropped from the specials bar and the primary buttons.",
+    "$note": "Black, gold and white, read off screenshots of the live site rather than the stylesheet. The gold is the wordmark underline and the primary buttons. Close, but confirm against the brand sheet.",
     "primary": "#000000",
     "primaryDark": "#1C1C1C",
-    "accent": "#F2B229",
+    "accent": "#E9A93C",
     "primarySoft": "#FFF7E6",
     "onPrimary": "#FFFFFF"
   },
@@ -26,22 +26,22 @@
     "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
     "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
     "widthPx": 160,
-    "altText": "Bob Johnson Chrysler Dodge Jeep Ram",
+    "altText": "Bob Johnson Auto Group",
     "wordmark": {
       "line1": "BOB JOHNSON",
-      "line2": "CHRYSLER DODGE JEEP RAM",
+      "line2": "AUTO GROUP",
       "italic": true,
       "ruleColor": "#F2B229"
     }
   },
   "contact": {
-    "storeName": "Bob Johnson Chrysler Dodge Jeep Ram",
+    "storeName": "Bob Johnson Dodge Jeep Ram",
     "addressLine1": "18712 US-11",
     "addressLine2": "Watertown, NY 13601",
-    "addressNote": "Watertown CDJR store, confirmed by client as the first rooftop in this program.",
-    "servicePhone": "(315) 965-8072",
+    "addressNote": "CONFIRMED from the dealership page: 18712 US-11, Watertown, NY 13601.",
+    "servicePhone": "(315) 782-8436",
     "replyTo": "service@PLACEHOLDER.com",
-    "phoneNote": "CONFIRM: taken from public dealer listings and may be the main line rather than the service department direct dial. It prints in every footer as \"Service:\", so verify before send."
+    "phoneNote": "CONFIRMED from the dealership page. Sales, service and parts all use this number."
   },
   "campaign": {
     "quoteUrlBase": "https://REPLACE-ME.driveone.link/bob-johnson/quote",

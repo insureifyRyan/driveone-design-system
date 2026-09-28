@@ -8,7 +8,15 @@ short and mostly operational.
 
 ## Still open
 
-### 1. The `$49` starting price needs substantiation
+### 1. Repair order data has no confirmed source
+
+The campaign triggers on a recent service visit and personalizes on the customer's vehicle
+and mileage. MetricBridge holds neither: no repair orders at all, and quotes reference a
+vehicle by id without exposing VIN, year, make, model or mileage. See
+`docs/METRICBRIDGE.md`. Until a repair order feed is identified, the campaign has no
+trigger. This is now the biggest open item.
+
+### 2. The `$49` starting price needs substantiation
 
 Used in emails 1 and 5. A "starting at" claim needs at least one genuinely available
 Platinum contract at that figure, for a vehicle that actually exists in this audience,
@@ -18,26 +26,27 @@ the one number that is not.
 If it cannot be substantiated, change `price_from` in `brand/offer.json` and rebuild, or
 tell me and I will pull the price line out of both emails.
 
-### 2. Assets and contact details
+### 3. Assets and contact details
 
 | Item | Status |
 |---|---|
-| Logo file | `REPLACE-ME` placeholder. Needs a hosted absolute `https` URL. |
-| Service phone | `PLACEHOLDER` |
-| Reply-to mailbox | `PLACEHOLDER` |
-| Postal address | Set to 3855 W Henrietta Rd, Rochester NY 14623. **Confirm.** That is the Imports address, and the group runs multiple rooftops. CAN-SPAM wants the address of the entity actually sending. |
-| Quote URL base | `REPLACE-ME` |
+| Logo file | **Done.** Uses the dealer's real logo from the MetricBridge dealer record, a public Supabase URL. Not visually checked, since this environment cannot reach supabase.co, so eyeball one preview. |
+| Service phone | **Done.** (315) 782-8436, confirmed from the dealership page. Sales, service and parts share it. |
+| Postal address | **Done.** 18712 US-11, Watertown NY 13601, confirmed from the dealership page. |
+| Store name | **Done.** Bob Johnson Dodge Jeep Ram, per the store's own page heading. The group site also calls it Chrysler Dodge Jeep Ram, so say if it should read Chrysler. |
+| Reply-to mailbox | Still `PLACEHOLDER`. |
+| Quote URL base | Still `REPLACE-ME`. |
 
-Colors are now real, read off the screenshot you sent: black `#000000`, gold `#F2B229`,
-white. Worth confirming the gold against the brand sheet, since it was eyedropped from an
-image rather than the stylesheet.
+Colors are read off screenshots of the live site: black `#000000`, gold `#E9A93C`, white.
+Still worth confirming the gold against the brand sheet, since it came from an image rather
+than the stylesheet.
 
 Until a logo URL is set, the header renders a type lockup that mirrors the wordmark:
 black italic extrabold "BOB JOHNSON" over a gold rule with "AUTO GROUP" letterspaced
 beneath. That is also exactly what recipients with images disabled will see, so it is
 worth a look either way.
 
-### 3. Consent, sender identity and deliverability
+### 4. Consent, sender identity and deliverability
 
 - `SEND_FROM` should be a Bob Johnson domain, not a DriveOne one, or the co-branding is
   undercut and deliverability suffers.
@@ -49,7 +58,7 @@ worth a look either way.
   `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented in the
   scheduler.
 
-### 4. n8n was not wired directly
+### 5. n8n was not wired directly
 
 The n8n MCP server needs OAuth and this session is non-interactive. Authorize it in
 claude.ai connector settings, or via `/mcp` in an interactive session, and the workflows

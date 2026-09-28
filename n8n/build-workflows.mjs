@@ -358,6 +358,8 @@ const PREPARE_SEND_CODE = [
   '        monthly_payment: fmtMoney(r.monthly_payment),',
   '        down_payment: fmtMoney(r.down_payment),',
   '        coverage_label: coverageLabel(r.coverage_miles, r.contract_months),',
+  '        payment_term: r.payment_term === null || r.payment_term === undefined ? "" : String(r.payment_term),',
+  '        contract_price: fmtMoney(r.contract_price),',
   '        last_ro_date: r.ro_closed_date',
   '          ? new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", timeZone: "UTC" }).format(new Date(r.ro_closed_date))',
   '          : "your last visit",',

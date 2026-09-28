@@ -38,7 +38,7 @@ if (files.length !== deck.emails.length) fail.push(`Built ${files.length} templa
 
 const ALLOWED_TAGS = new Set([
   'first_name', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'vehicle_mileage',
-  'last_ro_date', 'advisor_name', 'quote_url', 'monthly_payment', 'down_payment', 'coverage_label',
+  'last_ro_date', 'advisor_name', 'quote_url', 'monthly_payment', 'down_payment', 'coverage_label', 'payment_term', 'contract_price',
   'unsubscribe_url', 'preferences_url',
 ]);
 
@@ -50,6 +50,10 @@ for (const f of files) {
   if (!/unsubscribe_url/.test(html)) fail.push(`${f} has no unsubscribe link. CAN-SPAM requires one.`);
   // The price is the whole point of the redesign: it must be visible without a click.
   if (!/monthly_payment/.test(html)) fail.push(`${f} never shows {{monthly_payment}}. The price must be visible without clicking.`);
+  // Advertising a monthly figure without the number of payments is the classic
+  // truth-in-advertising failure, so the guard refuses to let it ship.
+  if (/monthly_payment/.test(html) && !/payment_term/.test(html)) fail.push(`${f} shows a monthly price with no payment term.`);
+  if (!/Advertisement/.test(html)) fail.push(`${f} is not identified as an advertisement, which CAN-SPAM requires absent prior affirmative consent.`);
   if (!/vsc_|vehicle service contract/i.test(html) && !/service contract/i.test(html)) warn.push(`${f} never uses the phrase "vehicle service contract".`);
   if (!/<title>/.test(html)) warn.push(`${f} has no title element.`);
 

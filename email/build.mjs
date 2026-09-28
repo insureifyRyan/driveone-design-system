@@ -76,6 +76,8 @@ const SAMPLE = {
   monthly_payment: '$66.47',
   coverage_label: '60 more months, 75,000 more miles',
   down_payment: '$110.35',
+  payment_term: '30',
+  contract_price: '$2,099.00',
   last_ro_date: 'September 19',
   advisor_name: 'Marcus',
   quote_url: `${D.campaign.quoteUrlBase}?${D.campaign.utm}`,
@@ -230,6 +232,7 @@ const vehicleCard = () => `
           <td align="left" valign="bottom" style="padding:12px 0 0 0;${font(F.display, 15, 800, C.ink, '1.4')}letter-spacing:-0.2px;">Then monthly</td>
           <td align="right" valign="bottom" style="padding:12px 0 0 0;white-space:nowrap;">
             <span style="${font(F.display, 32, 800, C.ink, '1')}letter-spacing:-1.3px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
+            <p style="margin:3px 0 0 0;${font(F.body, 12, 400, C.mutedText, '1.4')}">{{payment_term}} payments &middot; {{contract_price}} total</p>
           </td>
         </tr>
       </table>
@@ -323,10 +326,13 @@ const footer = () => `
 <tr>
 <td style="padding:24px ${GUT}px 34px ${GUT}px;background-color:${C.paper};">
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
+    <strong style="color:${C.mutedText};">Advertisement.</strong> You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
   </p>
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage, coverage tier and term. Payment plan is not a loan and involves no credit check.
+    Your quote is based on the vehicle and the odometer reading recorded at your last service visit. If your mileage has changed since then, the price at checkout may differ. The figure shown is the lowest monthly option available for your vehicle; other terms, including an unlimited mileage plan, are priced separately.
+  </p>
+  <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
+    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage and term. Payment plan is not a loan and involves no credit check.
   </p>
   <p style="margin:0;${font(F.body, 11, 400, C.legalText, '1.65')}">
     ${esc(D.dealer.displayName)}, ${esc(D.contact.addressLine1)}, ${esc(D.contact.addressLine2)}<br />

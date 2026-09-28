@@ -21,23 +21,7 @@ quote per visit, so `quotes.created_at` is the visit date and `customer_vehicles
 year, make, model and mileage. Op codes do not exist, so the services line was removed
 from the template.
 
-### 2. Three different names for the same plan
-
-The emails now say **Platinum**, your top coverage, per your direction. Three other names
-are in play for what looks like the same product:
-
-| Source | Name |
-|---|---|
-| Executed contract form | Elevate **Platinum** |
-| Rating API `policy_name` | DriveOne VSC |
-| Supabase `vsc_policies` | Century |
-
-Not blocking, and the emails are consistent with the contract the customer signs, which is
-the one that matters. But if the checkout page prints "DriveOne VSC" or the contract header
-says something else again, a customer who reads carefully will notice. Worth one pass to
-decide what this plan is called in front of customers, then making all four agree.
-
-### 3. Where the monthly price comes from
+### 2. Where the monthly price comes from
 
 The emails now show each recipient's real monthly figure in the card, no click needed. The
 plumbing is done; the source is not settled. Do not let anything compute it from the rate

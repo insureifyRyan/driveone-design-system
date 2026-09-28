@@ -7,7 +7,7 @@ First dealership: **Bob Johnson Auto Group**, Rochester NY.
 First campaign: **ten emails over 60 days** to service customers who just had a repair
 order closed and have no vehicle service contract on file.
 
-Product: **Elevate Platinum VSC**, administered by Ascent Administration Services, LLC,
+Product: **DriveOne VSC**, Platinum coverage, administered by Ascent Administration Services, LLC,
 and in New York by ORIAS Warranty Services. Every offer claim in the campaign is quoted
 from or directly supported by the executed contract form.
 

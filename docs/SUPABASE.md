@@ -89,7 +89,8 @@ click. The pipe is built. The number's **source** is the open question, and it m
 
 Pricing is keyed on `(policy, make, mileage_bracket, term, financing_plan)`:
 
-- One policy, `Century`. Worth a look, since the contract form is `Elevate Platinum`.
+- One policy row locally, a legacy internal name. Irrelevant now: pricing comes from the API,
+  which returns `policy_name` **DriveOne VSC**, and that is the customer facing name.
 - Terms 48, 60, 72 months.
 - Mileage brackets `low` 0 to 49,999 and `mid` 50,000 to 99,999. **Nothing above 99,999.**
 - Financing plans pay over 18, 24 or 30 months at 5% down. Longer plan, lower monthly.

@@ -24,17 +24,18 @@
     "onAccent": "#141414"
   },
   "logo": {
-    "$note": "Pulled from the dealer record in MetricBridge (elevate_service_drive), so it is the logo your own system already holds. NOT VISUALLY VERIFIED: this environment cannot reach supabase.co, so the aspect ratio, transparency and whether it reads on white were not checked. Open one preview and confirm, and adjust widthPx if it looks wrong.",
+    "$note": "useImage is false, so the header renders a hand built type lockup rather than the hosted PNG: heavy black italic wordmark, a two segment gold rule, and AUTO GROUP letterspaced beneath. The hosted file could not be inspected from the build environment and rendered badly, and a lockup we control also survives the images-off case, which is a large share of email opens. Set useImage true once a file has been checked at the width below.",
     "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
     "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/bob-johnson.png",
-    "widthPx": 160,
+    "widthPx": 190,
     "altText": "Bob Johnson Auto Group",
     "wordmark": {
       "line1": "BOB JOHNSON",
       "line2": "AUTO GROUP",
       "italic": true,
       "ruleColor": "#F2B229"
-    }
+    },
+    "useImage": false
   },
   "contact": {
     "storeName": "Bob Johnson Dodge Jeep Ram",

@@ -117,26 +117,27 @@ function driveOneLockup(onDark) {
 
 /** Dealer logo. Alt text is styled so images-off still reads as the dealership. */
 function dealerLogo() {
-  const placeholder = /REPLACE-ME/.test(D.logo.light);
-  if (!placeholder) {
-    // Styled alt text so an images-off client still reads as the dealership.
+  const wm = D.logo.wordmark || {};
+  // Only use a hosted image when it has been explicitly vouched for. An image we
+  // cannot inspect is a worse logo than type we control, and type also renders
+  // when the client blocks images.
+  if (D.logo.useImage && !/REPLACE-ME/.test(D.logo.light || '')) {
     return `<img src="${D.logo.light}" width="${D.logo.widthPx}" alt="${esc(D.logo.altText)}" style="display:block;border:0;outline:none;text-decoration:none;${font(F.display, 16, 800, C.primary, '1.2')}" />`;
   }
-  // Type lockup standing in for the wordmark: italic extrabold name, gold rule
-  // beneath it, letterspaced descriptor. Also what images-off recipients see.
-  const wm = D.logo.wordmark || { line1: D.dealer.displayName, line2: '', italic: false, ruleColor: C.accent };
+  const W1 = D.logo.widthPx || 190;
   return `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:0;">
-  <span style="${font(F.display, 21, 800, C.primary, '1.05')}letter-spacing:-0.6px;${wm.italic ? 'font-style:italic;' : ''}">${esc(wm.line1)}</span>
-</td></tr>
-<tr><td style="padding:3px 0 0 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-    <td style="height:3px;line-height:3px;font-size:3px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
-  </tr></table>
-</td></tr>
-${wm.line2 ? `<tr><td align="right" style="padding:3px 0 0 0;">
-  <span style="${font(F.body, 9, 600, C.primary, '1.2')}letter-spacing:3px;">${esc(wm.line2)}</span>
-</td></tr>` : ''}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${W1}" style="width:${W1}px;">
+  <tr><td style="padding:0;${font(F.display, 25, 800, C.primary, '1.02')}letter-spacing:-0.9px;font-style:italic;white-space:nowrap;">
+    ${esc(wm.line1 || D.dealer.displayName)}
+  </td></tr>
+  <tr><td style="padding:3px 0 0 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="26%" style="width:26%;height:4px;line-height:4px;font-size:4px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
+      <td width="4%"  style="width:4%;height:4px;line-height:4px;font-size:4px;background-color:${C.white};">&nbsp;</td>
+      <td style="height:4px;line-height:4px;font-size:4px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
+    </tr></table>
+  </td></tr>
+  ${wm.line2 ? `<tr><td align="right" style="padding:4px 0 0 0;${font(F.display, 10, 700, C.primary, '1.2')}letter-spacing:4px;white-space:nowrap;">${esc(wm.line2)}</td></tr>` : ''}
 </table>`;
 }
 
@@ -206,7 +207,7 @@ const vehicleCard = () => `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.white};border:1px solid ${C.rule};border-radius:${T.layout.radius}px;">
 
     <tr><td style="padding:18px 20px 14px 20px;background-color:${A.soft};border-radius:${T.layout.radius}px ${T.layout.radius}px 0 0;">
-      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">PLATINUM, OUR TOP COVERAGE</p>
+      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">DRIVEONE VSC &middot; PLATINUM COVERAGE</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
       <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
     </td></tr>

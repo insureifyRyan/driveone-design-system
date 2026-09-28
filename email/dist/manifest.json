@@ -11,7 +11,7 @@
       "subject": "{{first_name}}, one thing was missing from your file",
       "subjectAlt": "Your {{vehicle_model}} is covered. You are not.",
       "preheader": "No coverage on file. That is fixable in about four minutes, online, without talking to anybody.",
-      "cta": "See your free quote",
+      "cta": "Check out now",
       "ctaPath": "welcome",
       "file": "email/dist/01-missing-from-your-profile.html"
     },
@@ -23,7 +23,7 @@
       "subject": "That visit was the cheap one",
       "subjectAlt": "{{vehicle_model}} math, briefly",
       "preheader": "Modern cars are wonderful. Their parts are priced accordingly.",
-      "cta": "Price my coverage",
+      "cta": "Check out now",
       "ctaPath": "math",
       "file": "email/dist/02-todays-visit-was-the-cheap-one.html"
     },
@@ -35,7 +35,7 @@
       "subject": "Nobody is going to call you",
       "subjectAlt": "This email has no salesperson attached to it",
       "preheader": "That is not an oversight. That is the product.",
-      "cta": "Open my quote",
+      "cta": "Buy now, online",
       "ctaPath": "online",
       "file": "email/dist/03-nobody-is-going-to-call-you.html"
     },
@@ -47,7 +47,7 @@
       "subject": "Your deductible disappears when you come back",
       "subjectAlt": "A number that goes to zero",
       "preheader": "Bring the car back to Bob Johnson and the deductible on a covered repair goes away.",
-      "cta": "See my plan options",
+      "cta": "Buy now",
       "ctaPath": "deductible",
       "file": "email/dist/04-the-disappearing-deductible.html"
     },
@@ -59,7 +59,7 @@
       "subject": "0% for 36 months, no credit check",
       "subjectAlt": "Coverage, divided by 36",
       "preheader": "5% down. The rest spread out at zero percent. No credit pull.",
-      "cta": "See my monthly number",
+      "cta": "Check out now",
       "ctaPath": "payments",
       "file": "email/dist/05-zero-percent-thirty-six-months.html"
     },
@@ -71,7 +71,7 @@
       "subject": "The good kind of coverage has an ugly name",
       "subjectAlt": "Exclusionary. Terrible word, excellent thing.",
       "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
-      "cta": "Read what is covered",
+      "cta": "Buy now",
       "ctaPath": "exclusionary",
       "file": "email/dist/06-exclusionary-explained.html"
     },
@@ -83,7 +83,7 @@
       "subject": "We are not the people from the commercial",
       "subjectAlt": "Your car's extended warranty, and other famous phone calls",
       "preheader": "You have had that call. This is not that. We are the store that fixed your car.",
-      "cta": "Get my quote from Bob Johnson",
+      "cta": "Check out now",
       "ctaPath": "real",
       "file": "email/dist/07-not-the-tv-people.html"
     },
@@ -95,7 +95,7 @@
       "subject": "The parts of coverage nobody talks about",
       "subjectAlt": "Roadside, rental, and the rest of it",
       "preheader": "Coverage is not only for the day the transmission goes. Most of it is for smaller, more annoying days.",
-      "cta": "See everything included",
+      "cta": "Buy now",
       "ctaPath": "included",
       "file": "email/dist/08-the-stuff-you-forget-you-have.html"
     },
@@ -107,7 +107,7 @@
       "subject": "Why we keep saying now",
       "subjectAlt": "{{vehicle_model}} eligibility, plainly",
       "preheader": "Eligibility runs on mileage and model year. Both of yours are moving in one direction.",
-      "cta": "Check what I qualify for",
+      "cta": "Check out now",
       "ctaPath": "window",
       "file": "email/dist/09-the-window.html"
     },
@@ -119,7 +119,7 @@
       "subject": "Last one from us on this",
       "subjectAlt": "We are going to stop emailing you about this",
       "preheader": "Ten emails is a reasonable limit. Your quote link stays alive regardless.",
-      "cta": "Open my quote one last time",
+      "cta": "Buy now",
       "ctaPath": "last",
       "file": "email/dist/10-we-will-stop.html"
     }

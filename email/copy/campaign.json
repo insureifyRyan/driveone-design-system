@@ -43,7 +43,7 @@
       ],
       "benefitStrip": "Coverage is additive. The term and the miles are added on from the day you buy, on top of wherever the car is now. That is the lowest monthly we can do; longer terms and an unlimited mileage plan are on the quote page.",
       "cta": {
-        "label": "See your free quote",
+        "label": "Check out now",
         "path": "welcome"
       },
       "ps": "You do not need to call us, and you did not need to click anything to see your price. It is at the top of this email. The rest works online, on your schedule, with nobody on the other end of it."
@@ -83,7 +83,7 @@
       ],
       "benefitStrip": "Repair cost examples are verified and dated on request. We do not quote scary numbers we cannot source.",
       "cta": {
-        "label": "Price my coverage",
+        "label": "Check out now",
         "path": "math"
       },
       "ps": "The quote is free and it does not put you on a list. There is no list."
@@ -123,7 +123,7 @@
       ],
       "benefitStrip": "Open the quote. Close the tab. Come back in a week. It will still be there.",
       "cta": {
-        "label": "Open my quote",
+        "label": "Buy now, online",
         "path": "online"
       },
       "ps": "We are aware that an email telling you nobody will call you is itself a form of contact. We accept the irony."
@@ -163,7 +163,7 @@
       ],
       "benefitStrip": "Same building. Same advisors. Smaller invoice.",
       "cta": {
-        "label": "See my plan options",
+        "label": "Buy now",
         "path": "deductible"
       },
       "ps": "Deductible terms are set by your contract. The quote page shows exactly which one applies to your vehicle before you buy."
@@ -203,7 +203,7 @@
       ],
       "benefitStrip": "Payment plan. Not a loan. Not financing. The distinction matters and we keep it straight.",
       "cta": {
-        "label": "See my monthly number",
+        "label": "Check out now",
         "path": "payments"
       },
       "ps": "Pricing is set by vehicle, mileage and term. {{monthly_payment}} is your figure, not a range and not an average."
@@ -243,7 +243,7 @@
       ],
       "benefitStrip": "If you only remember one word from this campaign, it is this one.",
       "cta": {
-        "label": "Read what is covered",
+        "label": "Buy now",
         "path": "exclusionary"
       },
       "ps": "The full terms and conditions are linked from the quote page. Read them. We wrote them to survive being read."
@@ -283,7 +283,7 @@
       ],
       "benefitStrip": "No robocall has ever known your mileage. We do.",
       "cta": {
-        "label": "Get my quote from {{dealer_short}}",
+        "label": "Check out now",
         "path": "real"
       },
       "ps": "If you would like to verify any of this in person, the service drive is open and we are exactly where you left us."
@@ -323,7 +323,7 @@
       ],
       "benefitStrip": "Roadside covers three events a year. Most people use one and are glad it was there.",
       "cta": {
-        "label": "See everything included",
+        "label": "Buy now",
         "path": "included"
       },
       "ps": "Rental reimbursement needs proof of rental submitted with an authorized claim, so keep the receipt. Benefit limits are set by your contract."
@@ -363,7 +363,7 @@
       ],
       "benefitStrip": "No countdown timer in this email. We checked.",
       "cta": {
-        "label": "Check what I qualify for",
+        "label": "Check out now",
         "path": "window"
       },
       "ps": "If you have already sold or traded the {{vehicle_model}}, ignore all of this and enjoy the new one."
@@ -403,7 +403,7 @@
       ],
       "benefitStrip": "No hard sell on the way out. That would undercut the previous nine emails.",
       "cta": {
-        "label": "Open my quote one last time",
+        "label": "Buy now",
         "path": "last"
       },
       "ps": "If you would rather hear nothing from us at all, the unsubscribe link below works instantly and we will not make you explain yourself."

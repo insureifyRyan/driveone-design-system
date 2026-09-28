@@ -170,34 +170,74 @@ const hero = (e) => `
 </tr>`;
 
 /** The RO personalization card. This is the thing a generic VSC blast cannot do. */
-/** The RO personalization card, and the price. Both above the fold, no click needed. */
+
+/** Bulletproof purchase button. VML for Outlook, padded anchor everywhere else. */
+function buyButton(label, widthPx) {
+  const href = '{{quote_url}}';
+  const safe = esc(label);
+  return `
+  <!--[if mso]>
+  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+    href="${href}" style="height:54px;v-text-anchor:middle;width:${widthPx}px;" arcsize="24%" stroke="f" fillcolor="${A.accent}">
+    <w:anchorlock/>
+    <center style="color:${A.onAccent};font-family:Arial,sans-serif;font-size:17px;font-weight:bold;">${safe}</center>
+  </v:roundrect>
+  <![endif]-->
+  <!--[if !mso]><!-- -->
+  <a href="${href}" style="display:block;background-color:${A.accent};border-radius:${T.layout.radius}px;padding:18px 22px;text-align:center;text-decoration:none;${font(F.display, 17, 800, A.onAccent, '1.2')}letter-spacing:-0.2px;">${safe}</a>
+  <!--<![endif]-->`;
+}
+
+/** Reassurance row under a purchase button. Every claim is contract backed:
+ *  the 30 day full refund is in the cancellation section, no credit check and the
+ *  0% plan are confirmed offer terms. It says payment plan rather than APR on
+ *  purpose, because this is not a loan and must never be described as one. */
+const trustRow = () => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+  <td align="center" style="padding:10px 0 0 0;${font(F.body, 11, 500, C.mutedText, '1.6')}">
+    Secure checkout &nbsp;&middot;&nbsp; 0% payment plan &nbsp;&middot;&nbsp; No credit check &nbsp;&middot;&nbsp; 30 day money back
+  </td>
+</tr></table>`;
+
+/** Product card: what they own, what it costs, and the way to buy it. */
 const vehicleCard = () => `
 <tr>
 <td style="padding:26px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${A.soft};border-radius:${T.layout.radius}px;">
-    <tr><td style="padding:18px 20px 16px 20px;">
-      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">YOUR LAST VISIT WITH US</p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.white};border:1px solid ${C.rule};border-radius:${T.layout.radius}px;">
+
+    <tr><td style="padding:18px 20px 14px 20px;background-color:${A.soft};border-radius:${T.layout.radius}px ${T.layout.radius}px 0 0;">
+      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">PLATINUM, OUR TOP COVERAGE</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
-      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">{{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
+      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
     </td></tr>
 
-    <tr><td style="padding:0 20px;">
+    <tr><td style="padding:16px 20px 0 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr><td style="height:1px;line-height:1px;font-size:1px;background-color:${A.accent};">&nbsp;</td></tr>
+        <tr>
+          <td align="left" style="padding:0 0 8px 0;${font(F.body, 14, 400, C.bodyText, '1.5')}">Coverage added</td>
+          <td align="right" style="padding:0 0 8px 0;${font(F.display, 14, 700, C.ink, '1.5')}">{{coverage_label}}</td>
+        </tr>
+        <tr>
+          <td align="left" style="padding:0 0 8px 0;${font(F.body, 14, 400, C.bodyText, '1.5')}">Due today</td>
+          <td align="right" style="padding:0 0 8px 0;${font(F.display, 14, 700, C.ink, '1.5')}">{{down_payment}}</td>
+        </tr>
+        <tr><td colspan="2" style="padding:6px 0 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="height:1px;line-height:1px;font-size:1px;background-color:${C.rule};">&nbsp;</td>
+          </tr></table>
+        </td></tr>
+        <tr>
+          <td align="left" valign="bottom" style="padding:12px 0 0 0;${font(F.display, 15, 800, C.ink, '1.4')}letter-spacing:-0.2px;">Then monthly</td>
+          <td align="right" valign="bottom" style="padding:12px 0 0 0;white-space:nowrap;">
+            <span style="${font(F.display, 32, 800, C.ink, '1')}letter-spacing:-1.3px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
+          </td>
+        </tr>
       </table>
     </td></tr>
 
-    <tr><td style="padding:14px 20px 18px 20px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td valign="bottom" align="left">
-          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">PLATINUM, OUR TOP COVERAGE</p>
-          <p style="margin:0 0 2px 0;${font(F.display, 14, 700, C.ink, '1.35')}letter-spacing:-0.2px;">{{coverage_label}}</p>
-          <p style="margin:0;${font(F.body, 13, 400, C.mutedText, '1.4')}">Added from today &nbsp;&middot;&nbsp; {{down_payment}} down</p>
-        </td>
-        <td valign="bottom" align="right" style="white-space:nowrap;">
-          <span style="${font(F.display, 34, 800, C.ink, '1')}letter-spacing:-1.4px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
-        </td>
-      </tr></table>
+    <tr><td style="padding:18px 20px 20px 20px;">
+      ${buyButton('Buy now', W - GUT * 2 - 42)}
+      ${trustRow()}
     </td></tr>
   </table>
 </td>
@@ -235,21 +275,11 @@ const featureRows = (e) => `
 
 /** Bulletproof CTA. VML for Outlook, padded anchor everywhere else. */
 function cta(e) {
-  const href = '{{quote_url}}';
-  const label = esc(resolve(e.cta.label, false));
   return `
 <tr>
 <td align="center" style="padding:22px ${GUT}px 6px ${GUT}px;background-color:${C.white};">
-  <!--[if mso]>
-  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-    href="${href}" style="height:52px;v-text-anchor:middle;width:${W - GUT * 2}px;" arcsize="26%" stroke="f" fillcolor="${A.accent}">
-    <w:anchorlock/>
-    <center style="color:${A.onAccent};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center>
-  </v:roundrect>
-  <![endif]-->
-  <!--[if !mso]><!-- -->
-  <a href="${href}" style="display:block;background-color:${A.accent};border-radius:${T.layout.radius}px;padding:17px 22px;text-align:center;text-decoration:none;${font(F.display, 16, 800, A.onAccent, '1.2')}letter-spacing:-0.2px;">${label}</a>
-  <!--<![endif]-->
+  ${buyButton(resolve(e.cta.label, false), W - GUT * 2)}
+  ${trustRow()}
 </td>
 </tr>`;
 }

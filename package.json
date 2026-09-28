@@ -11,7 +11,8 @@
     "publish:static": "node scripts/publish-static.mjs",
     "vercel-build": "npm run build && npm run publish:static",
     "check": "node scripts/check.mjs",
-    "publish:templates": "node scripts/publish-templates.mjs"
+    "publish:templates": "node scripts/publish-templates.mjs",
+    "n8n:sdk": "node scripts/to-n8n-sdk.mjs"
   },
   "engines": {
     "node": ">=18"

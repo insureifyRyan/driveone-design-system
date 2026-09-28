@@ -3,7 +3,8 @@
  * Assembles the Vercel static output.
  *   public/index.html      the review gallery
  *   public/filled/*.html   sample-data previews for client sign off
- *   public/templates/*.html  merge-tag templates. This is TEMPLATE_BASE_URL for n8n.
+ *   public/templates/*.html  merge-tag templates, for review only. The scheduler reads
+ *                            templates out of Postgres, not over HTTP.
  */
 import { cpSync, mkdirSync, rmSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';

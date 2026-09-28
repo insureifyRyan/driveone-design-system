@@ -16,6 +16,7 @@
  *   04-error-handler.json  any failure  ->  alert, never silent
  */
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -92,8 +93,15 @@ const ifNode = (name, position, conditions) =>
     options: {},
   });
 
+// n8n keys each filter condition by id. The value is arbitrary, but it must be
+// stable: a random one per build makes every rebuild a diff, and makes it look
+// like the workflow changed when only the id did.
+const condId = (left, operator, right) =>
+  'c' + createHash('sha1').update(String(left) + '|' + operator + '|' + String(right))
+    .digest('hex').slice(0, 6);
+
 const cond = (left, operator, right, type = 'string') => ({
-  id: 'c' + Math.random().toString(36).slice(2, 8),
+  id: condId(left, operator, right),
   leftValue: left,
   rightValue: right,
   operator: { type, operation: operator, ...(operator === 'true' || operator === 'false' ? { singleValue: true } : {}) },

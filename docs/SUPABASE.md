@@ -145,14 +145,48 @@ The key is supplied to n8n as `RATING_API_KEY` and referenced only as `$env.RATI
 It is not in this repository and must not be committed. It was shared in a chat transcript,
 so rotate it once the integration is confirmed working.
 
-### One thing still to confirm
+### The contract, confirmed
 
-The request and response field names. The spec at
-`getelevatewarranty.com/docs/reference/rating/getrating` is unreachable from the build
-environment, so `Get Rating` and `Map Rating To Enrolment` carry a best guess, marked with
-TODO. The mapper tries several plausible names for each field and **throws rather than
-guessing a price** if it cannot find a monthly, which leaves the row unpriced, skipped by
-the scheduler, and retried on the next sweep. No customer can receive an invented number.
+```
+POST https://www.getelevatewarranty.com/api/partners/rating
+x-captured-api-key: <RATING_API_KEY>
+{ "vin": "...", "mileage": 45000, "partner_slug": "bob-johnson-auto" }
+```
+
+```json
+{ "make": "HONDA", "mileage": 45000, "vehicle_class": "A",
+  "quote_options": [ { "contract_term": 12, "financing_term": 0, "quote_price": 0,
+    "monthly_payment": 0, "down_payment": 0, "financed_amount": 0,
+    "coverage_miles": 75000, "plan_name": "30 Month Financing",
+    "policy_name": "DriveOne VSC", "bracket_name": "15001-50000", "rate_id": 0 } ] }
+```
+
+Rating is keyed on **VIN**, which is why local rate card arithmetic could never match: the
+API decodes engine, drivetrain and class from the VIN, and the local card holds none of
+that. All 269 quotable enrollments have a well formed 17 character VIN, and the claim
+query now requires one.
+
+Selection rule: take the **lowest `monthly_payment`** among options where
+`financing_term > 0`, `monthly_payment > 0` and `quote_price > 0`. Options that are pay in
+full or quote zero are discarded rather than presented as a bargain.
+
+A response with no usable financed option writes no price. It records the reason in
+`pricing_error`, increments `pricing_attempts`, and the row stays invisible to the
+scheduler. After 5 attempts it stops being retried, so a permanently unratable vehicle does
+not call the API forever. **No customer can receive a blank, a zero, or an invented price.**
+
+The response also carries `coverage_miles`, `plan_name`, `policy_name`, `vehicle_class` and
+`rate_id`, all now stored on the enrollment. `coverage_miles` is worth considering for the
+copy later: "covered to 75,000 miles" is concrete and currently unused.
+
+### Note on the API's mileage brackets
+
+The sample response returns `bracket_name: "15001-50000"`, which is a finer and completely
+different scheme from the local `low` / `mid` table. So the local 99,999 ceiling describes
+the **local card**, not necessarily the API. The cheap way to find out whether high mileage
+already rates is to raise `max_mileage` in the dealer file and watch whether those rows
+price or land in `pricing_error`. Nothing can leak to a customer either way, because an
+unpriced row is never sent.
 
 ### Two things to fix either way
 

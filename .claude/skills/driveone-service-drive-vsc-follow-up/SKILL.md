@@ -47,9 +47,10 @@ automation can never drift from the cadence in the creative.
 ```
 01-intake     hourly  ->  one atomic insert-select enrolls eligible service customers
 05-pricing    hourly  ->  calls the quote API, writes the price and the checkout link
-02-scheduler  hourly  ->  claims what is due, renders, sends, advances state
+02-scheduler  hourly  ->  gate, claim what is due, render, send, advance state
 03-events     webhook ->  purchase / unsubscribe / bounce  ->  exit and suppress
 04-error      any failure anywhere  ->  Slack alert
+06-bounce     IMAP    ->  reads bounces back out of the sending mailbox
 ```
 
 **State lives in Postgres, not in n8n.** A 60 day drip built on Wait nodes dies on every
@@ -101,6 +102,60 @@ unratable vehicle does not call the API forever.
 Do not impose a local mileage ceiling. Rating decides what it can price. An early 99,999
 ceiling, copied from the local bracket table, was holding back 163 of 432 people for no
 reason: the API uses a finer bracket scheme entirely (`15001-50000`).
+
+## Sending
+
+Mail goes out over **SMTP from the dealership's own warmed mailbox**, not through an ESP.
+That keeps the From address and the domain reputation with the dealer, which is the point of
+a co-branded send. It costs two things, and both are compensated for rather than ignored. If
+a dealer ever moves onto an ESP, both compensations can come back out.
+
+**No provider webhooks.** Bounces and complaints arrive as ordinary mail in the sending
+mailbox. Left alone the campaign keeps mailing dead addresses for the full 60 days, which is
+how a warmed domain stops being warm. Workflow 06 reads them over IMAP and posts to the same
+exit endpoint a webhook would have hit.
+
+Match on the RFC 3463 status class, not on wording: delivery notifications are not
+standardised in practice. Hard failures (`5.x.x`, user unknown, address rejected) suppress.
+Soft failures (`4.x.x`, over quota) deliberately do **not**, because a full mailbox is not a
+dead customer. Abuse reports suppress as complaints. Ordinary replies and out-of-office
+messages are ignored, which matters: a customer replying with a question must never be
+suppressed for it.
+
+**No one-click `List-Unsubscribe`**, because n8n's SMTP node cannot set custom headers. Under
+Google's 5,000-a-day bulk threshold this is a best-practice gap rather than a compliance one.
+The footer link is set larger and bolder than the surrounding legal text to compensate: a
+reader who cannot find it presses Report spam instead, which costs the domain far more.
+
+Keep `appendAttribution: false` on the send node, or n8n prints its own footer under a
+dealership's customer email.
+
+### Throughput and timing
+
+Configured under `sending` in the dealer file and compiled into workflow 02.
+
+| Setting | Bob Johnson | Why |
+|---|---|---|
+| `dailyCap` | 200 | Ceiling per dealer-local calendar day. |
+| `days` | Tue, Wed, Thu | Monday inboxes get cleared in bulk, Friday afternoon decays. |
+| `hours` | 9, 10, 11, 13, 14, 15, 16 | Mid morning and early afternoon, skipping lunch. |
+| `maxPerRun` | 45 | Stops a backlog arriving as one spike. |
+
+`Send Window Gate` runs **before** the claim, so an out-of-window hour costs one cheap check
+rather than a wasted lease. It spreads what is left for the day across the hours still to
+come. The cap is enforced inside the claim as `least(per_run, cap - sent_today)`, so two runs
+racing cannot jointly exceed it.
+
+Anything unsent when the window closes simply waits. Because each next send is computed from
+the enrolment date rather than from the last send, slipping a day never compresses the rest
+of the sequence.
+
+Derive the day boundary from the timezone, never a fixed offset, or the cap drifts by an hour
+twice a year. Test across the DST change.
+
+These days and hours are starting heuristics, not measured truth. Supabase already records
+`last_email_opened_at` and `email_open_count`, so tune them against real opens once a few
+thousand sends have landed.
 
 ## Product facts
 
@@ -178,7 +233,13 @@ Check `docs/OPEN-ITEMS.md` in the repo. The recurring blockers are the sending d
 (must be the **dealership's**, with SPF, DKIM and DMARC), a monitored reply-to, and consent
 basis for the service customer records.
 
-One-click `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented.
+Everything imports inactive. Nothing sends until someone activates it.
+
+Worth saying once when a dealer proposes a sending address: a mailbox whose name implies
+safety recalls, service reminders, or anything else a customer reads as non-commercial is a
+poor carrier for sales mail. It draws complaints rather than clicks and it burns the address
+for the thing it was named after. Raise it once, then respect the answer. The dealer owns
+their customer relationship.
 
 ## Gotchas worth knowing before you rediscover them
 

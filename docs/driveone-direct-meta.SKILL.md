@@ -58,6 +58,27 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 28 Sep 2026: 11 days dark, and the pixel may be broken.**
+
+**Still no delivery.** Last impression was 16 Sep. Zero on 17 Sep and every day since, confirmed
+live as well as cached. Every status unchanged and still ACTIVE. Two weeks of identical campaign
+state means nobody has fixed the billing or spend-limit cause. Fourteen-day spend $327.60, all of
+it from 13 to 16 Sep.
+
+**The 20 Sep checkout events did not hold, and Leads went to zero.** On 27 Sep, sampled 08:00 to
+midnight (a longer window than the 20 Sep sample): **205 PageViews, 0 Leads, 0 InitiateCheckout,
+0 Purchase.** Leads had fired in every prior sample at 0.38% to 3.8%; this is the first zero.
+Softer organic traffic explains fewer Leads, not none across 205 PageViews. The hour shape is also
+wrong for shoppers: seven daytime hours (14, 15, 17, 18, 20, 21, 22) logged no events at all and
+23:00 was the busiest hour of the day at 70 PageViews. **Working hypothesis: tracking changed
+around 20 Sep and the Lead event may no longer fire.** Confirm by walking a quote on a real VIN
+before trusting any pixel number.
+
+**Lesson recorded: do not revise a standing recommendation on one good day.** After the single
+2.71% Lead sample on 20 Sep I told Ryan my position on conversion-optimizing for `Lead` was
+softening. The next sample was 0%. The recommendation stands unchanged: do not switch to
+OFFSITE_CONVERSIONS on `Lead`. Require a sustained rate across several samples, not one.
+
 **State as of 21 Sep 2026: the account went dark, and InitiateCheckout finally fired.**
 
 **Delivery stopped after 16 Sep.** Daily spend ran $114.01 (14 Sep), $86.38 (15 Sep), $30.18
@@ -124,7 +145,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), **4,400 (21 Sep)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), **5,000 (28 Sep)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

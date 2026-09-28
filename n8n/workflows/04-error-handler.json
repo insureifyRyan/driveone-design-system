@@ -28,7 +28,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SLACK_ALERT_WEBHOOK }}",
+        "url": "={{ $vars.SLACK_ALERT_WEBHOOK }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",

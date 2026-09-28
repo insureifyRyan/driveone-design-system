@@ -14,6 +14,13 @@
  *   02-scheduler.json   hourly  ->  whatever is due  ->  send  ->  advance state
  *   03-events.json      purchase / unsubscribe / bounce  ->  exit + suppress
  *   04-error-handler.json  any failure  ->  alert, never silent
+ *
+ * Config is read through `$vars`, not `$env`. n8n Cloud blocks environment
+ * variables outright: an expression reading `$env` there returns "access to env
+ * vars denied" rather than a value, so a campaign wired to `$env` fails on every
+ * send and every price. `$vars` is the supported mechanism on Cloud, and it
+ * keeps the sending address and the API key out of this repo, which is the other
+ * reason to prefer it over inlining the values here.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -374,8 +381,8 @@ const PREPARE_SEND_CODE = [
   '        advisor_name: r.advisor_name || "",',
   '        // The API owns this URL. Append tracking only, never rebuild it.',
   '        quote_url: r.quote_url + (r.quote_url.indexOf("?") === -1 ? "?" : "&") + "step=" + nextStep + "&" + ' + JSON.stringify(DEALER.campaign.utm) + ',',
-  '        unsubscribe_url: $env.UNSUBSCRIBE_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
-  '        preferences_url: $env.PREFERENCES_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
+  '        unsubscribe_url: $vars.UNSUBSCRIBE_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
+  '        preferences_url: $vars.PREFERENCES_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
   '      },',
   '    },',
   '  });',
@@ -440,13 +447,13 @@ const schedulerNodes = [
   codeNode('Render Merge Tags', [700, -100], RENDER_CODE),
 
   node('Send via SMTP', 'emailSend', 2.1, [920, -100], {
-    fromEmail: '={{ $env.SEND_FROM }}',
+    fromEmail: '={{ $vars.SEND_FROM }}',
     toEmail: "={{ $('Claim Due Enrollments').itemMatching($itemIndex).json.email }}",
     subject: '={{ $json.subject }}',
     emailFormat: 'html',
     html: '={{ $json.html }}',
     options: {
-      replyTo: '={{ $env.SEND_REPLY_TO }}',
+      replyTo: '={{ $vars.SEND_REPLY_TO }}',
       // n8n appends its own footer unless this is off, which would put
       // "sent automatically with n8n" under a dealership's customer email.
       appendAttribution: false,
@@ -645,7 +652,7 @@ const errorNodes = [
   codeNode('Format Alert', [-180, 0], ERROR_CODE),
   node('Alert Slack', 'httpRequest', 4.2, [40, 0], {
     method: 'POST',
-    url: '={{ $env.SLACK_ALERT_WEBHOOK }}',
+    url: '={{ $vars.SLACK_ALERT_WEBHOOK }}',
     sendBody: true,
     specifyBody: 'json',
     jsonBody: '={{ JSON.stringify({ text: $json.text }) }}',
@@ -767,11 +774,11 @@ const pricingNodes = [
     // One call returns the rating and the customer facing links together, which
     // is why no short link base URL is configured anywhere: a locally built URL
     // could disagree with what checkout actually serves.
-    url: '={{ $env.QUOTE_API_BASE || "https://www.getelevatewarranty.com/api/partners" }}/quotes/{{ $json.quote_id }}',
+    url: '={{ $vars.QUOTE_API_BASE || "https://www.getelevatewarranty.com/api/partners" }}/quotes/{{ $json.quote_id }}',
     sendHeaders: true,
     headerParameters: {
       parameters: [
-        { name: 'x-captured-api-key', value: '={{ $env.RATING_API_KEY }}' },
+        { name: 'x-captured-api-key', value: '={{ $vars.RATING_API_KEY }}' },
         { name: 'Accept', value: 'application/json' },
       ],
     },
@@ -853,7 +860,7 @@ const PARSE_BOUNCE_CODE = [
   '',
   '  // The bounced address is whatever appears in the body that is not our own',
   '  // sending address or the daemon.',
-  '  const sender = String($env.SEND_FROM || "").toLowerCase().replace(/.*<|>.*/g, "");',
+  '  const sender = String($vars.SEND_FROM || "").toLowerCase().replace(/.*<|>.*/g, "");',
   '  const candidates = (blob.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi) || [])',
   '    .map((e) => e.toLowerCase())',
   '    .filter((e) => e !== sender && !/mailer-daemon|postmaster/.test(e));',
@@ -882,7 +889,7 @@ const bounceNodes = [
 
   node('Post To Exit Endpoint', 'httpRequest', 4.2, [-60, 0], {
     method: 'POST',
-    url: '={{ $env.CAMPAIGN_EVENT_URL }}',
+    url: '={{ $vars.CAMPAIGN_EVENT_URL }}',
     sendHeaders: true,
     headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
     sendBody: true,

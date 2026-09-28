@@ -24,15 +24,34 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 | Partner id | `b8440db1-62ea-41ad-a676-684a75a3f550` (Supabase `partners.id`) |
 | Partner slug | `bob-johnson-auto` |
 | MetricBridge | same dealer, `elevate_service_drive`, `dealers.source_id` equals the partner id |
+| n8n | `ryan-3522-williams.app.n8n.cloud`, personal project `zQfBVzsoRHjkhFD7` |
 
 `partners.id` in Supabase **is** `dealers.source_id` in MetricBridge. That is the join key
 between the two systems.
 
+The six workflows are live in n8n, created from the generated JSON via
+`scripts/to-n8n-sdk.mjs`:
+
+| Workflow | ID | Nodes |
+|---|---|---|
+| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 |
+| 02 Scheduler | `8ajOLclNiDmo4jyR` | 12 |
+| 03 Events | `0qJrCUa2YYHrls0d` | 8 |
+| 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 |
+| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 |
+| 06 Bounce Watcher | `HQeTdMk8tyg7qfLl` | 3 |
+
+Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, SMTP `qpZ7RhGkOTZjchlL`, IMAP
+`vCdTYNMkKDnlSPPB`, Header Auth `IoJuINMIbHzD6FJM` (shared with unrelated workflows, so
+the campaign should get its own secret before a second dealership).
+
 ## Build and check
 
 ```bash
-npm run build   # emails + n8n workflows, both generated from the copy deck
-npm run check   # pre-send guard, exits non-zero on a real problem
+npm run build       # emails + n8n workflows, both generated from the copy deck
+npm run check       # pre-send guard, exits non-zero on a real problem
+npm run n8n:sdk n8n/workflows/02-scheduler.json   # JSON -> n8n Workflow SDK code
+node scripts/publish-templates.mjs bob-johnson 1 2  # emit template SQL, in slices
 ```
 
 `npm run check` is not decoration. It fails on unknown merge tags, a missing unsubscribe
@@ -41,7 +60,7 @@ Run it before every push.
 
 ## Architecture, and why it is shaped this way
 
-Five n8n workflows, all generated from `email/copy/campaign.json` so the cadence in the
+Six n8n workflows, all generated from `email/copy/campaign.json` so the cadence in the
 automation can never drift from the cadence in the creative.
 
 ```
@@ -233,7 +252,18 @@ Check `docs/OPEN-ITEMS.md` in the repo. The recurring blockers are the sending d
 (must be the **dealership's**, with SPF, DKIM and DMARC), a monitored reply-to, and consent
 basis for the service customer records.
 
-Everything imports inactive. Nothing sends until someone activates it.
+Then, in order:
+
+1. Confirm the Code node runner is alive. Run any workflow with a Code node and watch it
+   finish. If it times out at 60 seconds, nothing else on this list matters yet.
+2. Set the seven `$vars` (see `docs/N8N-SETUP.md`). `$env` does not work on Cloud.
+3. Checksum the published templates against `email/dist/*.html`.
+4. Activate 01, then 05. Confirm `vsc_enrollment` rows carry both a `monthly_payment` and
+   a `quote_url` before anything can send: the scheduler skips rows missing either, which
+   is the last of the four guards against mailing a blank price.
+5. Send one to yourself. Then 02, 03, 06.
+
+Everything is created inactive. Nothing sends until someone activates it.
 
 Worth saying once when a dealer proposes a sending address: a mailbox whose name implies
 safety recalls, service reminders, or anything else a customer reads as non-commercial is a
@@ -260,3 +290,21 @@ their customer relationship.
 - **Regenerating SQL shifts parameter indices.** Verify with `EXPLAIN` against the live
   schema before pushing; that caught a trailing comma before `FROM` that would have failed
   on the first sweep.
+- **n8n Cloud blocks `$env`.** An expression reading it returns the literal string
+  `access to env vars denied`, not an empty value, so a workflow wired to `$env` does not
+  fail loudly: it puts that text into the From address and into the API key header. Use
+  `$vars` and set the values under Settings, Variables. Confirmed by probe, not assumed.
+- **`$vars` is plaintext** in n8n settings. Credentials are encrypted; variables are not.
+  An API key belongs in a Header Auth credential, and only sits in a variable because that
+  was the faster path to a first send.
+- **The Code node runner can be down while everything else looks healthy.** Executions sit
+  at `running` and fail after exactly 60 seconds with `Task request timed out`. A Set-node
+  workflow on the same instance finishes in milliseconds, which is how you tell the two
+  apart. Four of the six workflows use Code nodes, so this stops the campaign dead.
+- **Never trust a published template you have not checksummed.** Relaying 200 KB of SQL
+  dropped 18 characters out of step 3's preheader padding, invisible to review and
+  harmless only by luck. Compare `md5(html)` in `vsc_email_template` against `md5sum
+  email/dist/*.html` after every publish; they must match exactly.
+- **Manual executions started through the API never run.** They stay queued until the
+  editor is open in a browser. Publish the workflow and execute in production mode when
+  you need a real run from a tool.

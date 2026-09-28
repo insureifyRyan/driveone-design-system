@@ -95,40 +95,77 @@ and check the same way.
 
 ## Remaining setup
 
-**1. Credentials.** n8n auto-attached the existing Postgres and SMTP credentials. Confirm
-each points where you expect, and create the one that is missing.
+**1. Credentials.** All four are attached. Confirm each points where you expect.
 
 | Credential | Type | Used by | Status |
 |---|---|---|---|
 | Postgres account | Postgres | 01, 02, 03, 05 | attached |
 | SMTP account | SMTP | 02 send | attached |
+| IMAP account | IMAP | 06 bounce watcher | attached |
 | Header Auth account | Header Auth | 03 events webhook | attached, but shared with other workflows. Give the campaign its own secret. |
-| *(none yet)* | IMAP | 06 bounce watcher | **create this.** Same mailbox as the SMTP credential. |
 
-**2. Environment variables.** Set these in n8n (Settings, Variables, or the instance env).
+**2. Variables, not environment variables.** n8n Cloud blocks environment variables
+outright. An expression reading `$env` there does not come back empty, it comes back with
+the string `access to env vars denied`, which would have put that text into the From
+address of every send and into the rating API key header on every price. Every workflow
+reads `$vars` instead. Confirmed by probe on this instance: `$env` denied, `$vars`
+available.
 
-| Variable | Example | Notes |
+Set these in n8n under **Settings, Variables**:
+
+| Variable | Value | Notes |
 |---|---|---|
-| `SEND_FROM` | `Bob Johnson Service <northcountryrecalls@bobjohnsonauto.com>` | The warmed mailbox. |
+| `SEND_FROM` | `Bob Johnson Dodge Jeep Ram <northcountryrecalls@bobjohnsonauto.com>` | The warmed mailbox. |
 | `SEND_REPLY_TO` | `northcountryrecalls@bobjohnsonauto.com` | Monitored. Replies must reach a person. |
-| `RATING_API_KEY` | | Sent as the `x-captured-api-key` header. Workflow 05. Never commit it. |
-| `CAMPAIGN_EVENT_URL` | `https://<n8n>/webhook/vsc/events/bob-johnson` | Where 06 posts bounces. |
 | `UNSUBSCRIBE_URL_BASE` | `https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe` | Already deployed. |
-| `PREFERENCES_URL_BASE` | | Points at the same function today. |
-| `SLACK_ALERT_WEBHOOK` | | Workflow 04. Without it failures are silent. |
-| `QUOTE_API_BASE` | `https://www.getelevatewarranty.com/api/partners` | Defaults to this. Only set it to point elsewhere. |
+| `PREFERENCES_URL_BASE` | same as above | Points at the same function today. |
+| `CAMPAIGN_EVENT_URL` | `https://ryan-3522-williams.app.n8n.cloud/webhook/vsc/events/bob-johnson` | Where 06 posts bounces. |
+| `RATING_API_KEY` | *(the captured API key)* | Sent as the `x-captured-api-key` header. Workflow 05. |
+| `SLACK_ALERT_WEBHOOK` | *(the Slack incoming webhook)* | Workflow 04. Without it, failures are silent. |
+
+`QUOTE_API_BASE` is optional: workflow 05 falls back to
+`https://www.getelevatewarranty.com/api/partners` when it is unset.
+
+Variables are stored in plaintext in n8n settings. `RATING_API_KEY` would be better as a
+Header Auth credential, which n8n encrypts at rest; the trade is one dropdown on the Get
+Quote node against a key sitting readable in Settings. Worth doing before this runs for a
+second dealership.
 
 Templates are read out of Postgres now, so there is no `TEMPLATE_BASE_URL`, no hosting to
 stand up, and no deployment-protection bypass. Quote links come from the rating API
 response rather than being built locally, so there is no `QUOTE_URL_BASE` either.
 
-**3. Error workflow.** In each of 01, 02, 03, 05 and 06: Settings, Error Workflow, select
-`DriveOne VSC 04 Error Handler`.
+**3. Error workflow.** Already set: 01, 02, 03, 05 and 06 all point at
+`DriveOne VSC 04 Error Handler`, and 04 is published so n8n can run it. Nothing to do.
 
-**4. Activate in order.** 01 first, then 05. Wait for a sweep and confirm
+**4. The Code node runner has to be healthy first.** See below. Until it is, four of the
+six workflows cannot run at all.
+
+**5. Activate in order.** 01 first, then 05. Wait for a sweep and confirm
 `vsc_enrollment` has rows with a `monthly_payment` and a `quote_url`. Send one test to
 yourself before 02 goes live: set one row's `next_send_at` to `now()` and run 02 manually.
 Only then activate 02, 03 and 06.
+
+## Blocker: the Code node task runner
+
+Two production executions of a two-node probe on this instance failed identically after
+exactly 60 seconds:
+
+```
+Task request timed out
+Your Code node task was not matched to a runner within the timeout period
+(waited 60 seconds). This indicates that the task runner is currently down,
+or not ready, or at capacity.
+```
+
+Nothing in this repo can fix that: it is the instance's own Code execution service.
+Workflows 02, 03, 05 and 06 all depend on Code nodes, so while this persists the campaign
+cannot enroll, price, send, or process a bounce. A Set-node-only probe on the same
+instance ran fine in 77 ms, which is what proves the fault is specific to the Code runner
+rather than to executions generally.
+
+Check it before activating anything: run any workflow with a Code node and confirm it
+finishes. If it still times out, that is an n8n Cloud support question.
 
 ## Throughput and timing
 

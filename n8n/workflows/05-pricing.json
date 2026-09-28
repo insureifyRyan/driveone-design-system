@@ -76,13 +76,13 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.QUOTE_API_BASE || \"https://www.getelevatewarranty.com/api/partners\" }}/quotes/{{ $json.quote_id }}",
+        "url": "={{ $vars.QUOTE_API_BASE || \"https://www.getelevatewarranty.com/api/partners\" }}/quotes/{{ $json.quote_id }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "x-captured-api-key",
-              "value": "={{ $env.RATING_API_KEY }}"
+              "value": "={{ $vars.RATING_API_KEY }}"
             },
             {
               "name": "Accept",

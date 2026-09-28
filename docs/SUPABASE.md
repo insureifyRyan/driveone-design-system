@@ -176,8 +176,16 @@ scheduler. After 5 attempts it stops being retried, so a permanently unratable v
 not call the API forever. **No customer can receive a blank, a zero, or an invented price.**
 
 The response also carries `coverage_miles`, `plan_name`, `policy_name`, `vehicle_class` and
-`rate_id`, all now stored on the enrollment. `coverage_miles` is worth considering for the
-copy later: "covered to 75,000 miles" is concrete and currently unused.
+`rate_id`, all now stored on the enrollment.
+
+**Coverage is additive.** The term and the mileage are added on from the day the policy is
+bought, on top of wherever the car is at that moment. They are not a ceiling measured back
+to the vehicle's in-service date. So `contract_term` 60 and `coverage_miles` 75,000 render
+as "60 more months, 75,000 more miles", never as "covered to 75,000 miles", which would be
+wrong for a car that already has 61,400 on it.
+
+A null `coverage_miles` falls back to "Coverage shown on your quote" rather than claiming
+unlimited, and the sentinel renders as "unlimited miles".
 
 ### Note on the API's mileage brackets
 

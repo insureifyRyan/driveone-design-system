@@ -38,10 +38,10 @@
         {
           "icon": "$",
           "title": "{{deductible_home}} deductible at our store",
-          "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears."
+          "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears. Roadside is included anywhere in the US."
         }
       ],
-      "benefitStrip": "That number is the lowest monthly we can do for your {{vehicle_year}} {{vehicle_model}} at {{vehicle_mileage}} miles. Longer terms and an unlimited mileage plan are on the quote page if you want them.",
+      "benefitStrip": "Coverage is additive. The term and the miles are added on from the day you buy, on top of wherever the car is now. That is the lowest monthly we can do; longer terms and an unlimited mileage plan are on the quote page.",
       "cta": {
         "label": "See your free quote",
         "path": "welcome"
@@ -300,7 +300,7 @@
       "headline": "The big repair is [[not the only thing]] in here.",
       "subhead": "Most of what you will actually use is the unglamorous middle of the contract.",
       "body": [
-        "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones.",
+        "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones, and they work anywhere in the country rather than only in our zip code.",
         "A tow on a Sunday night. A rental car while yours sits on a lift for three days. A sensor you had never heard of, which turns out to be essential.",
         "None of that makes for dramatic advertising. All of it makes for a better Tuesday."
       ],
@@ -308,7 +308,7 @@
         {
           "icon": "R",
           "title": "24/7 roadside assistance",
-          "subtitle": "Up to three events per year, towing included."
+          "subtitle": "Anywhere in the US, up to three events per year, towing included."
         },
         {
           "icon": "K",
@@ -341,14 +341,14 @@
       "subhead": "We have avoided fake deadlines for eight emails. Here is the real one.",
       "body": [
         "Vehicle service contracts are underwritten against mileage and model year. Every plan has a ceiling, and your {{vehicle_year}} {{vehicle_model}} showed {{vehicle_mileage}} miles at its last visit.",
-        "Nothing expires this Friday. No countdown clock is running. But the set of plans available to your car today is larger than the set available to it next year, and considerably larger than the set available after something breaks.",
+        "Nothing expires this Friday. No countdown clock is running. But coverage is additive: the term and the miles start the day you buy and get added to wherever the car is then. Every month you wait is a month of protection you are not holding, on a car that is quietly getting older.",
         "Coverage cannot be bought retroactively. That is the entire reason this campaign exists."
       ],
       "featureRows": [
         {
           "icon": "M",
           "title": "Priced on today's mileage",
-          "subtitle": "Your quote reflects {{vehicle_mileage}} miles, not next year's."
+          "subtitle": "Your quote reflects {{vehicle_mileage}} miles today, and coverage is added from there."
         },
         {
           "icon": "T",

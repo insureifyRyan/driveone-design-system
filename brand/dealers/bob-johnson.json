@@ -79,5 +79,29 @@
   "brandLead": {
     "$comment": "dealer means the dealership colour leads the layout and DriveOne cyan is reduced to the provider mark in the header. Set to driveone to flip it back.",
     "mode": "dealer"
+  },
+  "sending": {
+    "$comment": "Throughput and timing. These are starting heuristics, not measured truths. Supabase already stores last_email_opened_at and email_open_count, so tune days and hours against real opens once a few thousand sends have landed.",
+    "timezone": "America/New_York",
+    "dailyCap": 200,
+    "dailyCapNote": "Hard ceiling per calendar day in dealer local time, enforced inside the atomic claim so two scheduler runs cannot jointly exceed it.",
+    "days": [
+      2,
+      3,
+      4
+    ],
+    "daysNote": "Tuesday, Wednesday, Thursday. Monday inboxes are cleared in bulk and Friday afternoon decays. A send that falls due outside these days waits for the next one; because the cadence is computed from the enrolment date rather than from the last send, slipping a day never compresses the rest of the sequence.",
+    "hours": [
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16
+    ],
+    "hoursNote": "Local. Mid morning and early afternoon, skipping the lunch hour. Sends are spread evenly across the remaining hours rather than fired in one burst at the top of the window, which is both better for engagement and much gentler on a warmed domain.",
+    "maxPerRun": 45,
+    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike."
   }
 }

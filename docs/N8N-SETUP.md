@@ -84,6 +84,35 @@ on import (n8n prompts for each on first open).
 workflow 01 webhook, confirm a row appears in `vsc_enrollment`, then set that row's
 `next_send_at` to `now()` and run workflow 02 manually.
 
+## Throughput and timing
+
+Set in `brand/dealers/<id>.json` under `sending`, and compiled into workflow 02.
+
+| Setting | Value | Why |
+|---|---|---|
+| `dailyCap` | 200 | Hard ceiling per dealer-local calendar day. |
+| `days` | Tue, Wed, Thu | Monday inboxes get cleared in bulk, Friday afternoon decays. |
+| `hours` | 9, 10, 11, 13, 14, 15, 16 | Mid morning and early afternoon, skipping lunch. |
+| `maxPerRun` | 45 | Stops a backlog arriving as one spike. |
+
+`Send Window Gate` runs before the claim, so an out-of-window hour costs one cheap check
+rather than a wasted database lease. It spreads whatever is left for the day across the
+hours still to come, so the queue drains smoothly instead of firing at the top of the window.
+
+The cap is enforced **inside the claim statement**, as a `least(per_run, cap - sent_today)`
+limit, so two scheduler runs racing cannot jointly exceed it. Anything unsent when the
+window closes simply waits: because each next send is computed from the enrolment date
+rather than from the last send, slipping a day never compresses the rest of the sequence.
+
+At 432 enrolled across ten steps that is 4,320 sends, about 8 weeks at 600 a week.
+
+The day boundary is derived from the timezone rather than a fixed offset, so it follows
+daylight saving. Verified: the boundary moves from 04:00Z to 05:00Z when EDT ends.
+
+These are starting heuristics, not measured truths. Supabase already records
+`last_email_opened_at` and `email_open_count`, so tune the days and hours against real opens
+once a few thousand sends have landed.
+
 ## Hosting the templates
 
 The Vercel project is `driveone-design-system` on the Kovara team, and it builds this

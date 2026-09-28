@@ -98,10 +98,23 @@ Authentication (SSO protection) enabled with `all_except_custom_domains`, so a p
 request to a `.vercel.app` template URL gets a 302 to the Vercel SSO page rather than the
 HTML. n8n would fail on every send. Three ways out, best first:
 
-1. **Point a custom domain at the project.** Protection is already set to
-   `all_except_custom_domains`, so a custom domain is served without the SSO gate
-   automatically. Nothing is weakened, no secret to rotate, and `TEMPLATE_BASE_URL`
-   becomes a stable branded URL. This is the recommended option.
+1. **Point a custom domain at the project.** Chosen approach. Protection is already set
+   to `all_except_custom_domains`, so a custom domain is served without the SSO gate
+   automatically. Nothing is weakened and there is no secret to rotate.
+
+   This domain is infrastructure, not marketing. Only n8n ever requests it, no customer
+   sees it, and no mail is sent from it. It is **not** the sending domain.
+
+   Every DriveOne domain already uses Vercel nameservers, so there is no DNS work: adding
+   the subdomain to the project creates the record. In the Vercel dashboard, Kovara team,
+   project `driveone-design-system`, Settings, Domains, Add:
+
+   ```
+   templates.driveonedealers.com
+   ```
+
+   Then set `TEMPLATE_BASE_URL=https://templates.driveonedealers.com/templates` in n8n and
+   leave `VERCEL_BYPASS_TOKEN` unset.
 2. **Create a Protection Bypass for Automation.** Vercel dashboard, Project Settings,
    Deployment Protection, Protection Bypass for Automation. Put the generated secret in
    n8n as `VERCEL_BYPASS_TOKEN`. The scheduler already sends it as the

@@ -26,13 +26,18 @@
     "dark": "https://REPLACE-ME.cdn/bob-johnson/logo-dark.png",
     "widthPx": 160,
     "altText": "Bob Johnson Auto Group",
-    "wordmark": { "line1": "BOB JOHNSON", "line2": "AUTO GROUP", "italic": true, "ruleColor": "#F2B229" }
+    "wordmark": {
+      "line1": "BOB JOHNSON",
+      "line2": "AUTO GROUP",
+      "italic": true,
+      "ruleColor": "#F2B229"
+    }
   },
   "contact": {
     "storeName": "Bob Johnson Auto Group",
     "addressLine1": "3855 W Henrietta Rd",
     "addressLine2": "Rochester, NY 14623",
-    "addressNote": "CONFIRM. This is the Bob Johnson Imports address. The group runs multiple rooftops, and CAN-SPAM wants the address of the entity actually sending. Use the store that owns the service customer, or the group's registered address.",
+    "addressNote": "CONFIRMED by client: Rochester is the first rooftop in this program. If a later dealership in the group is added, give it its own dealer file rather than changing this one.",
     "servicePhone": "PLACEHOLDER: service department phone",
     "replyTo": "service@PLACEHOLDER.com"
   },

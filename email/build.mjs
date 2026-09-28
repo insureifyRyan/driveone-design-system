@@ -397,6 +397,31 @@ ${preheader(resolve(e.preheader, false))}
 </html>`;
 }
 
+/**
+ * Conservative minifier. Smaller emails clip less often in Gmail and cost less
+ * to store and move. It only collapses whitespace that sits between tags and
+ * strips plain comments; MSO conditional comments are load bearing and are left
+ * exactly alone, as is anything inside the hidden preheader, where the padding
+ * characters are doing real work.
+ */
+function minify(html) {
+  const keep = [];
+  // Park conditionals and the preheader before touching anything.
+  let out = html
+    .replace(/<!--\[if[\s\S]*?<!\[endif\]-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<!--\[if[\s\S]*?\]><!-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<!--<!\[endif\]-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<div style="display:none[\s\S]*?<\/div>/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);
+
+  out = out
+    .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')   // plain comments only
+    .replace(/\n\s*\n/g, '\n')
+    .replace(/>\s+</g, '><')
+    .replace(/\s{2,}/g, ' ');
+
+  return out.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[Number(i)]);
+}
+
 /* ------------------------------------------------------------------ main */
 
 rmSync(join(ROOT, 'email/dist'), { recursive: true, force: true });
@@ -408,8 +433,8 @@ const manifest = [];
 
 for (const e of DECK.emails) {
   const raw = render(e);
-  const dist = resolve(raw, false);          // offer tags baked, recipient tags intact
-  const filled = resolve(raw, true);         // everything filled, for review
+  const dist = minify(resolve(raw, false));  // offer tags baked, recipient tags intact
+  const filled = minify(resolve(raw, true)); // everything filled, for review
 
   writeFileSync(join(ROOT, `email/dist/${e.slug}.html`), dist);
   writeFileSync(join(ROOT, `preview/filled/${e.slug}.html`), filled);

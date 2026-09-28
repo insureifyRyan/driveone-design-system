@@ -43,14 +43,17 @@
     "addressLine2": "Watertown, NY 13601",
     "addressNote": "CONFIRMED from the dealership page: 18712 US-11, Watertown, NY 13601.",
     "servicePhone": "(315) 782-8436",
-    "replyTo": "service@PLACEHOLDER.com",
-    "phoneNote": "CONFIRMED from the dealership page. Sales, service and parts all use this number."
+    "replyTo": "northcountryrecalls@bobjohnsonauto.com",
+    "phoneNote": "CONFIRMED from the dealership page. Sales, service and parts all use this number.",
+    "replyToNote": "Replies go back to the sending mailbox, which is monitored by the dealer. Workflow 06 reads that same mailbox over IMAP and is careful to ignore ordinary replies so a customer asking a question is never suppressed."
   },
   "campaign": {
     "quoteUrlBase": "SET VIA SHORT_LINK_BASE_URL IN n8n",
     "utm": "utm_source=email&utm_medium=crm&utm_campaign=bj_postro_vsc_2026",
     "quoteUrlNote": "Two shapes are supported, set by linkMode. \"short\" builds SHORT_LINK_BASE_URL + \"/\" + quote_short_links.short_code, e.g. .../KwR8HW4m. \"uuid\" builds SHORT_LINK_BASE_URL + \"/\" + the quote id. Only the customer facing base is missing. Note /api/partners/quotes/<uuid> is the partner API, key protected, so it is not what a customer can click.",
-    "linkMode": "short"
+    "linkMode": "short",
+    "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
+    "unsubscribeNote": "Supabase Edge Function vsc-unsubscribe, already deployed. Public by design: the audience is a car owner clicking a link in an email and has no session. Authorisation is the opaque per recipient key in the URL. A GET only renders the page and the opt out is a POST, so mail scanners following links cannot unsubscribe anyone by accident. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this."
   },
   "metricbridge": {
     "$comment": "Dealer identity in MetricBridge. The n8n intake uses these to scope the feed to this rooftop.",

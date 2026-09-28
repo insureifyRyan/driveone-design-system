@@ -68,7 +68,7 @@
           },
           "conditions": [
             {
-              "id": "c87p69b",
+              "id": "ccga7zn",
               "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
@@ -106,41 +106,30 @@
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $env.TEMPLATE_BASE_URL }}/{{ $json.slug }}.html",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-vercel-protection-bypass",
-              "value": "={{ $env.VERCEL_BYPASS_TOKEN || \"\" }}"
-            }
-          ]
-        },
+        "operation": "executeQuery",
+        "query": "-- Templates live in the same database as the enrolment state, published by\n-- npm run publish:templates. Reading them here rather than fetching them over\n-- HTTPS removes the need for public hosting, a deployment protection carve\n-- out, and a base URL in config, and removes a failure mode: a template that\n-- could not be loaded used to mean a failed send.\nselect html from vsc_email_template\nwhere dealer_id = $1 and campaign_id = $2 and slug = $3;",
         "options": {
-          "response": {
-            "response": {
-              "responseFormat": "text",
-              "outputPropertyName": "data"
-            }
-          }
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.slug }}"
         }
       },
-      "id": "n010-fetch-template-html",
-      "name": "Fetch Template HTML",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "id": "n010-load-template",
+      "name": "Load Template",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
       "position": [
         480,
         -100
       ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Merge tag substitution. The templates ship with offer facts already baked in\n// by email/build.mjs, so only recipient level tags remain here.\nconst out = [];\nfor (const item of $input.all()) {\n  const prepared = $('Prepare Send').itemMatching(item.pairedItem ? item.pairedItem.item : 0).json;\n  let html = item.json.data || item.json.body || \"\";\n\n  if (typeof html !== \"string\" || html.length < 500) {\n    throw new Error(\"Template fetch returned no usable HTML for step \" + prepared.step + \" (\" + prepared.slug + \")\");\n  }\n\n  for (const [k, v] of Object.entries(prepared.merge)) {\n    html = html.split(\"{{\" + k + \"}}\").join(String(v == null ? \"\" : v));\n  }\n\n  const leftover = html.match(/\\{\\{[a-z_]+\\}\\}/g);\n  if (leftover) {\n    // Fail loudly. A merge tag reaching a customer inbox is worse than a missed send.\n    throw new Error(\"Unresolved merge tags in step \" + prepared.step + \": \" + [...new Set(leftover)].join(\", \"));\n  }\n\n  out.push({ json: { ...prepared, html } });\n}\nreturn out;"
+        "jsCode": "// Merge tag substitution. The templates ship with offer facts already baked in\n// by email/build.mjs, so only recipient level tags remain here.\nconst out = [];\nfor (const item of $input.all()) {\n  const prepared = $('Prepare Send').itemMatching($itemIndex).json;\n  let html = item.json.html || \"\";\n\n  if (typeof html !== \"string\" || html.length < 500) {\n    throw new Error(\"No template row for step \" + prepared.step + \" (\" + prepared.slug + \"). Run npm run publish:templates.\");\n  }\n\n  for (const [k, v] of Object.entries(prepared.merge)) {\n    html = html.split(\"{{\" + k + \"}}\").join(String(v == null ? \"\" : v));\n  }\n\n  const leftover = html.match(/\\{\\{[a-z_]+\\}\\}/g);\n  if (leftover) {\n    // Fail loudly. A merge tag reaching a customer inbox is worse than a missed send.\n    throw new Error(\"Unresolved merge tags in step \" + prepared.step + \": \" + [...new Set(leftover)].join(\", \"));\n  }\n\n  out.push({ json: { ...prepared, html } });\n}\nreturn out;"
       },
       "id": "n011-render-merge-tags",
       "name": "Render Merge Tags",
@@ -307,14 +296,14 @@
       "main": [
         [
           {
-            "node": "Fetch Template HTML",
+            "node": "Load Template",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch Template HTML": {
+    "Load Template": {
       "main": [
         [
           {

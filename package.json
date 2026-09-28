@@ -10,7 +10,10 @@
     "build:n8n": "node n8n/build-workflows.mjs",
     "publish:static": "node scripts/publish-static.mjs",
     "vercel-build": "npm run build && npm run publish:static",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "publish:templates": "node scripts/publish-templates.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

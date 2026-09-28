@@ -381,11 +381,11 @@ const RENDER_CODE = [
   '// by email/build.mjs, so only recipient level tags remain here.',
   'const out = [];',
   'for (const item of $input.all()) {',
-  '  const prepared = $(\'Prepare Send\').itemMatching(item.pairedItem ? item.pairedItem.item : 0).json;',
-  '  let html = item.json.data || item.json.body || "";',
+  '  const prepared = $(\'Prepare Send\').itemMatching($itemIndex).json;',
+  '  let html = item.json.html || "";',
   '',
   '  if (typeof html !== "string" || html.length < 500) {',
-  '    throw new Error("Template fetch returned no usable HTML for step " + prepared.step + " (" + prepared.slug + ")");',
+  '    throw new Error("No template row for step " + prepared.step + " (" + prepared.slug + "). Run npm run publish:templates.");',
   '  }',
   '',
   '  for (const [k, v] of Object.entries(prepared.merge)) {',
@@ -417,20 +417,17 @@ const schedulerNodes = [
 
   codeNode('Prepare Send', [260, -100], PREPARE_SEND_CODE),
 
-  node('Fetch Template HTML', 'httpRequest', 4.2, [480, -100], {
-    method: 'GET',
-    url: '={{ $env.TEMPLATE_BASE_URL }}/{{ $json.slug }}.html',
-    sendHeaders: true,
-    headerParameters: {
-      parameters: [
-        // Only needed while the templates sit behind Vercel Deployment Protection.
-        // Harmless when empty, e.g. once they are served from an unprotected custom
-        // domain. See docs/N8N-SETUP.md, Hosting the templates.
-        { name: 'x-vercel-protection-bypass', value: '={{ $env.VERCEL_BYPASS_TOKEN || "" }}' },
-      ],
-    },
-    options: { response: { response: { responseFormat: 'text', outputPropertyName: 'data' } } },
-  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 3000 }),
+  pgNode('Load Template', [480, -100],
+    [
+      '-- Templates live in the same database as the enrolment state, published by',
+      '-- npm run publish:templates. Reading them here rather than fetching them over',
+      '-- HTTPS removes the need for public hosting, a deployment protection carve',
+      '-- out, and a base URL in config, and removes a failure mode: a template that',
+      '-- could not be loaded used to mean a failed send.',
+      'select html from vsc_email_template',
+      'where dealer_id = $1 and campaign_id = $2 and slug = $3;',
+    ].join('\n'),
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.slug }}'),
 
   codeNode('Render Merge Tags', [700, -100], RENDER_CODE),
 
@@ -483,8 +480,8 @@ const schedulerConnections = connect([
   ['Send Window Gate', 'Claim Due Enrollments'],
   ['Claim Due Enrollments', 'Anything Due?'],
   ['Anything Due?', ['Prepare Send', 'Nothing Due']],
-  ['Prepare Send', 'Fetch Template HTML'],
-  ['Fetch Template HTML', 'Render Merge Tags'],
+  ['Prepare Send', 'Load Template'],
+  ['Load Template', 'Render Merge Tags'],
   ['Render Merge Tags', 'Send via SMTP'],
   ['Send via SMTP', ['Log Send', 'Send Failed']],
   ['Log Send', 'Advance State'],

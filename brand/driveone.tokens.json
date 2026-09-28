@@ -3,9 +3,15 @@
   "brand": {
     "name": "DriveOne",
     "productName": "DriveOne VSC",
-    "productDescriptor": "EXTENDED SERVICE CONTRACT",
-    "productDescriptorNote": "CONFLICT FLAGGED: ads use EXTENDED SERVICE CONTRACT, the digital flyer / Notion logo page / signed VSC application print EXTENDED WARRANTY. Not silently resolved. See docs/OPEN-ITEMS.md.",
-    "administrator": "Ascent Administration Services LLC"
+    "productDescriptor": "VEHICLE SERVICE CONTRACT",
+    "productDescriptorNote": "Settled by the client from the master logo. Neither EXTENDED WARRANTY nor EXTENDED SERVICE CONTRACT: the lockup reads VEHICLE SERVICE CONTRACT, which also matches the rule that this product is never called a warranty. The earlier conflict between the ads, the flyer and the signed application is closed.",
+    "administrator": "Ascent Administration Services LLC",
+    "wordmark": {
+      "$comment": "Lowercase geometric wordmark: \"drive\" in the dark tone, \"one\" in Brand Cyan, trademark set small.",
+      "part1": "drive",
+      "part2": "one",
+      "trademark": true
+    }
   },
   "color": {
     "cyan": "#1FBFEC",
@@ -18,7 +24,8 @@
     "rule": "#D9E4EE",
     "bodyText": "#3A4A5E",
     "mutedText": "#6B7C90",
-    "legalText": "#8A97A6"
+    "legalText": "#8A97A6",
+    "logoInk": "#1C1D1F"
   },
   "font": {
     "display": "'Inter Tight', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",

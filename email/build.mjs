@@ -104,18 +104,19 @@ ${esc(text)}${'&#847;&zwnj;&nbsp;'.repeat(60)}
 
 /** DriveOne lockup. Uses a hosted image when one is configured, otherwise a type lockup that survives images-off. */
 function driveOneLockup(onDark) {
-  const nameColor = onDark ? '#FFFFFF' : C.ink;
-  if (T.logo && T.logo.url && !/REPLACE-ME/.test(T.logo.url)) {
-    return `<img src="${T.logo.url}" width="${T.logo.widthPx || 120}" alt="DriveOne" style="display:block;border:0;outline:none;text-decoration:none;" />`;
-  }
+  const wm = (T.brand.wordmark) || { part1: 'drive', part2: 'one', trademark: true };
+  const darkTone = onDark ? '#FFFFFF' : (C.logoInk || C.ink);
+  const sub = onDark ? 'rgba(255,255,255,0.62)' : C.mutedText;
+  // The D mark is a drawn shape and cannot be reproduced reliably in email HTML,
+  // so the header carries the wordmark alone. That is a legitimate reduced
+  // lockup, and unlike a hosted image it renders with images switched off.
+  const geometric = "'Inter Tight','Inter','Century Gothic','Questrial',Helvetica,Arial,sans-serif";
   return `
-<span style="${font(F.display, 19, 800, nameColor, '1')}letter-spacing:-0.4px;">DriveOne</span>
-<span style="${font(F.display, 19, 500, C.cyan, '1')}letter-spacing:-0.4px;">&nbsp;VSC</span>
+<span style="font-family:${geometric};font-size:21px;font-weight:700;color:${darkTone};line-height:1;letter-spacing:-0.6px;">${esc(wm.part1)}</span><span style="font-family:${geometric};font-size:21px;font-weight:700;color:${C.cyan};line-height:1;letter-spacing:-0.6px;">${esc(wm.part2)}</span>${wm.trademark ? `<span style="font-family:${geometric};font-size:9px;font-weight:700;color:${sub};vertical-align:super;line-height:1;">&trade;</span>` : ''}
 <br />
-<span style="${font(F.body, 8, 600, onDark ? 'rgba(255,255,255,0.62)' : C.mutedText, '1.6')}letter-spacing:1.6px;">${esc(T.brand.productDescriptor)}</span>`;
+<span style="font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:700;color:${sub};line-height:1.7;letter-spacing:1.5px;white-space:nowrap;">${esc(T.brand.productDescriptor)}</span>`;
 }
 
-/** Dealer logo. Alt text is styled so images-off still reads as the dealership. */
 function dealerLogo() {
   const wm = D.logo.wordmark || {};
   // Only use a hosted image when it has been explicitly vouched for. An image we
@@ -145,9 +146,9 @@ const header = () => `
 <td style="padding:22px ${GUT}px 18px ${GUT}px;background-color:${C.white};border-bottom:1px solid ${C.rule};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
     <td align="left" valign="middle">${dealerLogo()}</td>
-    <td align="right" valign="middle" style="${font(F.body, 9, 600, C.mutedText, '1.5')}letter-spacing:1.1px;text-transform:uppercase;">
-      Coverage by<br />
-      <span style="${font(F.display, 13, 800, C.ink, '1.3')}letter-spacing:-0.2px;text-transform:none;">DriveOne<span style="color:${C.cyan};"> VSC</span></span>
+    <td align="right" valign="middle" style="${font(F.body, 8, 700, C.mutedText, '1.5')}letter-spacing:1.4px;">
+      COVERAGE BY<br />
+      ${driveOneLockup(false)}
     </td>
   </tr></table>
 </td>

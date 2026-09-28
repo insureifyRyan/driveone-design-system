@@ -127,14 +127,12 @@ function dealerLogo() {
   const W1 = D.logo.widthPx || 190;
   return `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${W1}" style="width:${W1}px;">
-  <tr><td style="padding:0;${font(F.display, 25, 800, C.primary, '1.02')}letter-spacing:-0.9px;font-style:italic;white-space:nowrap;">
-    ${esc(wm.line1 || D.dealer.displayName)}
-  </td></tr>
+  <tr><td style="padding:0;${font(F.display, 25, 800, C.primary, '1.02')}letter-spacing:-0.9px;font-style:italic;white-space:nowrap;">${esc(wm.line1 || D.dealer.displayName)}</td></tr>
   <tr><td style="padding:3px 0 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="26%" style="width:26%;height:4px;line-height:4px;font-size:4px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
+      <td width="26%" style="width:26%;height:4px;line-height:4px;font-size:4px;background-color:${C.accent};">&nbsp;</td>
       <td width="4%"  style="width:4%;height:4px;line-height:4px;font-size:4px;background-color:${C.white};">&nbsp;</td>
-      <td style="height:4px;line-height:4px;font-size:4px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
+      <td style="height:4px;line-height:4px;font-size:4px;background-color:${C.accent};">&nbsp;</td>
     </tr></table>
   </td></tr>
   ${wm.line2 ? `<tr><td align="right" style="padding:4px 0 0 0;${font(F.display, 10, 700, C.primary, '1.2')}letter-spacing:4px;white-space:nowrap;">${esc(wm.line2)}</td></tr>` : ''}

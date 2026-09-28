@@ -33,7 +33,7 @@
       "line1": "BOB JOHNSON",
       "line2": "AUTO GROUP",
       "italic": true,
-      "ruleColor": "#F2B229"
+      "$note": "The rule colour is always color.accent. It is not set here, so the two can never drift apart."
     },
     "useImage": false
   },

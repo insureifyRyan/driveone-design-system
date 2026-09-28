@@ -73,3 +73,16 @@ create table if not exists vsc_send_log (
   sent_at             timestamptz not null default now(),
   constraint vsc_send_log_once unique (enrollment_id, step)
 );
+
+-- ---------------------------------------------------------------------------
+-- These tables live in the SAME Supabase project as quotes, customers and
+-- customer_vehicles (bbvkqwcapqsytrdrubci), which is what lets intake be a
+-- single insert-select rather than a DMS feed plus a normalizer.
+--
+-- RLS is enabled to match every other table in this project. No policies are
+-- defined, so only the service role reaches these tables. n8n connects as the
+-- service role, and RLS-enabled-with-no-policy denies everyone else by default.
+-- ---------------------------------------------------------------------------
+alter table vsc_enrollment  enable row level security;
+alter table vsc_suppression enable row level security;
+alter table vsc_send_log    enable row level security;

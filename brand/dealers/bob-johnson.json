@@ -58,5 +58,13 @@
     "program_contact_note": "This is the partner contact on the dealer record, not a customer facing service line. The footer uses the public service number instead.",
     "down_payment_percentage": 0.05,
     "down_payment_note": "Confirms the 5% down figure used in emails 1 and 5, straight from the system of record."
+  },
+  "supabase": {
+    "$comment": "Supabase is the system of record for service drive capture and for enrollment state. partners.id here equals dealers.source_id in MetricBridge.",
+    "project_id": "bbvkqwcapqsytrdrubci",
+    "partner_id": "b8440db1-62ea-41ad-a676-684a75a3f550",
+    "partner_type": "service-drive",
+    "intake_window_days": 90,
+    "intake_window_note": "Quotes for this rooftop run Feb to Sep 2026: 107 in the last 30 days, 458 within 90. A 30 day window would enroll only the newest 107 and strand the rest, so the backfill runs at 90."
   }
 }

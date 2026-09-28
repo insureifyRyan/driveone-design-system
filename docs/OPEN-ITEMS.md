@@ -8,13 +8,18 @@ short and mostly operational.
 
 ## Still open
 
-### 1. Repair order data has no confirmed source
+### 1. The VSC ownership flag does not exist in the data
 
-The campaign triggers on a recent service visit and personalizes on the customer's vehicle
-and mileage. MetricBridge holds neither: no repair orders at all, and quotes reference a
-vehicle by id without exposing VIN, year, make, model or mileage. See
-`docs/METRICBRIDGE.md`. Until a repair order feed is identified, the campaign has no
-trigger. This is now the biggest open item.
+The audience was described as everyone without a VSC in their profile, or with a 0 in that
+column. No such populated column exists anywhere in the Supabase project. Intake currently
+uses `quotes.payment_status = 'pending'` as the proxy, which is equivalent today because
+all 474 are pending, but is not the same rule once people buy, and misses coverage bought
+elsewhere. See `docs/SUPABASE.md`. Needs an answer before the first send.
+
+**Resolved:** repair order data. There is no RO table, but the service drive writes one
+quote per visit, so `quotes.created_at` is the visit date and `customer_vehicles` carries
+year, make, model and mileage. Op codes do not exist, so the services line was removed
+from the template.
 
 ### 2. The `$49` starting price needs substantiation
 

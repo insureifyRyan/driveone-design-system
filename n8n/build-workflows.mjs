@@ -601,3 +601,157 @@ writeFileSync(join(ROOT, 'n8n/workflows/04-error-handler.json'),
 
 console.log('built 04-error-handler.json');
 console.log('\nCadence compiled from campaign.json: ' + SCHEDULE.map((s) => 'd' + s.day).join(', '));
+
+
+/* =========================================================== 5. PRICING == */
+
+// The rating API is the only authoritative price. The local vsc_rate_* tables
+// reproduce their own export exactly (Chevrolet low/60/30 => 61.31, down 96.80,
+// markup 0) but do NOT reproduce live quotes: a real Chevrolet priced at 2442
+// against a card price of 2099, and the deltas are not constant across quotes.
+// Something in the API (vehicle class, VIN attributes, a newer rate version)
+// moves the number, so the campaign asks rather than computes.
+const CLAIM_UNPRICED_SQL = [
+  '-- Lease unpriced rows the same way the scheduler leases due rows, so two',
+  '-- pricing runs cannot call the rating API for the same enrollment at once.',
+  'update vsc_enrollment e',
+  "set priced_at = now()",
+  'where e.id in (',
+  '  select id from vsc_enrollment',
+  "  where status = 'active'",
+  '    and monthly_payment is null',
+  '    and dealer_id = $1 and campaign_id = $2',
+  "    and (priced_at is null or priced_at < now() - interval '1 hour')",
+  '  order by created_at',
+  '  limit 100',
+  '  for update skip locked',
+  ')',
+  'returning e.id, e.vin, e.vehicle_year, e.vehicle_make, e.vehicle_model,',
+  '          e.vehicle_mileage, e.garaging_state, e.ro_number;',
+].join('\n');
+
+const MAP_RATING_CODE = [
+  '// ===================================================================',
+  '// THE ONE PLACE THE RATING API CONTRACT LIVES.',
+  '// Response shape is NOT yet confirmed: the spec at',
+  '// getelevatewarranty.com/docs/reference/rating/getrating could not be read',
+  '// from the build environment. Fix the field names here and nothing else in',
+  '// the campaign changes.',
+  '// ===================================================================',
+  '',
+  'const pickNumber = (obj, names) => {',
+  '  for (const n of names) {',
+  '    const v = n.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);',
+  '    if (v !== undefined && v !== null && !isNaN(Number(v))) return Number(v);',
+  '  }',
+  '  return null;',
+  '};',
+  '',
+  'const out = [];',
+  'for (const item of $input.all()) {',
+  '  const res = item.json;',
+  '  const enrolment = $("Claim Unpriced Enrolments").itemMatching($itemIndex).json;',
+  '',
+  '  // Rate the cheapest monthly the customer can actually buy. If the API returns',
+  '  // a list of options, take the lowest financed monthly; if it returns one, use it.',
+  '  const options = Array.isArray(res) ? res',
+  '    : Array.isArray(res.rates) ? res.rates',
+  '    : Array.isArray(res.options) ? res.options',
+  '    : Array.isArray(res.data) ? res.data',
+  '    : [res];',
+  '',
+  '  let best = null;',
+  '  for (const o of options) {',
+  '    const monthly = pickNumber(o, ["monthly_payment", "monthlyPayment", "payment", "monthly"]);',
+  '    if (monthly === null) continue;',
+  '    if (best === null || monthly < best.monthly) {',
+  '      best = {',
+  '        monthly,',
+  '        down:      pickNumber(o, ["down_payment", "downPayment", "down"]),',
+  '        price:     pickNumber(o, ["quote_price", "contract_price", "price", "quote_base"]),',
+  '        term:      pickNumber(o, ["financing_term", "financingTerm", "payment_term", "paymentTerm"]),',
+  '        months:    pickNumber(o, ["contract_term", "contractTerm", "contract_months", "term_months"]),',
+  '      };',
+  '    }',
+  '  }',
+  '',
+  '  if (best === null) {',
+  '    // Leave monthly_payment null. The row stays unpriced, the scheduler skips it,',
+  '    // and the lease expires so a later run retries. Never invent a price.',
+  '    throw new Error("Rating API returned no usable monthly for enrolment " + enrolment.id',
+  '      + " (" + enrolment.vehicle_year + " " + enrolment.vehicle_make + " " + enrolment.vehicle_model + ")");',
+  '  }',
+  '',
+  '  out.push({ json: { enrollment_id: enrolment.id, ...best } });',
+  '}',
+  'return out;',
+].join('\n');
+
+const pricingNodes = [
+  node('Price Sweep', 'scheduleTrigger', 1.2, [-680, 0], {
+    rule: { interval: [{ field: 'cronExpression', expression: '41 * * * *' }] },
+  }),
+
+  setNode('Campaign Config', [-450, 0], [
+    ['dealer_id', DEALER.id],
+    ['campaign_id', DECK.campaign.id],
+  ]),
+
+  pgNode('Claim Unpriced Enrolments', [-220, 0], CLAIM_UNPRICED_SQL,
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
+
+  node('Get Rating', 'httpRequest', 4.2, [10, 0], {
+    method: 'POST',
+    // TODO confirm method and path against the published spec.
+    url: '={{ $env.RATING_API_URL }}',
+    sendHeaders: true,
+    headerParameters: {
+      parameters: [
+        // The key is supplied by the environment and never stored in this repo.
+        { name: 'captured-api-key', value: '={{ $env.RATING_API_KEY }}' },
+        { name: 'Accept', value: 'application/json' },
+      ],
+    },
+    sendBody: true,
+    specifyBody: 'json',
+    // TODO confirm request field names against the published spec.
+    jsonBody: '={{ JSON.stringify({\n'
+      + '  vin: $json.vin,\n'
+      + '  year: $json.vehicle_year,\n'
+      + '  make: $json.vehicle_make,\n'
+      + '  model: $json.vehicle_model,\n'
+      + '  mileage: $json.vehicle_mileage,\n'
+      + '  state: $json.garaging_state\n'
+      + '}) }}',
+    options: { response: { response: { neverError: false } } },
+  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 4000, onError: 'continueErrorOutput' }),
+
+  codeNode('Map Rating To Enrolment', [240, -110], MAP_RATING_CODE),
+
+  pgNode('Store Price', [470, -110],
+    [
+      'update vsc_enrollment',
+      'set monthly_payment = $2,',
+      '    down_payment    = $3,',
+      '    contract_price  = $4,',
+      '    payment_term    = $5,',
+      '    contract_months = $6,',
+      '    priced_at       = now(),',
+      '    updated_at      = now()',
+      'where id = $1;',
+    ].join('\n'),
+    '={{ $json.enrollment_id }}, {{ $json.monthly }}, {{ $json.down }}, {{ $json.price }}, {{ $json.term }}, {{ $json.months }}'),
+
+  node('Rating Failed (stays unpriced, retried later)', 'noOp', 1, [240, 110], {}),
+];
+
+writeFileSync(join(ROOT, 'n8n/workflows/05-pricing.json'),
+  JSON.stringify(workflow('DriveOne VSC 05 Pricing (' + DEALER.dealer.displayName + ')', pricingNodes, connect([
+    ['Price Sweep', 'Campaign Config'],
+    ['Campaign Config', 'Claim Unpriced Enrolments'],
+    ['Claim Unpriced Enrolments', 'Get Rating'],
+    ['Get Rating', ['Map Rating To Enrolment', 'Rating Failed (stays unpriced, retried later)']],
+    ['Map Rating To Enrolment', 'Store Price'],
+  ])), null, 2));
+
+console.log('built 05-pricing.json');

@@ -122,20 +122,46 @@ price claim. So the campaign does not compute prices.
 cannot advance past step 0 without a price. The scheduler skips any unpriced row rather
 than sending a blank. `npm run check` fails any template that does not show the price.
 
-**Needs an answer:** what should populate those columns? Options, best first.
+**Resolved: the rating API prices it.** Workflow `05-pricing.json` claims unpriced
+enrollments, calls the rating endpoint, and writes the cheapest financed monthly back.
 
-1. Run the existing pricing engine over the 474 pending quotes so `quotes.contract_price`
-   and `quotes.payment_term` get filled, then intake copies them across. One pricer, one
-   source of truth, and the email always agrees with checkout.
-2. Expose the pricer as an endpoint that n8n calls per enrollment.
-3. Tell me the missing markup rule and I will compute it, though I would rather not: two
-   implementations of a price will drift.
+`vsc_rates_export` settled the question of whether a local calculation could work. It
+reproduces the local rate card exactly, Chevrolet low / 60 month / 30 payments gives
+`monthly_payment` 61.31 with `down_payment` 96.80 and `markup` 0, which is precisely what
+the arithmetic here produced. But those numbers are not what live quotes charge: a real
+Chevrolet priced at 2442 against a card price of 2099, and a second at 2309. The deltas,
+343 and 210, are not constant, so it is not a flat fee or a fixed markup.
+
+Something the API sees is not in the local card. The likely candidates are
+`quotes.vehicle_class` (A or B) and the VIN attributes already stored on
+`customer_vehicles`: `vin_turbo`, `vin_drive_type`, `vin_fuel_type`, `vin_engine_model`.
+Those are ordinary VSC rating factors. Whatever it is, the local card is a simplified or
+stale snapshot and the API is authoritative, which is why the campaign asks rather than
+computes.
+
+### The API key
+
+The key is supplied to n8n as `RATING_API_KEY` and referenced only as `$env.RATING_API_KEY`.
+It is not in this repository and must not be committed. It was shared in a chat transcript,
+so rotate it once the integration is confirmed working.
+
+### One thing still to confirm
+
+The request and response field names. The spec at
+`getelevatewarranty.com/docs/reference/rating/getrating` is unreachable from the build
+environment, so `Get Rating` and `Map Rating To Enrolment` carry a best guess, marked with
+TODO. The mapper tries several plausible names for each field and **throws rather than
+guessing a price** if it cannot find a monthly, which leaves the row unpriced, skipped by
+the scheduler, and retried on the next sweep. No customer can receive an invented number.
 
 ### Two things to fix either way
 
 - **191 of 474 Bob Johnson vehicles are over 100,000 miles**, and no bracket covers them.
-  Today they cannot be priced at all. Either a high bracket is needed or those customers
-  must be excluded from the campaign, which is a big slice of the list.
+  Intake now holds them back rather than emailing a blank: 269 are quotable today, 163 are
+  waiting. Good news on adding the bracket: the `mileage_bracket` enum **already includes
+  `high`**, alongside `low` and `mid`, so this is adding rate rows rather than a schema
+  change. Raise `max_mileage` in the dealer file the day those rates exist and the held
+  back customers enroll on the next sweep.
 - Campaign eligibility currently allows up to 125,000 miles, which is looser than pricing
   supports. It should match whatever the bracket table ends up covering.
 - The **$49 claim is gone** from the copy, replaced by each recipient's real figure. Real

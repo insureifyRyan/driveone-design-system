@@ -1,0 +1,244 @@
+{
+  "name": "DriveOne VSC 05 Pricing (Bob Johnson Dodge Jeep Ram)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "41 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "n028-price-sweep",
+      "name": "Price Sweep",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0",
+              "name": "dealer_id",
+              "value": "bob-johnson",
+              "type": "string"
+            },
+            {
+              "id": "a1",
+              "name": "campaign_id",
+              "value": "bj_postro_vsc_2026",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n029-campaign-config",
+      "name": "Campaign Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -450,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Lease unpriced rows the same way the scheduler leases due rows, so two\n-- pricing runs cannot call the rating API for the same enrollment at once.\nupdate vsc_enrollment e\nset priced_at = now()\nwhere e.id in (\n  select id from vsc_enrollment\n  where status = 'active'\n    and monthly_payment is null\n    and dealer_id = $1 and campaign_id = $2\n    and (priced_at is null or priced_at < now() - interval '1 hour')\n  order by created_at\n  limit 100\n  for update skip locked\n)\nreturning e.id, e.vin, e.vehicle_year, e.vehicle_make, e.vehicle_model,\n          e.vehicle_mileage, e.garaging_state, e.ro_number;",
+        "options": {
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}"
+        }
+      },
+      "id": "n030-claim-unpriced-enrolments",
+      "name": "Claim Unpriced Enrolments",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -220,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RATING_API_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "captured-api-key",
+              "value": "={{ $env.RATING_API_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  vin: $json.vin,\n  year: $json.vehicle_year,\n  make: $json.vehicle_make,\n  model: $json.vehicle_model,\n  mileage: $json.vehicle_mileage,\n  state: $json.garaging_state\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "n031-get-rating",
+      "name": "Get Rating",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// THE ONE PLACE THE RATING API CONTRACT LIVES.\n// Response shape is NOT yet confirmed: the spec at\n// getelevatewarranty.com/docs/reference/rating/getrating could not be read\n// from the build environment. Fix the field names here and nothing else in\n// the campaign changes.\n// ===================================================================\n\nconst pickNumber = (obj, names) => {\n  for (const n of names) {\n    const v = n.split(\".\").reduce((o, k) => (o == null ? o : o[k]), obj);\n    if (v !== undefined && v !== null && !isNaN(Number(v))) return Number(v);\n  }\n  return null;\n};\n\nconst out = [];\nfor (const item of $input.all()) {\n  const res = item.json;\n  const enrolment = $(\"Claim Unpriced Enrolments\").itemMatching($itemIndex).json;\n\n  // Rate the cheapest monthly the customer can actually buy. If the API returns\n  // a list of options, take the lowest financed monthly; if it returns one, use it.\n  const options = Array.isArray(res) ? res\n    : Array.isArray(res.rates) ? res.rates\n    : Array.isArray(res.options) ? res.options\n    : Array.isArray(res.data) ? res.data\n    : [res];\n\n  let best = null;\n  for (const o of options) {\n    const monthly = pickNumber(o, [\"monthly_payment\", \"monthlyPayment\", \"payment\", \"monthly\"]);\n    if (monthly === null) continue;\n    if (best === null || monthly < best.monthly) {\n      best = {\n        monthly,\n        down:      pickNumber(o, [\"down_payment\", \"downPayment\", \"down\"]),\n        price:     pickNumber(o, [\"quote_price\", \"contract_price\", \"price\", \"quote_base\"]),\n        term:      pickNumber(o, [\"financing_term\", \"financingTerm\", \"payment_term\", \"paymentTerm\"]),\n        months:    pickNumber(o, [\"contract_term\", \"contractTerm\", \"contract_months\", \"term_months\"]),\n      };\n    }\n  }\n\n  if (best === null) {\n    // Leave monthly_payment null. The row stays unpriced, the scheduler skips it,\n    // and the lease expires so a later run retries. Never invent a price.\n    throw new Error(\"Rating API returned no usable monthly for enrolment \" + enrolment.id\n      + \" (\" + enrolment.vehicle_year + \" \" + enrolment.vehicle_make + \" \" + enrolment.vehicle_model + \")\");\n  }\n\n  out.push({ json: { enrollment_id: enrolment.id, ...best } });\n}\nreturn out;"
+      },
+      "id": "n032-map-rating-to-enrolment",
+      "name": "Map Rating To Enrolment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -110
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update vsc_enrollment\nset monthly_payment = $2,\n    down_payment    = $3,\n    contract_price  = $4,\n    payment_term    = $5,\n    contract_months = $6,\n    priced_at       = now(),\n    updated_at      = now()\nwhere id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.enrollment_id }}, {{ $json.monthly }}, {{ $json.down }}, {{ $json.price }}, {{ $json.term }}, {{ $json.months }}"
+        }
+      },
+      "id": "n033-store-price",
+      "name": "Store Price",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        470,
+        -110
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "n034-rating-failed-stays-unpriced-retried-later",
+      "name": "Rating Failed (stays unpriced, retried later)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        110
+      ]
+    }
+  ],
+  "connections": {
+    "Price Sweep": {
+      "main": [
+        [
+          {
+            "node": "Campaign Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign Config": {
+      "main": [
+        [
+          {
+            "node": "Claim Unpriced Enrolments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Unpriced Enrolments": {
+      "main": [
+        [
+          {
+            "node": "Get Rating",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rating": {
+      "main": [
+        [
+          {
+            "node": "Map Rating To Enrolment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rating Failed (stays unpriced, retried later)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Rating To Enrolment": {
+      "main": [
+        [
+          {
+            "node": "Store Price",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:bob-johnson"
+    }
+  ]
+}

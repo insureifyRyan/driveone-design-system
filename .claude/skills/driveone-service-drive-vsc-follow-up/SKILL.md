@@ -1,11 +1,12 @@
 ---
-name: driveone-dealer-vsc-campaign
-description: Operations manual for the DriveOne dealer post-service VSC email campaign, the co-branded drip sent on a dealership's behalf to its own service customers. Use this whenever the user mentions the dealer VSC campaign, the post-service or post-RO emails, the Bob Johnson campaign, enrolling service customers, the vsc_enrollment tables, the rating or quote API at getelevatewarranty.com, auto-quoting a monthly payment into an email, adding a new dealership to the campaign, or the driveone-design-system repo. Also use it when asked to change campaign copy, the checkout card, the send cadence, eligibility rules, or the co-branded email design, even if the campaign is not named. This is the DEALER channel, sent as the dealership; for DTC use driveone-direct-retargeting, for pre-sale abandoned quotes use driveone-workflow, and for customers who already bought use driveone-sold-nurture.
+name: driveone-service-drive-vsc-follow-up
+description: Operations manual for the DriveOne Service Drive VSC follow up campaign, the co-branded email drip sent on a dealership's behalf to its own service drive customers after a visit. Use this whenever the user mentions the service drive follow up, the dealer VSC campaign, the post-service or post-RO emails, the Bob Johnson campaign, enrolling service customers, the vsc_enrollment tables, the rating or quote API at getelevatewarranty.com, auto-quoting a monthly payment into an email, adding a new dealership or rooftop to the campaign, or the driveone-design-system repo. Also use it when asked to change campaign copy, the checkout card, the send cadence, eligibility rules, or the co-branded email design, even if the campaign is not named. This is the DEALER channel, sent as the dealership; for DTC use driveone-direct-retargeting, for pre-sale abandoned quotes use driveone-workflow, and for customers who already bought use driveone-sold-nurture.
 ---
 
-# DriveOne dealer post-service VSC campaign
+# DriveOne Service Drive VSC follow up
 
-A co-branded drip sent **as the dealership**, to its own service customers, offering the
+A co-branded follow up sent **as the dealership**, to its own service drive customers after
+their visit, offering the
 DriveOne VSC they do not yet have. Ten emails over 60 days, each carrying that customer's
 real vehicle, real visit, and a real monthly price with a Buy now button.
 

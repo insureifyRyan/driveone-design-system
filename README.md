@@ -7,8 +7,13 @@ First dealership: **Bob Johnson Auto Group**, Rochester NY.
 First campaign: **ten emails over 60 days** to service customers who just had a repair
 order closed and have no vehicle service contract on file.
 
-> **Read `docs/OPEN-ITEMS.md` before sending anything.** There is a blocking item at the
-> top of it: New York is not on the approved state list.
+Product: **Elevate Platinum VSC**, administered by Ascent Administration Services, LLC,
+and in New York by ORIAS Warranty Services. Every offer claim in the campaign is quoted
+from or directly supported by the executed contract form.
+
+> Read `docs/OPEN-ITEMS.md` before sending. Nothing there is blocking any more, but the
+> `$49` starting price still needs substantiation on file, and the logo, service phone and
+> postal address are placeholders.
 
 ---
 
@@ -45,20 +50,21 @@ npm run publish:static   # assembles public/ for Vercel
 
 No dependencies. Node 18 or later.
 
-## Rebranding for Bob Johnson (the one thing outstanding on design)
+## Rebranding
 
-`bobjohnsonautogroup.com` is blocked by this environment's network egress proxy, so no
-colors or logos were sampled from the live site. Everything in
-`brand/dealers/bob-johnson.json` marked `PLACEHOLDER` or `REPLACE-ME` is a guess.
+Colors are set from the screenshot of the live site. The logo file is still a placeholder,
+so the header currently renders a type lockup mirroring the wordmark: black italic
+extrabold "BOB JOHNSON" over a gold rule with "AUTO GROUP" beneath. That is also what
+recipients with images off will see.
 
-To make it real, edit that one file:
+To change any of it, edit one file, `brand/dealers/bob-johnson.json`:
 
 ```jsonc
 "color": {
-  "primary":     "#003A70",  // dealer's primary
-  "primaryDark": "#002951",  // a darker step of primary
-  "accent":      "#C8102E",  // the thin accent rule
-  "primarySoft": "#EAF0F7",  // tint for light fills
+  "primary":     "#000000",  // dealer's primary
+  "primaryDark": "#1C1C1C",  // a darker step of primary
+  "accent":      "#F2B229",  // the thin accent rule
+  "primarySoft": "#FFF7E6",  // tint for light fills
   "onPrimary":   "#FFFFFF"   // text on primary
 },
 "logo": {
@@ -69,6 +75,10 @@ To make it real, edit that one file:
 
 Then `npm run build`. All ten emails, both preview sets and the gallery pick it up. No
 template, no copy and no workflow changes.
+
+`dealer.state` also drives the footer: the contract names a different Administrator and
+Obligor in NY, CA and FL, so `NY` prints ORIAS Warranty Services while everyone else
+prints Ascent. The map lives in `brand/offer.json`.
 
 Logos must be absolute `https` URLs. Email clients will not render relative or local
 paths. Until a real logo URL is set, the header falls back to a styled type lockup of the
@@ -81,6 +91,11 @@ DriveOne palette is three colors and does not change per dealer: Brand Cyan `#1F
 Ink `#0E1B2C`, Cyan-Soft `#E8F8FE`. The dealership's colors sit alongside it in the header
 lockup and the footer bar, so the dealership visibly owns the relationship and DriveOne
 provides the product.
+
+For Bob Johnson that is black `#000000` and gold `#F2B229`. The email opens with their
+wordmark on white and closes on a black bar with a gold rule, with DriveOne's cyan
+reserved for the hero accent and the CTA. The two systems stay legible as two systems
+rather than blending into a third.
 
 Every email is built from the same parts, in the same order:
 
@@ -113,6 +128,8 @@ House rules, enforced by `npm run check`:
 - The DriveOne product is **never** called a warranty. It is a vehicle service contract,
   or coverage. Warranty refers only to the factory warranty the customer no longer has.
 - No competitor names. Own the grievance without naming anyone.
+- Only claims the contract supports. `brand/offer.json` cites the form for each one and
+  records under `not_included` what was removed and why.
 - No testimonials, star ratings or invented reviews.
 - No fake urgency. Email 9 is the only one that argues "now," and it argues it honestly,
   on mileage and model year eligibility.

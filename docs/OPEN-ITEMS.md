@@ -1,119 +1,134 @@
 # Open items before this campaign can send
 
-Nothing in here blocks review of the creative. Everything in here blocks hitting send.
-Ordered by how expensive it is to get wrong.
+Most of the original list is now closed against the executed contract form
+(`Elevate_Platinum_VSC_Contract_1.pdf`, AAS VSC 1 11-2022, 16 pages). What is left is
+short and mostly operational.
 
 ---
 
-## 1. New York is not on the approved state list
+## Still open
 
-**Severity: blocking. Resolve this first.**
+### 1. The `$49` starting price needs substantiation
 
-Bob Johnson Auto Group is a Rochester, New York operation. Every store, every service
-customer, every garaging address in this audience is NY.
+Used in emails 1 and 5. A "starting at" claim needs at least one genuinely available
+Platinum contract at that figure, for a vehicle that actually exists in this audience,
+documented on file. Everything else in the campaign is now quoted from the form; this is
+the one number that is not.
 
-The DriveOne launch state list on record is PA, TX, FL, OH, NC, SC and WI. New York is
-not on it. There is a separate note that NY contracts run through ORIAS as obligor,
-which suggests NY is contemplated, but "contemplated" and "filed and approved" are
-different things, and VSC forms are regulated state by state.
+If it cannot be substantiated, change `price_from` in `brand/offer.json` and rebuild, or
+tell me and I will pull the price line out of both emails.
 
-Before any of this sends, confirm in writing:
+### 2. Assets and contact details
 
-- The VSC form is filed and approved for sale in New York.
-- ORIAS is the correct obligor on the NY form, and the footer names the right entity.
-  The templates currently print Ascent Administration Services LLC. If NY requires
-  ORIAS, `brand/offer.json` needs a per state obligor map and the footer needs to read
-  from it.
-- Bob Johnson Auto Group holds whatever NY licensing or registration selling a VSC
-  requires of the dealer.
+| Item | Status |
+|---|---|
+| Logo file | `REPLACE-ME` placeholder. Needs a hosted absolute `https` URL. |
+| Service phone | `PLACEHOLDER` |
+| Reply-to mailbox | `PLACEHOLDER` |
+| Postal address | Set to 3855 W Henrietta Rd, Rochester NY 14623. **Confirm.** That is the Imports address, and the group runs multiple rooftops. CAN-SPAM wants the address of the entity actually sending. |
+| Quote URL base | `REPLACE-ME` |
 
-If New York is not approved, this campaign cannot run at this dealership at all, and
-that is worth knowing before anyone reviews subject lines.
+Colors are now real, read off the screenshot you sent: black `#000000`, gold `#F2B229`,
+white. Worth confirming the gold against the brand sheet, since it was eyedropped from an
+image rather than the stylesheet.
+
+Until a logo URL is set, the header renders a type lockup that mirrors the wordmark:
+black italic extrabold "BOB JOHNSON" over a gold rule with "AUTO GROUP" letterspaced
+beneath. That is also exactly what recipients with images disabled will see, so it is
+worth a look either way.
+
+### 3. Consent, sender identity and deliverability
+
+- `SEND_FROM` should be a Bob Johnson domain, not a DriveOne one, or the co-branding is
+  undercut and deliverability suffers.
+- Confirm the service customer records carry a marketing email consent basis, and that
+  the DMS feed excludes anyone who already opted out at the dealership level. The
+  campaign's own suppression list cannot see unsubscribes that happened in the dealer's
+  other systems.
+- SPF, DKIM and a DMARC policy on the sending domain before any volume. One click
+  `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented in the
+  scheduler.
+
+### 4. n8n was not wired directly
+
+The n8n MCP server needs OAuth and this session is non-interactive. Authorize it in
+claude.ai connector settings, or via `/mcp` in an interactive session, and the workflows
+can be created through the API rather than imported by hand. The versioned JSON in
+`n8n/workflows/` is the better artifact regardless.
 
 ---
 
-## 2. The word "warranty"
+## Closed against the contract
 
-The program was described as a "post sale warranty program." The standing DriveOne
-compliance rule is that the product is never called a warranty. It is a vehicle service
-contract, or coverage. Warranty refers only to the customer's factory warranty, which
-this audience no longer has.
+### New York is approved, and the obligor is ORIAS
 
-All ten emails follow the compliance rule, not the brief. `npm run check` enforces it.
-Flagging rather than silently choosing: if the rule has changed, say so and the check
-script comes out.
+The form carries a full New York disclosure block, so NY is a covered state. From the
+DEFINITIONS section:
 
-Related, still unresolved from before this campaign: the ads print
-`EXTENDED SERVICE CONTRACT` while the digital flyer, the Notion logo page and the signed
-VSC application all print `EXTENDED WARRANTY`. The templates use
-`EXTENDED SERVICE CONTRACT`. One of those two artifacts is wrong and somebody has to
-pick.
+> In New York, the Administrator/Obligor is ORIAS Warranty Services, 8282 S Memorial Dr.,
+> Ste. 202, Tulsa, OK 74133, 800-331-3780
+
+Not ORIC. The footer now resolves the obligor from the dealer's state, so Bob Johnson
+prints ORIAS while a Florida dealership would print Old Republic Insurance Company and
+everyone else prints Ascent Administration Services, LLC. The map is in
+`brand/offer.json` under `obligor_by_state`.
+
+NY also amends cancellation: mail delivered contracts get a 30 day cancellation window
+with full refund if no claim was made, and a 10% per month penalty if a refund owed is
+not paid within 30 days.
+
+### Platinum only, and Platinum is the exclusionary tier
+
+Confirmed, and it is the reason the exclusionary claim is safe here:
+
+> PLATINUM COVERAGE: Includes coverages listed in SILVER COVERAGE and GOLD COVERAGE, plus
+> ALL OF YOUR VEHICLE'S ORIGINAL FACTORY-EQUIPPED MECHANICAL AND ELECTRICAL PARTS, EXCEPT
+> those excluded by the TERMS AND CONDITIONS and the following PLATINUM COVERAGE
+> EXCLUSIONS
+
+And the inverse, which confirms Silver and Gold are listed component plans:
+
+> Unless You have chosen PLATINUM COVERAGE, components not listed on Your SCHEDULE OF
+> COVERAGE, regardless of failure.
+
+Silver and Gold are no longer named anywhere in the campaign.
+
+### The deductible language is exactly as briefed
+
+> Your Deductible is $0 per claim visit if You return the Vehicle to the selling Dealer
+> for repair. If You do not return to the Vehicle's selling Dealer for repair, Your
+> Deductible is $100 per claim visit.
+
+Bob Johnson is the selling dealer on these contracts, so `$0` at store is correct.
+
+### "Warranty"
+
+Your call, and the campaign follows it: vehicle service contract throughout. The only
+uses of the word are email 7 quoting the robocall on purpose, and the required footer
+disclosure that this is not a manufacturer warranty. `npm run check` enforces this.
 
 ---
 
-## 3. Claims that need substantiation on file
+## Claims removed because the form does not support them
 
-| Claim | Where | What is needed |
+These came from other DriveOne material and are not in this contract. All are now out of
+the campaign and recorded in `brand/offer.json` under `not_included`.
+
+| Removed | Why |
+|---|---|
+| **Diminished value protection** | Appears nowhere in this contract. Was in email 8, now removed. |
+| **Protection Plus** (tire and wheel, key replacement, dent repair, windshield) | Not in this program. Tires, valve stems, wheels and rims are expressly excluded under Platinum, as are glass and windshields. Was in emails 6 and 8. |
+| **Openbay** scheduling and service discounts | Not part of this program, per your direction. Was in email 8. |
+| **"Any ASE certified shop nationwide"** | The form defines Repair Facility as "A licensed Repair Facility (licensed as a retail merchant to perform mechanical repairs) **authorized by the Administrator/Obligor**." Authorization is required, so the open network claim was overstated. Now reads "any licensed repair facility the administrator authorizes." Was in emails 4 and 7. |
+| **"Terms up to 60 months"** | Term is per contract on the Application Page, not a fixed ceiling in the form. Email 2 now says the term is set at purchase. |
+| Repair cost figures | Never used. The source numbers were corrupted in the brand record, and stale repair figures are a compliance problem. Email 2 makes the argument without a dollar amount. |
+
+## Claims added because the form does support them
+
+| Added | Where | Basis |
 |---|---|---|
-| Plans start at `$49` a month | Emails 1 and 5 | At least one genuinely available plan at that price for a vehicle in this audience. A "starting at" price is a price claim and needs a real SKU behind it. |
-| `$0` deductible at our store, `$100` elsewhere | Emails 1 and 4 | Contract language on record reads `$0` when the vehicle returns to the selling dealer. For a dealer sold contract the selling dealer is Bob Johnson, so this should be correct. Confirm against the NY form specifically. |
-| Exclusionary coverage on **all** plans | Emails 1 and 6 | The brief says all plans are exclusionary. Tiers on record are Silver, Gold and Platinum. Confirm all three are exclusionary and none is a listed component plan. |
-| 0% for up to 36 months, 5% down, no credit check | Emails 1 and 5 | Confirm 5% down and the 0% / 36 month terms are both current, and that "payment plan, not a loan" survives NY lending review. |
-| Rental `$35` per 6 hours, `$250` max | Email 8 | Confirm against the NY form. |
-| Diminished value | Email 8 | Written as "up to the contract maximum," formula based, deliberately never a flat figure. The source figure for the maximum was unreadable in the brand record and was not guessed. Supply it if it should appear. |
-| Openbay | Email 8 | Named as an included partner benefit. The standing rule requires explicit sign off before naming Openbay in customer facing copy. Get it, or the line comes out. |
-
-**No repair cost figures are used anywhere in the campaign.** The alternator and
-transmission numbers in the brand record were corrupted and unreadable, and stale repair
-figures are a compliance problem. Email 2 makes the repair cost argument without naming a
-dollar amount. If you want real numbers, source them fresh from RepairPal and date them
-on the creative.
-
----
-
-## 4. Consent and sender identity
-
-This is marketing sent on behalf of the dealership to its own service customers.
-
-- **Sender identity.** The from address, friendly from and reply-to must make clear the
-  mail comes from Bob Johnson. `SEND_FROM` should be a Bob Johnson domain, not a
-  DriveOne one, or the co-branding is undercut and deliverability suffers.
-- **Physical address.** CAN-SPAM requires a real postal address in every message. The
-  footer prints it from `brand/dealers/bob-johnson.json`, which is currently
-  `PLACEHOLDER`.
-- **Consent basis.** Confirm the dealer's service customer records carry a marketing
-  email consent basis and that the DMS feed excludes anyone who has already opted out at
-  the dealership level. The campaign's own suppression list does not know about
-  unsubscribes that happened in the dealer's other systems.
-- **Bulk sender requirements.** One click `List-Unsubscribe` and
-  `List-Unsubscribe-Post` headers are implemented in the scheduler. The sending domain
-  still needs SPF, DKIM and a DMARC policy before any volume.
-
----
-
-## 5. Brand assets are placeholders
-
-`bobjohnsonautogroup.com` is blocked by this environment's network egress proxy, on both
-the www and apex hostnames. Nothing in this repo was sampled from the live site.
-
-Everything currently in `brand/dealers/bob-johnson.json` marked `PLACEHOLDER` or
-`REPLACE-ME` is a guess: colors, logo URLs, tagline, address, phone.
-
-Replacing them is a single file edit followed by `npm run build`. No template, no
-workflow and no copy needs to change. See `README.md`.
-
-Logos must be hosted at absolute `https` URLs. Email clients will not render relative or
-local paths.
-
----
-
-## 6. n8n could not be wired directly from this session
-
-The n8n MCP server requires OAuth and this session is non-interactive, so nothing was
-pushed into a live n8n instance. Authorize it in claude.ai connector settings, or via
-`/mcp` in an interactive session, and the workflows can be created through the API
-instead of imported by hand.
-
-The importable JSON in `n8n/workflows/` is the better artifact regardless: it is version
-controlled, diffable, and regenerated from the same copy deck that builds the emails, so
-the cadence cannot drift between the creative and the automation.
+| 30 day full refund, no claims made | Email 3 | Cancellation section, and reinforced by the NY amendment. |
+| Transferable to a valid transferee | Email 6 | Term definition, and "You" includes "any valid transferee." |
+| Towing up to $100 per occurrence | Email 8 | Roadside section, Quest Towing Services. |
+| Seals and gaskets excluded past 125,000 miles | Email 9 | Platinum exclusions. This is a genuine, honest reason the window matters, which is better than manufacturing urgency. |
+| Rental needs proof of rental with an authorized claim | Email 8 P.S. | Rental benefits section. |

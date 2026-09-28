@@ -23,6 +23,10 @@ const D = read(`brand/dealers/${DEALER_ID}.json`);
 const OFFER = read('brand/offer.json');
 const DECK = read('email/copy/campaign.json');
 
+// The form names a different Administrator/Obligor in NY, CA and FL. Resolve it
+// from the dealer's state so the footer is correct per dealership, not per brand.
+const OBLIGOR = (OFFER.obligor_by_state && OFFER.obligor_by_state[D.dealer.state]) || OFFER.administrator_default;
+
 const C = { ...T.color, ...D.color };
 const F = T.font;
 const W = T.layout.emailWidth;
@@ -38,7 +42,7 @@ const accent = (s) =>
 
 /** Defaults injected for every {{tag}} that the ESP does not own. */
 const OFFER_TAGS = {
-  administrator: OFFER.administrator,
+  administrator: OBLIGOR,
   deductible_home: OFFER.deductible_home,
   deductible_away: OFFER.deductible_away,
   price_from: OFFER.price_from,
@@ -99,10 +103,26 @@ function driveOneLockup(onDark) {
 /** Dealer logo. Alt text is styled so images-off still reads as the dealership. */
 function dealerLogo() {
   const placeholder = /REPLACE-ME/.test(D.logo.light);
-  if (placeholder) {
-    return `<span style="${font(F.display, 18, 800, C.primary, '1.2')}letter-spacing:-0.3px;">${esc(D.dealer.displayName)}</span>`;
+  if (!placeholder) {
+    // Styled alt text so an images-off client still reads as the dealership.
+    return `<img src="${D.logo.light}" width="${D.logo.widthPx}" alt="${esc(D.logo.altText)}" style="display:block;border:0;outline:none;text-decoration:none;${font(F.display, 16, 800, C.primary, '1.2')}" />`;
   }
-  return `<img src="${D.logo.light}" width="${D.logo.widthPx}" alt="${esc(D.logo.altText)}" style="display:block;border:0;outline:none;text-decoration:none;${font(F.display, 16, 800, C.primary, '1.2')}" />`;
+  // Type lockup standing in for the wordmark: italic extrabold name, gold rule
+  // beneath it, letterspaced descriptor. Also what images-off recipients see.
+  const wm = D.logo.wordmark || { line1: D.dealer.displayName, line2: '', italic: false, ruleColor: C.accent };
+  return `
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:0;">
+  <span style="${font(F.display, 21, 800, C.primary, '1.05')}letter-spacing:-0.6px;${wm.italic ? 'font-style:italic;' : ''}">${esc(wm.line1)}</span>
+</td></tr>
+<tr><td style="padding:3px 0 0 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="height:3px;line-height:3px;font-size:3px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
+  </tr></table>
+</td></tr>
+${wm.line2 ? `<tr><td align="right" style="padding:3px 0 0 0;">
+  <span style="${font(F.body, 9, 600, C.primary, '1.2')}letter-spacing:3px;">${esc(wm.line2)}</span>
+</td></tr>` : ''}
+</table>`;
 }
 
 /** Co-brand bar: dealership owns the relationship, DriveOne provides the product. */
@@ -236,7 +256,7 @@ const footer = () => `
     You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
   </p>
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OFFER.administrator)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage, coverage tier and term. Payment plan is not a loan and involves no credit check.
+    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage, coverage tier and term. Payment plan is not a loan and involves no credit check.
   </p>
   <p style="margin:0;${font(F.body, 11, 400, C.legalText, '1.65')}">
     ${esc(D.dealer.displayName)}, ${esc(D.contact.addressLine1)}, ${esc(D.contact.addressLine2)}<br />

@@ -25,12 +25,27 @@
         "You do not have to buy that off a television commercial. You can buy it from the store that already knows the car."
       ],
       "featureRows": [
-        { "icon": "0", "title": "0% payment plan, up to 36 months", "subtitle": "No credit check. 5% down to start." },
-        { "icon": "E", "title": "Exclusionary coverage on every plan", "subtitle": "The strongest coverage level we offer, not the stripped one." },
-        { "icon": "$", "title": "{{deductible_home}} deductible at our store", "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears." }
+        {
+          "icon": "0",
+          "title": "0% payment plan, up to 36 months",
+          "subtitle": "No credit check. 5% down to start."
+        },
+        {
+          "icon": "E",
+          "title": "Exclusionary Platinum coverage",
+          "subtitle": "The only plan in this program. Nothing stripped down."
+        },
+        {
+          "icon": "$",
+          "title": "{{deductible_home}} deductible at our store",
+          "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears."
+        }
       ],
-      "benefitStrip": "Plans start at {{price_from}} a month depending on the vehicle and the coverage you pick.",
-      "cta": { "label": "See your free quote", "path": "welcome" },
+      "benefitStrip": "Plans start at {{price_from}} a month depending on your vehicle.",
+      "cta": {
+        "label": "See your free quote",
+        "path": "welcome"
+      },
       "ps": "You do not need to call us. You can if you want to. The whole thing works online, on your schedule, with nobody on the other end of it."
     },
     {
@@ -50,12 +65,27 @@
         "A vehicle service contract is simply the decision to price that now, while the car is healthy, instead of later, when it is not."
       ],
       "featureRows": [
-        { "icon": "R", "title": "Covered repairs, covered parts and labor", "subtitle": "You pay your deductible. We handle the rest of the conversation." },
-        { "icon": "S", "title": "Serviced right here", "subtitle": "Same shop, same advisors, same people who already have your history." },
-        { "icon": "T", "title": "Terms up to 60 months", "subtitle": "Match the coverage to how long you actually plan to keep it." }
+        {
+          "icon": "R",
+          "title": "Covered repairs, covered parts and labor",
+          "subtitle": "You pay your deductible. We handle the rest of the conversation."
+        },
+        {
+          "icon": "S",
+          "title": "Serviced right here",
+          "subtitle": "Same shop, same advisors, same people who already have your history."
+        },
+        {
+          "icon": "T",
+          "title": "Term set at purchase",
+          "subtitle": "Match the coverage to how long you actually plan to keep the car."
+        }
       ],
       "benefitStrip": "Repair cost examples are verified and dated on request. We do not quote scary numbers we cannot source.",
-      "cta": { "label": "Price my coverage", "path": "math" },
+      "cta": {
+        "label": "Price my coverage",
+        "path": "math"
+      },
       "ps": "The quote is free and it does not put you on a list. There is no list."
     },
     {
@@ -75,12 +105,27 @@
         "If you would genuinely like to talk to a human at {{dealer_short}}, our service line is at the bottom of this email and they are good. But you will never need to use it to buy this."
       ],
       "featureRows": [
-        { "icon": "W", "title": "100% online checkout", "subtitle": "Quote, select, purchase. No appointment, no finance office." },
-        { "icon": "N", "title": "No pressure, no follow up call", "subtitle": "We mean this literally. Nobody is assigned to chase you." },
-        { "icon": "C", "title": "Cancel per your contract terms", "subtitle": "The terms are printed plainly, not buried on page nine." }
+        {
+          "icon": "W",
+          "title": "100% online checkout",
+          "subtitle": "Quote, select, purchase. No appointment, no finance office."
+        },
+        {
+          "icon": "N",
+          "title": "No pressure, no follow up call",
+          "subtitle": "We mean this literally. Nobody is assigned to chase you."
+        },
+        {
+          "icon": "C",
+          "title": "30 day full refund",
+          "subtitle": "Cancel in the first 30 days with no claims made and the full price comes back."
+        }
       ],
       "benefitStrip": "Open the quote. Close the tab. Come back in a week. It will still be there.",
-      "cta": { "label": "Open my quote", "path": "online" },
+      "cta": {
+        "label": "Open my quote",
+        "path": "online"
+      },
       "ps": "We are aware that an email telling you nobody will call you is itself a form of contact. We accept the irony."
     },
     {
@@ -95,17 +140,32 @@
       "headline": "Come back to us and your deductible [[goes to zero.]]",
       "subhead": "Anywhere else it is {{deductible_away}}. Here it is {{deductible_home}}.",
       "body": [
-        "Coverage bought through {{dealer_name}} carries a disappearing deductible. Take a covered repair to another ASE certified shop and you pay {{deductible_away}}. Bring it to us and you pay {{deductible_home}}.",
+        "Coverage bought through {{dealer_name}} carries a disappearing deductible. Take a covered repair to another authorized repair facility and you pay {{deductible_away}}. Bring it to us and you pay {{deductible_home}}.",
         "This is not a loyalty points scheme. It is a line in the contract.",
-        "You are welcome to use any ASE certified shop in the country, and the coverage travels with you. We would just rather you did not have to."
+        "You are welcome to use any licensed repair facility the administrator authorizes, and the coverage travels with the car. We would just rather you did not have to."
       ],
       "featureRows": [
-        { "icon": "0", "title": "{{deductible_home}} deductible at {{dealer_short}}", "subtitle": "On covered repairs, per your contract terms." },
-        { "icon": "M", "title": "Any ASE certified shop nationwide", "subtitle": "Breaking down in another state is a bad day, not a coverage problem." },
-        { "icon": "H", "title": "Your service history is already here", "subtitle": "No starting from scratch with a shop that has never seen the car." }
+        {
+          "icon": "0",
+          "title": "{{deductible_home}} deductible at {{dealer_short}}",
+          "subtitle": "On covered repairs, per your contract terms."
+        },
+        {
+          "icon": "M",
+          "title": "Repairs anywhere the administrator authorizes",
+          "subtitle": "Breaking down out of town is a bad day, not a coverage problem."
+        },
+        {
+          "icon": "H",
+          "title": "Your service history is already here",
+          "subtitle": "No starting from scratch with a shop that has never seen the car."
+        }
       ],
       "benefitStrip": "Same building. Same advisors. Smaller invoice.",
-      "cta": { "label": "See my plan options", "path": "deductible" },
+      "cta": {
+        "label": "See my plan options",
+        "path": "deductible"
+      },
       "ps": "Deductible terms are set by your contract. The quote page shows exactly which one applies to your vehicle before you buy."
     },
     {
@@ -122,16 +182,31 @@
       "body": [
         "So we removed the number on the day. Coverage starts with 5% down. Whatever is left splits across up to 36 months at zero percent.",
         "There is no credit check and there is no interest. It is a payment plan, not a loan, and it does not touch your credit file.",
-        "Plans start at {{price_from}} a month depending on your vehicle and the coverage level you choose. Your actual number is on the quote page, in plain type, before you agree to anything."
+        "Plans start at {{price_from}} a month depending on your vehicle and the term you choose. Your actual number is on the quote page, in plain type, before you agree to anything."
       ],
       "featureRows": [
-        { "icon": "5", "title": "5% down to activate", "subtitle": "Coverage begins per your contract effective date." },
-        { "icon": "0", "title": "0% for up to 36 months", "subtitle": "No interest. Not a promotional rate that expires." },
-        { "icon": "X", "title": "No credit check", "subtitle": "No hard pull, no soft pull, no effect on your score." }
+        {
+          "icon": "5",
+          "title": "5% down to activate",
+          "subtitle": "Coverage begins per your contract effective date."
+        },
+        {
+          "icon": "0",
+          "title": "0% for up to 36 months",
+          "subtitle": "No interest. Not a promotional rate that expires."
+        },
+        {
+          "icon": "X",
+          "title": "No credit check",
+          "subtitle": "No hard pull, no soft pull, no effect on your score."
+        }
       ],
       "benefitStrip": "Payment plan. Not a loan. Not financing. The distinction matters and we keep it straight.",
-      "cta": { "label": "See my monthly number", "path": "payments" },
-      "ps": "Pricing varies by vehicle, mileage and coverage tier. Your quote shows your figure, not an average."
+      "cta": {
+        "label": "See my monthly number",
+        "path": "payments"
+      },
+      "ps": "Pricing varies by vehicle, mileage and term. Your quote shows your figure, not an average."
     },
     {
       "step": 6,
@@ -143,19 +218,34 @@
       "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
       "eyebrow": "ONE WORD, EXPLAINED",
       "headline": "Exclusionary. [[Ugly word.]] Best coverage.",
-      "subhead": "Every plan we sell is exclusionary. We are not holding a better one back for a different customer.",
+      "subhead": "Every contract in this program is exclusionary. We are not holding a better one back for a different customer.",
       "body": [
         "A listed component plan names the parts it covers. If your part is not on the list, it is not covered, and the list is always shorter than the car.",
         "An exclusionary plan flips it. It names the short list of things it does not cover, and everything else is in. You are reading a page instead of a phone book, and the burden sits with us rather than with you.",
-        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we offer, on every plan."
+        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell."
       ],
       "featureRows": [
-        { "icon": "E", "title": "Exclusionary on all plans", "subtitle": "Silver, Gold and Platinum. No stripped entry tier." },
-        { "icon": "L", "title": "A short list of exclusions", "subtitle": "Printed in the contract, readable before you buy." },
-        { "icon": "P", "title": "Protection Plus available", "subtitle": "Tire and wheel, key replacement, dent repair, windshield." }
+        {
+          "icon": "E",
+          "title": "Platinum is the only plan here",
+          "subtitle": "We sell one coverage level in this program. It is the exclusionary one."
+        },
+        {
+          "icon": "L",
+          "title": "A short list of exclusions",
+          "subtitle": "Printed in the contract, readable before you buy."
+        },
+        {
+          "icon": "P",
+          "title": "Transferable if you sell the car",
+          "subtitle": "Coverage follows a proper transfer to the next owner."
+        }
       ],
       "benefitStrip": "If you only remember one word from this campaign, it is this one.",
-      "cta": { "label": "Read what is covered", "path": "exclusionary" },
+      "cta": {
+        "label": "Read what is covered",
+        "path": "exclusionary"
+      },
       "ps": "The full terms and conditions are linked from the quote page. Read them. We wrote them to survive being read."
     },
     {
@@ -172,22 +262,37 @@
       "body": [
         "Here is the difference, and it is not subtle. Those callers do not know your car. We have it in our system, with its service history, its mileage and the ticket we closed on {{last_ro_date}}.",
         "We are not a call center that bought your number. We are the service department you drove to.",
-        "Coverage is administered by {{administrator}} and honored at any ASE certified shop in the country. It is a real contract with a real obligor, sold by a store with a physical address you have parked at."
+        "Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize. It is a real contract with a real obligor, sold by a store with a physical address you have parked at."
       ],
       "featureRows": [
-        { "icon": "A", "title": "A real administrator", "subtitle": "{{administrator}} backs the contract." },
-        { "icon": "B", "title": "A real building", "subtitle": "{{dealer_name}}, serving {{service_area}}." },
-        { "icon": "R", "title": "24/7 roadside assistance included", "subtitle": "Up to three events per year." }
+        {
+          "icon": "A",
+          "title": "A real administrator",
+          "subtitle": "{{administrator}} backs the contract."
+        },
+        {
+          "icon": "B",
+          "title": "A real building",
+          "subtitle": "{{dealer_name}}, serving {{service_area}}."
+        },
+        {
+          "icon": "R",
+          "title": "24/7 roadside assistance included",
+          "subtitle": "Up to three events per year."
+        }
       ],
       "benefitStrip": "No robocall has ever known your mileage. We do.",
-      "cta": { "label": "Get my quote from {{dealer_short}}", "path": "real" },
+      "cta": {
+        "label": "Get my quote from {{dealer_short}}",
+        "path": "real"
+      },
       "ps": "If you would like to verify any of this in person, the service drive is open and we are exactly where you left us."
     },
     {
       "step": 8,
       "sendDay": 40,
       "slug": "08-the-stuff-you-forget-you-have",
-      "goal": "Ancillary benefits: roadside, rental, diminished value, Openbay scheduling",
+      "goal": "Ancillary benefits: roadside, towing, rental reimbursement",
       "subject": "The parts of coverage nobody talks about",
       "subjectAlt": "Roadside, rental, and the rest of it",
       "preheader": "Coverage is not only for the day the transmission goes. Most of it is for smaller, more annoying days.",
@@ -196,17 +301,32 @@
       "subhead": "Most of what you will actually use is the unglamorous middle of the contract.",
       "body": [
         "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones.",
-        "A tow on a Sunday. A rental while the car is on a lift. A key fob that went into a washing machine, assuming you added Protection Plus.",
+        "A tow on a Sunday night. A rental car while yours sits on a lift for three days. A sensor you had never heard of, which turns out to be essential.",
         "None of that makes for dramatic advertising. All of it makes for a better Tuesday."
       ],
       "featureRows": [
-        { "icon": "R", "title": "24/7 roadside assistance", "subtitle": "Up to three events per year, towing included." },
-        { "icon": "K", "title": "Rental reimbursement", "subtitle": "{{rental_rate}} per 6 hours of labor time, up to {{rental_max}} per claim visit." },
-        { "icon": "D", "title": "Diminished value protection", "subtitle": "One year, up to the contract maximum. Formula based, not a flat payout." }
+        {
+          "icon": "R",
+          "title": "24/7 roadside assistance",
+          "subtitle": "Up to three events per year, towing included."
+        },
+        {
+          "icon": "K",
+          "title": "Rental reimbursement",
+          "subtitle": "{{rental_rate}} per 6 hours of labor time, up to {{rental_max}} per claim visit."
+        },
+        {
+          "icon": "D",
+          "title": "Towing to the nearest shop",
+          "subtitle": "Up to $100 per occurrence, part of the same roadside benefit."
+        }
       ],
-      "benefitStrip": "Service scheduling and future service discounts through Openbay are included with your coverage.",
-      "cta": { "label": "See everything included", "path": "included" },
-      "ps": "Diminished value is calculated by formula and paid up to the contract maximum. It is not a guaranteed lump sum and we will not pretend otherwise."
+      "benefitStrip": "Roadside covers three events a year. Most people use one and are glad it was there.",
+      "cta": {
+        "label": "See everything included",
+        "path": "included"
+      },
+      "ps": "Rental reimbursement needs proof of rental submitted with an authorized claim, so keep the receipt. Benefit limits are set by your contract."
     },
     {
       "step": 9,
@@ -225,12 +345,27 @@
         "Coverage cannot be bought retroactively. That is the entire reason this campaign exists."
       ],
       "featureRows": [
-        { "icon": "M", "title": "Priced on today's mileage", "subtitle": "Your quote reflects {{vehicle_mileage}} miles, not next year's." },
-        { "icon": "T", "title": "More tiers available now", "subtitle": "Eligibility narrows as mileage climbs." },
-        { "icon": "X", "title": "No coverage after the fact", "subtitle": "Existing conditions are not covered by any contract, anywhere." }
+        {
+          "icon": "M",
+          "title": "Priced on today's mileage",
+          "subtitle": "Your quote reflects {{vehicle_mileage}} miles, not next year's."
+        },
+        {
+          "icon": "T",
+          "title": "Some exclusions arrive with mileage",
+          "subtitle": "Seals and gaskets stop being covered once the car is past 125,000 miles at claim time."
+        },
+        {
+          "icon": "X",
+          "title": "No coverage after the fact",
+          "subtitle": "Existing conditions are not covered by any contract, anywhere."
+        }
       ],
       "benefitStrip": "No countdown timer in this email. We checked.",
-      "cta": { "label": "Check what I qualify for", "path": "window" },
+      "cta": {
+        "label": "Check what I qualify for",
+        "path": "window"
+      },
       "ps": "If you have already sold or traded the {{vehicle_model}}, ignore all of this and enjoy the new one."
     },
     {
@@ -250,12 +385,27 @@
         "Either way, thank you for servicing with {{dealer_name}}. That part we would like to keep doing."
       ],
       "featureRows": [
-        { "icon": "L", "title": "Your quote link stays active", "subtitle": "Bookmark it. Use it whenever." },
-        { "icon": "S", "title": "We will still service the car", "subtitle": "Coverage or no coverage, nothing changes in the drive." },
-        { "icon": "N", "title": "No further emails in this series", "subtitle": "This sequence ends here automatically." }
+        {
+          "icon": "L",
+          "title": "Your quote link stays active",
+          "subtitle": "Bookmark it. Use it whenever."
+        },
+        {
+          "icon": "S",
+          "title": "We will still service the car",
+          "subtitle": "Coverage or no coverage, nothing changes in the drive."
+        },
+        {
+          "icon": "N",
+          "title": "No further emails in this series",
+          "subtitle": "This sequence ends here automatically."
+        }
       ],
       "benefitStrip": "No hard sell on the way out. That would undercut the previous nine emails.",
-      "cta": { "label": "Open my quote one last time", "path": "last" },
+      "cta": {
+        "label": "Open my quote one last time",
+        "path": "last"
+      },
       "ps": "If you would rather hear nothing from us at all, the unsubscribe link below works instantly and we will not make you explain yourself."
     }
   ]

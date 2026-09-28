@@ -28,6 +28,19 @@ const DECK = read('email/copy/campaign.json');
 const OBLIGOR = (OFFER.obligor_by_state && OFFER.obligor_by_state[D.dealer.state]) || OFFER.administrator_default;
 
 const C = { ...T.color, ...D.color };
+
+// Co-brand balance. On a dealership send the dealer's colour should carry the
+// layout and DriveOne should read as the provider, not the sender. When
+// brandLead.mode is "dealer" every structural accent resolves to their gold and
+// DriveOne cyan is kept for the provider lockup alone.
+const DEALER_LED = (D.brandLead && D.brandLead.mode) === 'dealer';
+const A = {
+  accent:     DEALER_LED ? C.accent      : C.cyan,
+  accentDark: DEALER_LED ? C.accentDark  : C.cyanDark,
+  onAccent:   DEALER_LED ? C.onAccent    : C.ink,
+  soft:       DEALER_LED ? C.primarySoft : C.cyanSoft,
+  ground:     DEALER_LED ? C.primary     : C.ink,
+};
 const F = T.font;
 const W = T.layout.emailWidth;
 const GUT = T.layout.gutter;
@@ -38,7 +51,7 @@ const esc = (s) => String(s).replace(/&(?![a-z#0-9]+;)/gi, '&amp;').replace(/</g
 
 /** Turn [[phrase]] into a cyan accent span. */
 const accent = (s) =>
-  esc(s).replace(/\[\[(.+?)\]\]/g, `<span style="color:${C.cyan};">$1</span>`);
+  esc(s).replace(/\[\[(.+?)\]\]/g, `<span style="color:${A.accent};">$1</span>`);
 
 /** Defaults injected for every {{tag}} that the ESP does not own. */
 const OFFER_TAGS = {
@@ -143,11 +156,11 @@ const header = () => `
 /** Dark hero with a cyan rule standing in for the bloom. Gradients do not render in Outlook, a solid ground does. */
 const hero = (e) => `
 <tr>
-<td style="padding:0;background-color:${C.ink};">
+<td style="padding:0;background-color:${A.ground};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:4px;line-height:4px;font-size:4px;background-color:${C.cyan};">&nbsp;</td></tr>
+    <tr><td style="height:4px;line-height:4px;font-size:4px;background-color:${A.accent};">&nbsp;</td></tr>
     <tr><td style="padding:${GUT}px ${GUT}px 30px ${GUT}px;">
-      <p style="margin:0 0 14px 0;${font(F.body, 10, 700, C.cyan, '1.5')}letter-spacing:2px;">${esc(e.eyebrow)}</p>
+      <p style="margin:0 0 14px 0;${font(F.body, 10, 700, A.accent, '1.5')}letter-spacing:2px;">${esc(e.eyebrow)}</p>
       <h1 style="margin:0 0 14px 0;${font(F.display, 32, 800, '#FFFFFF', '1.14')}letter-spacing:-0.9px;">${accent(e.headline)}</h1>
       <p style="margin:0;${font(F.body, 16, 400, 'rgba(255,255,255,0.74)', '1.55')}">${esc(e.subhead)}</p>
     </td></tr>
@@ -160,23 +173,23 @@ const hero = (e) => `
 const vehicleCard = () => `
 <tr>
 <td style="padding:26px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.cyanSoft};border-radius:${T.layout.radius}px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${A.soft};border-radius:${T.layout.radius}px;">
     <tr><td style="padding:18px 20px 16px 20px;">
-      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR LAST VISIT WITH US</p>
+      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">YOUR LAST VISIT WITH US</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
       <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">{{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
     </td></tr>
 
     <tr><td style="padding:0 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr><td style="height:1px;line-height:1px;font-size:1px;background-color:${C.cyan};">&nbsp;</td></tr>
+        <tr><td style="height:1px;line-height:1px;font-size:1px;background-color:${A.accent};">&nbsp;</td></tr>
       </table>
     </td></tr>
 
     <tr><td style="padding:14px 20px 18px 20px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td valign="bottom" align="left">
-          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR PLATINUM COVERAGE</p>
+          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">YOUR PLATINUM COVERAGE</p>
           <p style="margin:0;${font(F.body, 13, 500, C.bodyText, '1.4')}">{{down_payment}} down to start</p>
         </td>
         <td valign="bottom" align="right" style="white-space:nowrap;">
@@ -204,8 +217,8 @@ const featureRows = (e) => `
     <tr><td style="padding:16px 0 16px 0;${i ? `border-top:1px solid ${C.rule};` : ''}">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td width="44" valign="top" style="width:44px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="34" style="width:34px;border:2px solid ${C.cyan};border-radius:17px;">
-            <tr><td align="center" valign="middle" height="30" style="height:30px;${font(F.display, 14, 800, C.cyanDark, '30px')}">${esc(r.icon)}</td></tr>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="34" style="width:34px;border:2px solid ${A.accent};border-radius:17px;">
+            <tr><td align="center" valign="middle" height="30" style="height:30px;${font(F.display, 14, 800, A.accentDark, '30px')}">${esc(r.icon)}</td></tr>
           </table>
         </td>
         <td valign="top">
@@ -227,13 +240,13 @@ function cta(e) {
 <td align="center" style="padding:22px ${GUT}px 6px ${GUT}px;background-color:${C.white};">
   <!--[if mso]>
   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-    href="${href}" style="height:52px;v-text-anchor:middle;width:${W - GUT * 2}px;" arcsize="26%" stroke="f" fillcolor="${C.cyan}">
+    href="${href}" style="height:52px;v-text-anchor:middle;width:${W - GUT * 2}px;" arcsize="26%" stroke="f" fillcolor="${A.accent}">
     <w:anchorlock/>
-    <center style="color:${C.ink};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center>
+    <center style="color:${A.onAccent};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center>
   </v:roundrect>
   <![endif]-->
   <!--[if !mso]><!-- -->
-  <a href="${href}" style="display:block;background-color:${C.cyan};border-radius:${T.layout.radius}px;padding:17px 22px;text-align:center;text-decoration:none;${font(F.display, 16, 800, C.ink, '1.2')}letter-spacing:-0.2px;">${label}</a>
+  <a href="${href}" style="display:block;background-color:${A.accent};border-radius:${T.layout.radius}px;padding:17px 22px;text-align:center;text-decoration:none;${font(F.display, 16, 800, A.onAccent, '1.2')}letter-spacing:-0.2px;">${label}</a>
   <!--<![endif]-->
 </td>
 </tr>`;
@@ -242,7 +255,7 @@ function cta(e) {
 const benefitStrip = (e) => `
 <tr>
 <td style="padding:16px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid ${C.cyan};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid ${A.accent};">
     <tr><td style="padding:2px 0 2px 14px;${font(F.body, 14, 500, C.bodyText, '1.55')}">${esc(e.benefitStrip)}</td></tr>
   </table>
 </td>

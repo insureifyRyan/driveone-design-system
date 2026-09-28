@@ -14,12 +14,14 @@
     "storeNote": "Rooftop is the Watertown store. Its own page heading reads BOB JOHNSON DODGE JEEP RAM, so that is what the emails print, though the group site also lists it as Chrysler Dodge Jeep Ram and the page shows Chrysler among available makes. Say the word if it should read Chrysler. State stays NY, so the ORIAS obligor in the footer is still correct."
   },
   "color": {
-    "$note": "Black, gold and white, read off screenshots of the live site rather than the stylesheet. The gold is the wordmark underline and the primary buttons. Close, but confirm against the brand sheet.",
+    "$note": "Black and gold, read from the wordmark and the primary buttons on the live site. accentDark is a darkened gold used only for small caps labels, because gold at 9px on white does not carry enough contrast to read.",
     "primary": "#000000",
     "primaryDark": "#1C1C1C",
-    "accent": "#E9A93C",
-    "primarySoft": "#FFF7E6",
-    "onPrimary": "#FFFFFF"
+    "accent": "#E8A33C",
+    "primarySoft": "#FDF6E8",
+    "onPrimary": "#FFFFFF",
+    "accentDark": "#8A6410",
+    "onAccent": "#141414"
   },
   "logo": {
     "$note": "Pulled from the dealer record in MetricBridge (elevate_service_drive), so it is the logo your own system already holds. NOT VISUALLY VERIFIED: this environment cannot reach supabase.co, so the aspect ratio, transparency and whether it reads on white were not checked. Open one preview and confirm, and adjust widthPx if it looks wrong.",
@@ -68,5 +70,9 @@
     "intake_window_note": "Quotes for this rooftop run Feb to Sep 2026: 107 in the last 30 days, 458 within 90. A 30 day window would enroll only the newest 107 and strand the rest, so the backfill runs at 90.",
     "max_mileage": 99999,
     "max_mileage_note": "Matches the top of vsc_rate_mileage_bracket. Vehicles at 100k+ cannot be priced, so they are held out rather than emailed a blank. Of 432 otherwise eligible, 269 are quotable today and 163 are waiting on a high mileage bracket. Raise this the day that bracket exists and they enroll on the next sweep, no other change needed."
+  },
+  "brandLead": {
+    "$comment": "dealer means the dealership colour leads the layout and DriveOne cyan is reduced to the provider mark in the header. Set to driveone to flip it back.",
+    "mode": "dealer"
   }
 }

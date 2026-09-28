@@ -472,8 +472,17 @@ const schedulerNodes = [
   node('Fetch Template HTML', 'httpRequest', 4.2, [480, -100], {
     method: 'GET',
     url: '={{ $env.TEMPLATE_BASE_URL }}/{{ $json.slug }}.html',
+    sendHeaders: true,
+    headerParameters: {
+      parameters: [
+        // Only needed while the templates sit behind Vercel Deployment Protection.
+        // Harmless when empty, e.g. once they are served from an unprotected custom
+        // domain. See docs/N8N-SETUP.md, Hosting the templates.
+        { name: 'x-vercel-protection-bypass', value: '={{ $env.VERCEL_BYPASS_TOKEN || "" }}' },
+      ],
+    },
     options: { response: { response: { responseFormat: 'text', outputPropertyName: 'data' } } },
-  }),
+  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 3000 }),
 
   codeNode('Render Merge Tags', [700, -100], RENDER_CODE),
 

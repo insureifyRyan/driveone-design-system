@@ -84,7 +84,7 @@
           },
           "conditions": [
             {
-              "id": "cwzb3lf",
+              "id": "cybugth",
               "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
@@ -124,6 +124,15 @@
       "parameters": {
         "method": "GET",
         "url": "={{ $env.TEMPLATE_BASE_URL }}/{{ $json.slug }}.html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-vercel-protection-bypass",
+              "value": "={{ $env.VERCEL_BYPASS_TOKEN || \"\" }}"
+            }
+          ]
+        },
         "options": {
           "response": {
             "response": {
@@ -140,7 +149,10 @@
       "position": [
         480,
         -100
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {

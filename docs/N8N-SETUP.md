@@ -60,7 +60,8 @@ on import (n8n prompts for each on first open).
 
 | Variable | Example | Notes |
 |---|---|---|
-| `TEMPLATE_BASE_URL` | `https://<project>.vercel.app/templates` | Where `email/dist/*.html` is served. Vercel config is in the repo. |
+| `TEMPLATE_BASE_URL` | `https://driveone-design-system.vercel.app/templates` | Where `email/dist/*.html` is served. See Hosting the templates below. |
+| `VERCEL_BYPASS_TOKEN` | | Only while the templates sit behind Vercel Deployment Protection. Leave empty otherwise. |
 | `RESEND_API_KEY` | `re_...` | |
 | `SEND_FROM` | `Bob Johnson Service <service@mail.bobjohnson...>` | Must be a dealer domain. See open item 4. |
 | `SEND_REPLY_TO` | `service@...` | A monitored mailbox. |
@@ -79,6 +80,47 @@ on import (n8n prompts for each on first open).
 **5. Test before activating.** Everything imports inactive. Post one fake RO to the
 workflow 01 webhook, confirm a row appears in `vsc_enrollment`, then set that row's
 `next_send_at` to `now()` and run workflow 02 manually.
+
+## Hosting the templates
+
+The Vercel project is `driveone-design-system` on the Kovara team, and it builds this
+repo with `npm run vercel-build`. The build emits:
+
+```
+/                      the review gallery
+/filled/*.html         sample data previews for client sign off
+/templates/*.html      merge tag templates  <- TEMPLATE_BASE_URL
+/templates/manifest.json
+```
+
+**One thing to settle before the scheduler can fetch them.** The project has Vercel
+Authentication (SSO protection) enabled with `all_except_custom_domains`, so a plain
+request to a `.vercel.app` template URL gets a 302 to the Vercel SSO page rather than the
+HTML. n8n would fail on every send. Three ways out, best first:
+
+1. **Point a custom domain at the project.** Protection is already set to
+   `all_except_custom_domains`, so a custom domain is served without the SSO gate
+   automatically. Nothing is weakened, no secret to rotate, and `TEMPLATE_BASE_URL`
+   becomes a stable branded URL. This is the recommended option.
+2. **Create a Protection Bypass for Automation.** Vercel dashboard, Project Settings,
+   Deployment Protection, Protection Bypass for Automation. Put the generated secret in
+   n8n as `VERCEL_BYPASS_TOKEN`. The scheduler already sends it as the
+   `x-vercel-protection-bypass` header on the template fetch, so nothing else changes.
+3. **Turn off Vercel Authentication for this project.** Simplest, but it makes every
+   preview deployment publicly readable, so prefer 1 or 2.
+
+Whichever you pick, confirm it by fetching one template and checking you get HTML rather
+than a redirect:
+
+```bash
+curl -sSI "$TEMPLATE_BASE_URL/01-missing-from-your-profile.html" | head -1
+# want: HTTP/2 200      not: HTTP/2 302
+```
+
+The scheduler already fails loudly rather than silently on a bad fetch: the render node
+throws if the response is under 500 characters or if any merge tag is left unresolved, so
+a protection redirect surfaces as a failed execution and a Slack alert rather than a
+broken email.
 
 ## Adding a second DMS
 

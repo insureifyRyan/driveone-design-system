@@ -68,7 +68,7 @@
           },
           "conditions": [
             {
-              "id": "ctruw23",
+              "id": "cc21lw1",
               "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
@@ -153,44 +153,34 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.resend.com/emails",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.RESEND_API_KEY }}"
-            },
-            {
-              "name": "Idempotency-Key",
-              "value": "={{ $json.enrollment_id }}-{{ $json.step }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  from: $env.SEND_FROM,\n  reply_to: $env.SEND_REPLY_TO,\n  to: [$('Claim Due Enrollments').itemMatching($itemIndex).json.email],\n  subject: $json.subject,\n  html: $json.html,\n  headers: {\n    \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">, <mailto:\" + $env.UNSUBSCRIBE_MAILBOX + \">\",\n    \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\"\n  },\n  tags: [\n    { name: \"campaign\", value: $json.campaign_id },\n    { name: \"dealer\", value: $json.dealer_id },\n    { name: \"step\", value: String($json.step) },\n    { name: \"variant\", value: $json.variant }\n  ]\n}) }}",
+        "fromEmail": "={{ $env.SEND_FROM }}",
+        "toEmail": "={{ $('Claim Due Enrollments').itemMatching($itemIndex).json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
         "options": {
-          "response": {
-            "response": {
-              "neverError": false
-            }
-          }
+          "replyTo": "={{ $env.SEND_REPLY_TO }}",
+          "appendAttribution": false
         }
       },
-      "id": "n012-send-via-resend",
-      "name": "Send via Resend",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "id": "n012-send-via-smtp",
+      "name": "Send via SMTP",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
       "position": [
         920,
         -100
       ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_SMTP_CRED_ID",
+          "name": "Bob Johnson Sending Mailbox"
+        }
+      },
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 8000
     },
     {
       "parameters": {
@@ -339,14 +329,14 @@
       "main": [
         [
           {
-            "node": "Send via Resend",
+            "node": "Send via SMTP",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send via Resend": {
+    "Send via SMTP": {
       "main": [
         [
           {

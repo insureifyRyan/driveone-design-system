@@ -1,0 +1,109 @@
+{
+  "name": "DriveOne VSC 06 Bounce Watcher (Bob Johnson Dodge Jeep Ram)",
+  "nodes": [
+    {
+      "parameters": {
+        "mailbox": "INBOX",
+        "postProcessAction": "read",
+        "format": "simple",
+        "options": {}
+      },
+      "id": "n035-sending-mailbox-imap",
+      "name": "Sending Mailbox (IMAP)",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ],
+      "credentials": {
+        "imap": {
+          "id": "REPLACE_IMAP_CRED_ID",
+          "name": "Bob Johnson Sending Mailbox"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const out = [];\n\n// Delivery status notifications are not standardised in practice, so match on\n// the things that are actually stable: the RFC 3463 status code, and the\n// original recipient echoed somewhere in the body.\nconst HARD = /\\b5\\.\\d\\.\\d\\b|user unknown|no such user|does not exist|mailbox unavailable|address rejected|recipient rejected/i;\nconst SOFT = /\\b4\\.\\d\\.\\d\\b|over quota|mailbox full|try again later|temporarily deferred/i;\nconst COMPLAINT = /feedback-type:\\s*abuse|this is an abuse report|complaint/i;\n\nfor (const item of $input.all()) {\n  const m = item.json || {};\n  const from = String(m.from || m.fromEmail || \"\").toLowerCase();\n  const subject = String(m.subject || \"\");\n  const body = String(m.textPlain || m.text || m.textHtml || m.html || \"\");\n  const blob = subject + \"\\n\" + body;\n\n  const looksAutomated = /mailer-daemon|postmaster|no-?reply/.test(from)\n    || /undeliverable|delivery status|returned mail|failure notice|mail delivery/i.test(subject);\n  if (!looksAutomated && !COMPLAINT.test(blob)) continue;\n\n  // The bounced address is whatever appears in the body that is not our own\n  // sending address or the daemon.\n  const sender = String($env.SEND_FROM || \"\").toLowerCase().replace(/.*<|>.*/g, \"\");\n  const candidates = (blob.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi) || [])\n    .map((e) => e.toLowerCase())\n    .filter((e) => e !== sender && !/mailer-daemon|postmaster/.test(e));\n  if (candidates.length === 0) continue;\n\n  const type = COMPLAINT.test(blob) ? \"email.complained\"\n    : HARD.test(blob) ? \"email.bounced\"\n    : SOFT.test(blob) ? null          // transient, do not suppress a real customer\n    : null;\n  if (!type) continue;\n\n  out.push({ json: { type, email: candidates[0], dealer_id: \"bob-johnson\", subject } });\n}\nreturn out;"
+      },
+      "id": "n036-parse-bounce-or-complaint",
+      "name": "Parse Bounce Or Complaint",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -310,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CAMPAIGN_EVENT_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "n037-post-to-exit-endpoint",
+      "name": "Post To Exit Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -60,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Sending Mailbox (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Parse Bounce Or Complaint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Bounce Or Complaint": {
+      "main": [
+        [
+          {
+            "node": "Post To Exit Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:bob-johnson"
+    }
+  ]
+}

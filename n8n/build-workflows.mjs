@@ -432,37 +432,22 @@ const schedulerNodes = [
 
   codeNode('Render Merge Tags', [700, -100], RENDER_CODE),
 
-  node('Send via Resend', 'httpRequest', 4.2, [920, -100], {
-    method: 'POST',
-    url: 'https://api.resend.com/emails',
-    sendHeaders: true,
-    headerParameters: {
-      parameters: [
-        { name: 'Authorization', value: '=Bearer {{ $env.RESEND_API_KEY }}' },
-        { name: 'Idempotency-Key', value: '={{ $json.enrollment_id }}-{{ $json.step }}' },
-      ],
+  node('Send via SMTP', 'emailSend', 2.1, [920, -100], {
+    fromEmail: '={{ $env.SEND_FROM }}',
+    toEmail: "={{ $('Claim Due Enrollments').itemMatching($itemIndex).json.email }}",
+    subject: '={{ $json.subject }}',
+    emailFormat: 'html',
+    html: '={{ $json.html }}',
+    options: {
+      replyTo: '={{ $env.SEND_REPLY_TO }}',
+      // n8n appends its own footer unless this is off, which would put
+      // "sent automatically with n8n" under a dealership's customer email.
+      appendAttribution: false,
     },
-    sendBody: true,
-    specifyBody: 'json',
-    jsonBody: '={{ JSON.stringify({\n'
-      + '  from: $env.SEND_FROM,\n'
-      + '  reply_to: $env.SEND_REPLY_TO,\n'
-      + '  to: [$(\'Claim Due Enrollments\').itemMatching($itemIndex).json.email],\n'
-      + '  subject: $json.subject,\n'
-      + '  html: $json.html,\n'
-      + '  headers: {\n'
-      + '    "List-Unsubscribe": "<" + $json.merge.unsubscribe_url + ">, <mailto:" + $env.UNSUBSCRIBE_MAILBOX + ">",\n'
-      + '    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"\n'
-      + '  },\n'
-      + '  tags: [\n'
-      + '    { name: "campaign", value: $json.campaign_id },\n'
-      + '    { name: "dealer", value: $json.dealer_id },\n'
-      + '    { name: "step", value: String($json.step) },\n'
-      + '    { name: "variant", value: $json.variant }\n'
-      + '  ]\n'
-      + '}) }}',
-    options: { response: { response: { neverError: false } } },
-  }, { onError: 'continueErrorOutput', retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 }),
+  }, {
+    credentials: { smtp: { id: 'REPLACE_SMTP_CRED_ID', name: 'Bob Johnson Sending Mailbox' } },
+    onError: 'continueErrorOutput', retryOnFail: true, maxTries: 3, waitBetweenTries: 8000,
+  }),
 
   pgNode('Log Send', [1140, -200],
     [
@@ -498,8 +483,8 @@ const schedulerConnections = connect([
   ['Anything Due?', ['Prepare Send', 'Nothing Due']],
   ['Prepare Send', 'Fetch Template HTML'],
   ['Fetch Template HTML', 'Render Merge Tags'],
-  ['Render Merge Tags', 'Send via Resend'],
-  ['Send via Resend', ['Log Send', 'Send Failed']],
+  ['Render Merge Tags', 'Send via SMTP'],
+  ['Send via SMTP', ['Log Send', 'Send Failed']],
   ['Log Send', 'Advance State'],
 ]);
 
@@ -829,3 +814,81 @@ writeFileSync(join(ROOT, 'n8n/workflows/05-pricing.json'),
   ])), null, 2));
 
 console.log('built 05-pricing.json');
+
+
+/* ================================================== 6. BOUNCE WATCHER == */
+
+// Sending over SMTP means no provider webhooks, so bounces and complaints
+// arrive as ordinary mail in the sending mailbox instead of as events. Left
+// alone, the campaign would keep mailing dead addresses for 60 days, which is
+// exactly how a warmed domain stops being warm. This workflow reads them back
+// out over IMAP and feeds the same exit endpoint an ESP webhook would have hit.
+const PARSE_BOUNCE_CODE = [
+  'const out = [];',
+  '',
+  '// Delivery status notifications are not standardised in practice, so match on',
+  '// the things that are actually stable: the RFC 3463 status code, and the',
+  '// original recipient echoed somewhere in the body.',
+  'const HARD = /\\b5\\.\\d\\.\\d\\b|user unknown|no such user|does not exist|mailbox unavailable|address rejected|recipient rejected/i;',
+  'const SOFT = /\\b4\\.\\d\\.\\d\\b|over quota|mailbox full|try again later|temporarily deferred/i;',
+  "const COMPLAINT = /feedback-type:\\s*abuse|this is an abuse report|complaint/i;",
+  '',
+  'for (const item of $input.all()) {',
+  '  const m = item.json || {};',
+  '  const from = String(m.from || m.fromEmail || "").toLowerCase();',
+  '  const subject = String(m.subject || "");',
+  '  const body = String(m.textPlain || m.text || m.textHtml || m.html || "");',
+  '  const blob = subject + "\\n" + body;',
+  '',
+  '  const looksAutomated = /mailer-daemon|postmaster|no-?reply/.test(from)',
+  '    || /undeliverable|delivery status|returned mail|failure notice|mail delivery/i.test(subject);',
+  '  if (!looksAutomated && !COMPLAINT.test(blob)) continue;',
+  '',
+  '  // The bounced address is whatever appears in the body that is not our own',
+  '  // sending address or the daemon.',
+  '  const sender = String($env.SEND_FROM || "").toLowerCase().replace(/.*<|>.*/g, "");',
+  '  const candidates = (blob.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi) || [])',
+  '    .map((e) => e.toLowerCase())',
+  '    .filter((e) => e !== sender && !/mailer-daemon|postmaster/.test(e));',
+  '  if (candidates.length === 0) continue;',
+  '',
+  '  const type = COMPLAINT.test(blob) ? "email.complained"',
+  '    : HARD.test(blob) ? "email.bounced"',
+  '    : SOFT.test(blob) ? null          // transient, do not suppress a real customer',
+  '    : null;',
+  '  if (!type) continue;',
+  '',
+  '  out.push({ json: { type, email: candidates[0], dealer_id: ' + JSON.stringify(DEALER.id) + ', subject } });',
+  '}',
+  'return out;',
+].join('\n');
+
+const bounceNodes = [
+  node('Sending Mailbox (IMAP)', 'emailReadImap', 2, [-560, 0], {
+    mailbox: 'INBOX',
+    postProcessAction: 'read',
+    format: 'simple',
+    options: {},
+  }, { credentials: { imap: { id: 'REPLACE_IMAP_CRED_ID', name: 'Bob Johnson Sending Mailbox' } } }),
+
+  codeNode('Parse Bounce Or Complaint', [-310, 0], PARSE_BOUNCE_CODE),
+
+  node('Post To Exit Endpoint', 'httpRequest', 4.2, [-60, 0], {
+    method: 'POST',
+    url: '={{ $env.CAMPAIGN_EVENT_URL }}',
+    sendHeaders: true,
+    headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
+    sendBody: true,
+    specifyBody: 'json',
+    jsonBody: '={{ JSON.stringify($json) }}',
+    options: {},
+  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 }),
+];
+
+writeFileSync(join(ROOT, 'n8n/workflows/06-bounce-watcher.json'),
+  JSON.stringify(workflow('DriveOne VSC 06 Bounce Watcher (' + DEALER.dealer.displayName + ')', bounceNodes, connect([
+    ['Sending Mailbox (IMAP)', 'Parse Bounce Or Complaint'],
+    ['Parse Bounce Or Complaint', 'Post To Exit Endpoint'],
+  ])), null, 2));
+
+console.log('built 06-bounce-watcher.json');

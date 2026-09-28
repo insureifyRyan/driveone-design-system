@@ -314,6 +314,11 @@ const dealerBar = () => `
 </td>
 </tr>`;
 
+/* The unsubscribe link is set deliberately larger and bolder than the rest of
+ * the legal block. Sending over SMTP means no one-click List-Unsubscribe header,
+ * so a reader who wants out has only this link to find. If they cannot find it
+ * they press Report spam instead, which costs the domain far more than the
+ * unsubscribe ever would. */
 const footer = () => `
 <tr>
 <td style="padding:24px ${GUT}px 34px ${GUT}px;background-color:${C.paper};">
@@ -325,8 +330,8 @@ const footer = () => `
   </p>
   <p style="margin:0;${font(F.body, 11, 400, C.legalText, '1.65')}">
     ${esc(D.dealer.displayName)}, ${esc(D.contact.addressLine1)}, ${esc(D.contact.addressLine2)}<br />
-    <a href="{{unsubscribe_url}}" style="color:${C.legalText};text-decoration:underline;">Unsubscribe from this series</a> &nbsp;&middot;&nbsp;
-    <a href="{{preferences_url}}" style="color:${C.legalText};text-decoration:underline;">Email preferences</a>
+    <a href="{{unsubscribe_url}}" style="color:${C.mutedText};text-decoration:underline;font-weight:700;font-size:12px;">Unsubscribe from this series</a> &nbsp;&middot;&nbsp;
+    <a href="{{preferences_url}}" style="color:${C.mutedText};text-decoration:underline;font-size:12px;">Email preferences</a>
   </p>
 </td>
 </tr>`;

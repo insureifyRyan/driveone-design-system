@@ -156,25 +156,33 @@ const hero = (e) => `
 </tr>`;
 
 /** The RO personalization card. This is the thing a generic VSC blast cannot do. */
+/** The RO personalization card, and the price. Both above the fold, no click needed. */
 const vehicleCard = () => `
 <tr>
 <td style="padding:26px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.cyanSoft};border-radius:${T.layout.radius}px;">
-    <tr><td style="padding:18px 20px;">
+    <tr><td style="padding:18px 20px 16px 20px;">
       <p style="margin:0 0 6px 0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR LAST VISIT WITH US</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
-      <p style="margin:0 0 14px 0;${font(F.body, 13, 400, C.bodyText, '1.6')}">{{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${C.cyan};">
-        <tr>
-          <td valign="middle" style="padding:12px 0 0 0;">
-            <p style="margin:0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR COVERAGE, PER MONTH</p>
-          </td>
-          <td align="right" valign="middle" style="padding:12px 0 0 0;">
-            <span style="${font(F.display, 30, 800, C.ink, '1')}letter-spacing:-1px;">{{monthly_payment}}</span>
-            <span style="${font(F.body, 13, 500, C.mutedText, '1')}">/mo</span>
-          </td>
-        </tr>
+      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">{{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
+    </td></tr>
+
+    <tr><td style="padding:0 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="height:1px;line-height:1px;font-size:1px;background-color:${C.cyan};">&nbsp;</td></tr>
       </table>
+    </td></tr>
+
+    <tr><td style="padding:14px 20px 18px 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td valign="bottom" align="left">
+          <p style="margin:0 0 4px 0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR PLATINUM COVERAGE</p>
+          <p style="margin:0;${font(F.body, 13, 500, C.bodyText, '1.4')}">{{down_payment}} down to start</p>
+        </td>
+        <td valign="bottom" align="right" style="white-space:nowrap;">
+          <span style="${font(F.display, 34, 800, C.ink, '1')}letter-spacing:-1.4px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
+        </td>
+      </tr></table>
     </td></tr>
   </table>
 </td>

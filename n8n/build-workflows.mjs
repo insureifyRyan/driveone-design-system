@@ -140,7 +140,8 @@ const INTAKE_SQL = [
   '  -- VSCs are not sold in California',
   "  and upper(coalesce(c.state, '')) <> 'CA'",
   '  -- eligibility ceilings',
-  '  and cv.mileage is not null and cv.mileage <= 125000',
+  '  -- ceiling tracks the rate card: above it we cannot quote, so we do not email',
+  '  and cv.mileage is not null and cv.mileage <= $6',
   '  and cv.year >= extract(year from now())::int - 12',
   '  -- campaign level do-not-contact, which outlives any single enrollment',
   '  and not exists (',
@@ -163,10 +164,11 @@ const intakeNodes = [
     ['campaign_id', DECK.campaign.id],
     ['partner_id', DEALER.supabase.partner_id],
     ['window_days', String(DEALER.supabase.intake_window_days)],
+    ['max_mileage', String(DEALER.supabase.max_mileage)],
   ]),
 
   pgNode('Enroll Eligible Service Customers', [-120, 0], INTAKE_SQL,
-    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $env.SHORT_LINK_BASE_URL }}, {{ $json.partner_id }}, {{ $json.window_days }}'),
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $env.SHORT_LINK_BASE_URL }}, {{ $json.partner_id }}, {{ $json.window_days }}, {{ $json.max_mileage }}'),
 
   node('Enrolled', 'noOp', 1, [140, 0], {}),
 ];

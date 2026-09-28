@@ -1,7 +1,7 @@
 # Open items before this campaign can send
 
 Most of the original list is now closed against the executed contract form
-(`Elevate_Platinum_VSC_Contract_1.pdf`, AAS VSC 1 11-2022, 16 pages). What is left is
+(the signed contract form, AAS VSC 1 11-2022, 16 pages). What is left is
 short and mostly operational.
 
 ---

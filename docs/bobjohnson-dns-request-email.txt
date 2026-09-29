@@ -1,52 +1,70 @@
-Subject: DNS records to authorise customer follow-up email for bobjohnsonauto.com
+Subject: Four DNS records for bobjohnsonauto.com - not the SMTP request
 
 
-Hi,
+Hi Mike,
 
-We're sending a customer follow-up email series on the dealership's behalf, from
-Northcountryrecalls@bobjohnsonauto.com. For that mail to authenticate properly rather
-than be treated as spoofed, our sending platform needs to be authorised to sign for
-the domain.
+This is a different request from the SMTP one, and a much smaller one. Four DNS
+records, and nothing else.
 
-That's four DNS records. Nothing else is needed from you.
+Declining SMTP access was the right call. A standing credential into the mail
+system is exactly the kind of thing to say no to, and we are not asking you to
+reconsider it. What follows asks for no access of any kind.
 
 
-WHAT THIS DOES NOT ASK FOR
+WHAT THIS DOES NOT INVOLVE
 --------------------------------------------------------------------
-Worth saying up front, because it's a smaller request than it sounds:
-
-  - No access to any mailbox. Nobody gains the ability to read, send from,
-    or sign in to a Microsoft 365 account.
+  - No mailbox access. Nobody gains the ability to read, send from, or
+    sign in to any Microsoft 365 account.
   - No app registration, no OAuth consent, no Microsoft admin approval.
-  - No change to how your existing mail flows. Inbound and outbound mail
-    through Microsoft 365 is untouched.
+  - No change to how your mail flows. Inbound and outbound mail through
+    Microsoft 365 is completely untouched.
+  - No credential of any kind is issued to us.
 
-These records only tell receiving mail servers that one specific platform is
-permitted to sign mail for the domain.
+For scale: an OAuth app registration, of the sort already in place for your
+existing system, grants an application standing permission against your tenant.
+DNS records grant permission to nothing. They are public entries, in the same
+category as the record that already points your mail at Microsoft, and all they
+say is that one named platform is allowed to sign messages for this domain.
+
+
+WHY IT IS NEEDED
+--------------------------------------------------------------------
+We are sending a customer follow-up email series on the dealership's behalf,
+from Northcountryrecalls@bobjohnsonauto.com.
+
+Without these records, receiving mail servers see messages claiming to come from
+your domain that your domain has not authorised. They treat that as spoofing.
+The practical result is that the mail lands in spam, and a run of unauthenticated
+mail claiming your domain does the domain's own reputation no favours either.
+
+Adding the records is what makes the mail provably authorised by you. It is the
+same mechanism that protects the domain from genuine spoofing.
 
 
 PLEASE DO NOT CHANGE YOUR EXISTING SPF RECORD
 --------------------------------------------------------------------
+This is the only part of the request that could affect your current mail, and it
+is avoidable entirely.
+
 Your root domain almost certainly has an SPF record today, something like:
 
   v=spf1 include:spf.protection.outlook.com -all
 
 Please leave it exactly as it is.
 
-A domain may only have ONE SPF record. If a second is added to the root, SPF
+A domain may only have ONE SPF record. If a second one is added to the root, SPF
 fails for the whole domain and your normal business email starts going to spam.
 
 None of the records below touch it. The SPF entries here go on a "send"
-subdomain that doesn't exist yet, which is specifically why the request is
+subdomain that does not exist yet, which is specifically why the request is
 built this way.
 
 
 THE FOUR RECORDS
 --------------------------------------------------------------------
-
-The "Name" values are the short form most DNS panels expect. If your panel
-wants a fully qualified name instead, use the FQDN line. Please don't enter
-both, or you'll end up with bobjohnsonauto.com.bobjohnsonauto.com.
+The "Name" values are the short form most DNS panels expect. If your panel wants
+a fully qualified name instead, use the FQDN line. Please do not enter both, or
+you will end up with bobjohnsonauto.com.bobjohnsonauto.com.
 
 
 --- RECORD 1 of 4 --- DKIM signing key
@@ -95,12 +113,27 @@ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDEBOW3hHfo5XeYmMw3V8VGc6Mk/6+M7+WGZ/fo0h
   TTL:   Auto (or default)
 
 
-WHEN YOU'RE DONE
+COMMON MISTAKES
 --------------------------------------------------------------------
-Just reply to confirm and we'll run verification, which takes a few minutes
+  - Doubling the domain. Some panels append the domain automatically, so
+    entering the FQDN in a panel that already appends it produces
+    resend._domainkey.bobjohnsonauto.com.bobjohnsonauto.com, which will
+    not verify.
+  - The DKIM value wrapping. It must be one unbroken string. Copying from a
+    formatted document can introduce spaces or line breaks.
+  - Adding a second root SPF record. See the warning above. This is the only
+    change here that could affect your existing mail, and none of these
+    records require it.
+
+
+WHEN YOU ARE DONE
+--------------------------------------------------------------------
+Just reply to confirm and we will run verification, which takes a few minutes
 once DNS has propagated. Nothing further is needed from you after that.
 
 If any of the above conflicts with a record you already have, please tell us
-rather than overwriting it and we'll work out the right merge together.
+rather than overwriting it and we will work out the right merge together.
+
+Happy to get on a call for ten minutes if that is easier than email.
 
 Thanks,

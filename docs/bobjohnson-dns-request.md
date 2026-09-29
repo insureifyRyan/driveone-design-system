@@ -6,26 +6,38 @@
 
 ---
 
-## What this is
+## This is not the SMTP request
 
-We are sending a customer follow up email series on the dealership's behalf, from
-`Northcountryrecalls@bobjohnsonauto.com`. To do that without the mail being treated as
-spoofed, the sending platform needs to be authorised to sign mail for your domain.
+State this first, because the recipient has already declined something and will read this
+as a second attempt at the same thing. It is not.
 
-That authorisation is four DNS records. **Nothing else is required from you.**
+Declining SMTP access was the correct call — a standing credential into the mail system is
+exactly what an administrator should refuse. This request asks for no access of any kind.
 
 ## What this does NOT ask for
-
-Worth stating plainly, because it is a smaller request than it may first appear:
 
 - **No access to any mailbox.** Nobody gains the ability to read, send from, or sign in to
   a Microsoft 365 account.
 - **No app registration, no OAuth consent, no admin approval in Microsoft.**
 - **No change to how your existing mail flows.** Inbound and outbound mail through
   Microsoft 365 is untouched.
+- **No credential is issued to us at all.**
 
-These records only tell receiving mail servers that this one sending platform is permitted
-to sign mail for the domain.
+For scale: an OAuth app registration, of the kind already in place for their existing
+system, grants an application standing permission against the tenant. DNS records grant
+permission to nothing. They are public entries in the same category as the record already
+pointing their mail at Microsoft, and all they say is that one named platform may sign
+messages for the domain.
+
+## What this is
+
+We are sending a customer follow up email series on the dealership's behalf, from
+`Northcountryrecalls@bobjohnsonauto.com`. Without these records, receiving servers see mail
+claiming to come from a domain that has not authorised it, and treat it as spoofing: the
+mail lands in spam, and a run of unauthenticated mail claiming the domain does its
+reputation no favours either.
+
+That authorisation is four DNS records. **Nothing else is required from them.**
 
 ---
 

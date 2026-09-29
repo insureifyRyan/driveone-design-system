@@ -32,18 +32,35 @@ between the two systems.
 The six workflows are live in n8n, created from the generated JSON via
 `scripts/to-n8n-sdk.mjs`:
 
-| Workflow | ID | Nodes |
-|---|---|---|
-| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 |
-| 02 Scheduler | `8ajOLclNiDmo4jyR` | 12 |
-| 03 Events | `0qJrCUa2YYHrls0d` | 8 |
-| 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 |
-| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 |
-| 06 Bounce Watcher | `HQeTdMk8tyg7qfLl` | 3 |
+| Workflow | ID | Nodes | State |
+|---|---|---|---|
+| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active** |
+| 02 Scheduler | `8ajOLclNiDmo4jyR` | 12 | inactive, the one that sends |
+| 03 Events | `0qJrCUa2YYHrls0d` | 8 | inactive |
+| 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 | **active** |
+| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active** |
+| 06 Bounce Watcher | `HQeTdMk8tyg7qfLl` | 3 | inactive |
+
+01 and 05 are safe to run alone: they enrol and price, and nothing in either touches a
+mailbox. 02 is the one that sends, so it stays off until a test send has been read by a
+human. 04 has to be published before any workflow will accept it as their Error Workflow.
 
 Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, SMTP `qpZ7RhGkOTZjchlL`, IMAP
 `vCdTYNMkKDnlSPPB`, Header Auth `IoJuINMIbHzD6FJM` (shared with unrelated workflows, so
 the campaign should get its own secret before a second dealership).
+
+Config lives in n8n **Variables**, not environment variables, and every workflow reads
+`$vars`:
+
+| Key | Holds |
+|---|---|
+| `SEND_FROM` | `Name <addr>` form, 67 chars for Bob Johnson |
+| `SEND_REPLY_TO` | the monitored mailbox |
+| `UNSUBSCRIBE_URL_BASE` | the Supabase Edge Function |
+| `PREFERENCES_URL_BASE` | same function today, separate key so it can split later |
+| `CAMPAIGN_EVENT_URL` | the 03 webhook, where 06 posts bounces |
+| `RATING_API_KEY` | 44-char base64, sent as `x-captured-api-key` |
+| `SLACK_ALERT_WEBHOOK` | 04's destination |
 
 ## Build and check
 
@@ -176,6 +193,23 @@ These days and hours are starting heuristics, not measured truth. Supabase alrea
 `last_email_opened_at` and `email_open_count`, so tune them against real opens once a few
 thousand sends have landed.
 
+**The daily cap is not what makes this a drip.** Intake enrols every eligible customer in
+one sweep, so without a limit the whole backlog becomes due for email 1 at the same
+moment, and the cap just chops that wall into consecutive days at the ceiling. Then the
+same thing happens on day 3 for email 2, and on every cadence day after. Nothing is lost
+and nobody's spacing is wrong, but the domain sits pinned at its ceiling for weeks, which
+is the opposite of what a warmed server wants.
+
+Throttle **enrolment**, not sends. A `limit` on the intake insert-select spreads the
+backlog into cohorts that each flow through the ten emails at proper spacing, and daily
+volume settles near `backlog × 10 / 60` rather than slamming the cap. For Bob Johnson,
+432 people at 60/day enrol inside a week and level out around 70 to 90 sends a day
+against a 200 ceiling.
+
+Do this arithmetic before any first send on a new dealer: `backlog × 10` is total volume,
+`dailyCap × send days per week` is capacity, and the campaign is 60 days. If those are
+close, the cap is doing the pacing and enrolment should be throttled instead.
+
 ## Product facts
 
 Everything here is quoted from the signed contract form, AAS VSC 1 11-2022. If a claim is
@@ -263,6 +297,10 @@ Then, in order:
    is the last of the four guards against mailing a blank price.
 5. Send one to yourself. Then 02, 03, 06.
 
+Do the volume arithmetic at step 4, before enrolling anyone: if `backlog × 10` is close to
+`dailyCap × send days per week × campaign weeks`, throttle enrolment rather than letting
+the cap do the pacing. See Throughput and timing.
+
 Everything is created inactive. Nothing sends until someone activates it.
 
 Worth saying once when a dealer proposes a sending address: a mailbox whose name implies
@@ -297,6 +335,15 @@ their customer relationship.
 - **`$vars` is plaintext** in n8n settings. Credentials are encrypted; variables are not.
   An API key belongs in a Header Auth credential, and only sits in a variable because that
   was the faster path to a first send.
+- **Check variables by shape, never by value.** A pasted value can carry trailing
+  whitespace or wrapping quotes that are invisible in the settings list and fatal in a From
+  address. Run a throwaway workflow that reports length, `s === s.trim()`, and a format
+  test per key, and prints no values — then the output is safe to paste anywhere. That
+  caught a truncated Slack webhook twice.
+- **A Slack webhook has three path segments after `/services/`** and runs about 75 to 80
+  characters. A short one still passes a `startsWith('https://hooks.slack.com/')` test,
+  still returns HTTP 200, and returns Slack's developer *documentation page* instead of
+  `ok`. Count the segments; do not trust the status code.
 - **The Code node runner can be down while everything else looks healthy.** Executions sit
   at `running` and fail after exactly 60 seconds with `Task request timed out`. A Set-node
   workflow on the same instance finishes in milliseconds, which is how you tell the two

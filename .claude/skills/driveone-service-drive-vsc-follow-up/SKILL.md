@@ -552,6 +552,16 @@ their customer relationship.
 - **Names arrive in block capitals**, 129 of the first 132. `properName` in
   Prepare Send recases only when the source is entirely upper case, so a properly
   typed name is left alone and McBride and O'Brien survive.
+- **The quote links expire in seven days. The campaign runs sixty.**
+  `guided_purchase_link` is a JWT and `quote_link` carries a Clerk sign-in
+  token; both are minted with a seven day life every time the quote API is
+  called. A link written once at pricing time is dead from email 3 onward, and
+  because the cohort is staggered it was already dead for 61 of 150 on email 1.
+  Decode the token, store `quote_expires_at`, let pricing re-fetch two days
+  before it dies, and let the scheduler refuse to claim a row past it. Only
+  `short_link` carries no token, and nobody has yet confirmed where it lands or
+  whether it outlives the others. Check this on any new provider: an expiring
+  link looks identical to a working one in every preview.
 - **Check the copy against the real spread of data, not against one example.**
   Email 5 promised everyone 36 months when only 69 of 148 had that term. The
   same sweep found a RAM 1500 whose model in the DMS is the string "1500" and

@@ -35,6 +35,13 @@ create table if not exists vsc_enrollment (
 
   quote_url         text,
 
+  -- When the token inside quote_url stops working. The quote API mints links
+  -- that live seven days and this campaign runs sixty, so a link stored once
+  -- at pricing time is dead from email 3 onward. Pricing refreshes a row two
+  -- days before this, and the scheduler refuses to claim a row past it: a
+  -- missed send is recoverable, a Buy now button that goes nowhere is not.
+  quote_expires_at  timestamptz,
+
   -- Send failures. Pricing already recorded its errors and capped its retries;
   -- sending recorded nothing, so a run that delivered zero emails finished
   -- green and looked exactly like a quiet one. send_attempts is the ceiling the

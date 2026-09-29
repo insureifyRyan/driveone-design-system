@@ -72,6 +72,8 @@
     "project_id": "bbvkqwcapqsytrdrubci",
     "partner_id": "b8440db1-62ea-41ad-a676-684a75a3f550",
     "partner_type": "service-drive",
+    "initial_cohort": 150,
+    "initial_cohort_note": "Freshest visits first, capped. The daily send cap does not make this a drip: the backlog all falls due for email 1 at once and the cap just chops that into consecutive days at the ceiling. Total sends are cohort x 10 however slowly you enrol, so capping the cohort is the only lever that actually lowers volume. 150 x 10 over about nine weeks of Tue/Wed/Thu is roughly 52 a send day against a 200 ceiling. Raise it once bounce and complaint rates on the first cohort are clean.",
     "intake_window_days": 90,
     "intake_window_note": "Quotes for this rooftop run Feb to Sep 2026: 107 in the last 30 days, 458 within 90. A 30 day window would enroll only the newest 107 and strand the rest, so the backfill runs at 90.",
     "max_mileage": 999999,

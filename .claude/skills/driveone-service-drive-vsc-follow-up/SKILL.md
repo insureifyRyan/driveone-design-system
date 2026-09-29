@@ -200,15 +200,25 @@ same thing happens on day 3 for email 2, and on every cadence day after. Nothing
 and nobody's spacing is wrong, but the domain sits pinned at its ceiling for weeks, which
 is the opposite of what a warmed server wants.
 
-Throttle **enrolment**, not sends. A `limit` on the intake insert-select spreads the
-backlog into cohorts that each flow through the ten emails at proper spacing, and daily
-volume settles near `backlog × 10 / 60` rather than slamming the cap. For Bob Johnson,
-432 people at 60/day enrol inside a week and level out around 70 to 90 sends a day
-against a 200 ceiling.
+**Slowing enrolment does not reduce volume either.** Total sends are `cohort x 10`
+however slowly you feed people in; pacing enrolment only smooths the peaks. The one lever
+that genuinely lowers daily volume is **cohort size**, set by `supabase.initial_cohort`
+as a `limit` on the intake insert-select, ordered `q.created_at desc` so the freshest
+visits go first. Fresh is also the slice most likely to convert, since the email refers to
+the visit by date.
 
-Do this arithmetic before any first send on a new dealer: `backlog × 10` is total volume,
-`dailyCap × send days per week` is capacity, and the campaign is 60 days. If those are
-close, the cap is doing the pacing and enrolment should be throttled instead.
+Do this arithmetic before any first send on a new dealer, and note it is **send days, not
+calendar days** — getting that wrong understates the number by more than half:
+
+```
+total      = cohort x 10
+send days  = campaign weeks x send days per week
+per send day = total / send days
+```
+
+Bob Johnson, for the record: the full 432 backlog would have been 4,320 sends over about
+29 send days, roughly 150 a day against a 200 ceiling. The 150 cohort is about 52 a send
+day. Raise the cohort once bounce and complaint rates on the first one are clean.
 
 ## Product facts
 

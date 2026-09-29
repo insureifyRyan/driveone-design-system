@@ -168,6 +168,16 @@ const INTAKE_SQL = [
   '    where s.dealer_id = $1',
   "      and s.customer_key = encode(sha256(($1 || ':' || lower(trim(c.email)))::bytea), 'hex')",
   '  )',
+  '-- Freshest visits first, capped at the cohort size. Two reasons.',
+  '-- Relevance: someone who was in last week remembers the visit, and the email',
+  '-- refers to it by date. Volume: the backlog is a one time wall, and the daily',
+  '-- send cap only chops that wall into consecutive days at the ceiling rather',
+  '-- than making it a drip. Capping the cohort is what actually lowers volume,',
+  '-- because total sends are cohort size times ten however slowly you feed it.',
+  '-- Already enrolled rows conflict and cost nothing, so the window simply',
+  '-- advances as new service visits arrive.',
+  'order by q.created_at desc',
+  'limit $6',
   '-- Idempotent. Re-running the sweep enrolls only people who are not enrolled yet.',
   'on conflict (dealer_id, campaign_id, customer_key) do nothing',
   'returning id, email, ro_closed_date, next_send_at;',
@@ -184,11 +194,11 @@ const intakeNodes = [
     ['partner_id', DEALER.supabase.partner_id],
     ['window_days', String(DEALER.supabase.intake_window_days)],
     ['max_mileage', String(DEALER.supabase.max_mileage)],
-
+    ['cohort_limit', String(DEALER.supabase.initial_cohort)],
   ]),
 
   pgNode('Enroll Eligible Service Customers', [-120, 0], INTAKE_SQL,
-    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.partner_id }}, {{ $json.window_days }}, {{ $json.max_mileage }}'),
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.partner_id }}, {{ $json.window_days }}, {{ $json.max_mileage }}, {{ $json.cohort_limit }}'),
 
   node('Enrolled', 'noOp', 1, [140, 0], {}),
 ];

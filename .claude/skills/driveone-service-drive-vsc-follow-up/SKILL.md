@@ -78,10 +78,22 @@ Supabase's CA. The connection stays TLS encrypted; what is given up is verifying
 end, which is a theoretical man in the middle between n8n Cloud and AWS us-east-2. If n8n
 ever adds a CA field, put the Supabase root in it and turn this back off.
 
-That error is also the good one to see. It means TCP connected and TLS negotiated, so the
-host, port and username are already right and only trust is failing. `Connection refused`
-means the opposite: nothing was listening, usually because Host is blank and the node fell
-back to `127.0.0.1:5432`.
+Getting this credential right took five attempts, each failing differently. The messages
+form a ladder, and where you are on it tells you what is already proven:
+
+| Message | What it means | Fix |
+|---|---|---|
+| `Connection refused`, description `127.0.0.1:5432` | Host is blank, so the node dialled itself | Set Host |
+| `Host not found` | DNS failed, usually a stray space in Host | Repaste the host |
+| `self-signed certificate in certificate chain` | TCP and TLS both fine, trust failing | Ignore SSL Issues on |
+| `database "..." does not exist` | the hostname got pasted into Database too | Database is `postgres` |
+| `password authentication failed for user "postgres"` | everything above is working | the password is wrong |
+
+Read it as a ladder rather than five unrelated faults: each message only appears once the
+stage before it succeeded, so a later error is progress. The last one names the role as
+`postgres` rather than `postgres.<ref>` because Supavisor maps the pooler username onto the
+underlying role before authenticating. That is not the suffix going missing; a missing
+suffix gives `Tenant or user not found`, and never reaches a password check at all.
 
 Config lives in n8n **Variables**, not environment variables, and every workflow reads
 `$vars`:

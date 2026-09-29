@@ -487,6 +487,12 @@ their customer relationship.
   characters. A short one still passes a `startsWith('https://hooks.slack.com/')` test,
   still returns HTTP 200, and returns Slack's developer *documentation page* instead of
   `ok`. Count the segments; do not trust the status code.
+- **`publish_workflow` ACTIVATES an inactive workflow.** It is not just "save a
+  version". Publishing the sender to pick up a bug fix turned it on, and the
+  hourly cron fired twenty minutes later and claimed 45 real customers. Nothing
+  was sent, only because the SMTP credential was broken, which is luck and not
+  design. Before publishing anything, know whether it is meant to be running, and
+  check the active flags again afterwards. `unpublish_workflow` turns it back off.
 - **`update_workflow` writes the DRAFT. An active workflow keeps running its
   published version.** Nothing warns you. Edits are applied, the API returns
   success, and the schedule goes on running the old code. Half an afternoon went

@@ -33,25 +33,26 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 `partners.id` in Supabase **is** `dealers.source_id` in MetricBridge. That is the join key
 between the two systems.
 
-The six workflows are live in n8n, created from the generated JSON via
+The workflows are live in n8n, created from the generated JSON via
 `scripts/to-n8n-sdk.mjs`:
 
 | Workflow | ID | Nodes | State |
 |---|---|---|---|
 | 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active**, 148 enrolled |
-| 02 Scheduler | `8ajOLclNiDmo4jyR` | 12 | inactive, the one that sends |
-| 03 Events | `0qJrCUa2YYHrls0d` | 8 | inactive |
+| 02 Scheduler | `8ajOLclNiDmo4jyR` | 13 | inactive, the one that sends |
+| 03 Events | `0qJrCUa2YYHrls0d` | 10 | **active**, two webhooks |
 | 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 | **active** |
 | 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active**, 148 priced, 0 errors |
-| 06 Bounce Watcher | `HQeTdMk8tyg7qfLl` | 3 | inactive |
+| ~~06 Bounce Watcher~~ | `HQeTdMk8tyg7qfLl` | — | **archived**, see Sending |
 
-01 and 05 are safe to run alone: they enrol and price, and nothing in either touches a
-mailbox. 02 is the one that sends, so it stays off until a test send has been read by a
-human. 04 has to be published before any workflow will accept it as their Error Workflow.
+01 and 05 are safe to run alone: they enrol and price, and nothing in either sends. 02 is
+the one that sends, so it stays off until a test send has been read by a human. 04 has to
+be published before any workflow will accept it as their Error Workflow.
 
-Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, SMTP `qpZ7RhGkOTZjchlL`, IMAP
-`vCdTYNMkKDnlSPPB`, Header Auth `IoJuINMIbHzD6FJM` (shared with unrelated workflows, so
-the campaign should get its own secret before a second dealership).
+Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, Resend API key as Header Auth, Header
+Auth `IoJuINMIbHzD6FJM` on the internal event webhook (shared with unrelated workflows, so
+the campaign should get its own secret before a second dealership). The SMTP and IMAP
+credentials are no longer used by anything.
 
 **Two credentials, two different ports, and they are easy to confuse.** Most of the
 setup conversation is about the Postgres credential, so when talk turns to SMTP it is
@@ -64,6 +65,9 @@ mail port. Say which credential you mean, every time.
 |---|---|---|
 | Postgres account `lb0H0xZWFnSnRsBz` | `5432` | `Require`, Ignore SSL Issues **on** |
 | SMTP account `qpZ7RhGkOTZjchlL` | `587` | SSL/TLS **off**, so STARTTLS is used |
+
+The SMTP row is kept because the confusion it caused is instructive, not because the
+credential is still in use. Sending moved to Resend; see **Sending**.
 
 **The Postgres credential must use the Supabase session pooler, not the direct host.**
 n8n Cloud reaches the internet over IPv4 and `db.<ref>.supabase.co` resolves to IPv6 only
@@ -236,30 +240,43 @@ reporting, suppression scope and cadence independent.
 
 ## Sending
 
-Mail goes out over **SMTP from the dealership's own warmed mailbox**, not through an ESP.
-That keeps the From address and the domain reputation with the dealer, which is the point of
-a co-branded send. It costs two things, and both are compensated for rather than ignored. If
-a dealer ever moves onto an ESP, both compensations can come back out.
+Mail goes out through **Resend**, signing as the dealership's domain. It is an HTTP POST to
+`api.resend.com/emails` from workflow 02, not an SMTP node and not the Resend n8n node, which
+does not exist.
 
-**No provider webhooks.** Bounces and complaints arrive as ordinary mail in the sending
-mailbox. Left alone the campaign keeps mailing dead addresses for the full 60 days, which is
-how a warmed domain stops being warm. Workflow 06 reads them over IMAP and posts to the same
-exit endpoint a webhook would have hit.
+**This was not the original design, and the reason for the change is worth carrying
+forward.** The plan was to send over SMTP from the dealership's own warmed mailbox, which
+keeps the From address, the domain reputation and a copy in Sent Items all with the dealer.
+Bob Johnson's IT would not open SMTP: their environment authenticates with OAuth 2.0 against
+Microsoft and SMTP AUTH is off, which is now the default posture at most dealer groups.
+Assume it. The options at that point are to get an OAuth app registration approved by the
+dealer's Microsoft admin, or to authenticate the domain instead of the mailbox.
 
-Match on the RFC 3463 status class, not on wording: delivery notifications are not
-standardised in practice. Hard failures (`5.x.x`, user unknown, address rejected) suppress.
-Soft failures (`4.x.x`, over quota) deliberately do **not**, because a full mailbox is not a
-dead customer. Abuse reports suppress as complaints. Ordinary replies and out-of-office
-messages are ignored, which matters: a customer replying with a question must never be
-suppressed for it.
+Authenticating the domain is the smaller ask and it is worth knowing why when you have to
+make the case. It needs **four DNS records and nothing else**: no mailbox access, no app
+registration, no Microsoft admin consent, no change to existing mail flow. The DKIM key goes
+on the root, and SPF and MX go on a `send.` **subdomain**, so the existing root SPF record is
+never touched — which matters, because a domain may have only one SPF record and a second one
+on the root silently spams the dealership's own business mail. `docs/bobjohnson-dns-request.md`
+is the request written out; reuse its shape for the next dealer.
 
-**No one-click `List-Unsubscribe`**, because n8n's SMTP node cannot set custom headers. Under
-Google's 5,000-a-day bulk threshold this is a best-practice gap rather than a compliance one.
-The footer link is set larger and bolder than the surrounding legal text to compensate: a
+What is lost is the Sent Items copy. What is gained is real:
+
+**Provider webhooks.** Bounces and complaints arrive as signed events rather than as English
+prose to be regex-parsed out of an inbox. That deleted workflow 06 entirely, which was the
+most fragile thing in this system. `email.bounced` carries `data.bounce.type`: only
+`Permanent` suppresses. `Transient` is a full mailbox or a greylisting server, and burning a
+real customer's address over a condition that clears by itself is the exact mistake the old
+regex was careful to avoid — keep avoiding it.
+
+**One-click `List-Unsubscribe`.** An HTTP call can set headers, which n8n's SMTP node could
+not, so the `List-Unsubscribe` and `List-Unsubscribe-Post` headers Google and Yahoo expect
+from bulk senders are finally there. Keep the visible footer link large and bold anyway: a
 reader who cannot find it presses Report spam instead, which costs the domain far more.
 
-Keep `appendAttribution: false` on the send node, or n8n prints its own footer under a
-dealership's customer email.
+Resend allows **two requests a second**. The send node paces itself with
+`batching: { batchSize: 2, batchInterval: 1100 }` rather than firing a run of 45 at once,
+because a 429 surfaces as a failed send rather than as back pressure.
 
 ### Throughput and timing
 
@@ -443,14 +460,17 @@ Then, in order:
 
 1. Confirm the Code node runner is alive. Run any workflow with a Code node and watch it
    finish. If it times out at 60 seconds, nothing else on this list matters yet.
-2. Set the seven `$vars` (see `docs/N8N-SETUP.md`). `$env` does not work on Cloud.
-3. Checksum the published templates against `email/dist/*.html`.
-4. Activate 01, then 05. Confirm `vsc_enrollment` rows carry both a `monthly_payment` and
+2. Set the `$vars` (see `docs/N8N-SETUP.md`). `$env` does not work on Cloud.
+3. Get the four DNS records in with the dealer's IT, then verify the domain in Resend.
+   Nothing authenticates until that lands, and mail sent before it will be treated as
+   spoofed by the receivers who matter most.
+4. Checksum the published templates against `email/dist/*.html`.
+5. Activate 01, then 05. Confirm `vsc_enrollment` rows carry both a `monthly_payment` and
    a `quote_url` before anything can send: the scheduler skips rows missing either, which
    is the last of the four guards against mailing a blank price.
-5. Send one to yourself. Then 02, 03, 06.
+6. Send one to yourself and read it in a real client. Then publish 02.
 
-Do the volume arithmetic at step 4, before enrolling anyone: if `backlog × 10` is close to
+Do the volume arithmetic at step 5, before enrolling anyone: if `backlog × 10` is close to
 `dailyCap × send days per week × campaign weeks`, throttle enrolment rather than letting
 the cap do the pacing. See Throughput and timing.
 
@@ -464,6 +484,33 @@ their customer relationship.
 
 ## Gotchas worth knowing before you rediscover them
 
+- **`$json` does not exist in a Code node that runs once for all items.** It is bound only
+  in run-once-per-item mode, so reading `$json.params?.dealer` inside a `for` loop over
+  `$input.all()` is a `ReferenceError` that takes the whole node down — valid events
+  included. Use `item.json`. Found by running the generated `jsCode` through plain `node`
+  locally before deploying it, which is cheap and catches this class of thing immediately:
+  extract the string from the built JSON, wrap it in `new Function`, feed it fixtures.
+- **Resend's webhooks are signed by Svix and cannot send a custom header.** An n8n webhook
+  node set to `headerAuth` will reject every delivery, and `create-webhook` takes only an
+  endpoint and an event list — there is nowhere to put an `Authorization` value. Verify the
+  signature in a Code node instead: it is the stronger control anyway, since a shared header
+  only proves the caller knows a string that sits in two configs and rides every request.
+- **Svix signs the bytes it sent, so the webhook node needs `options.rawBody: true`.**
+  Parsing the body and re-serialising it produces a different byte string over whitespace
+  alone, and the mismatch looks exactly like an attack. Under `rawBody` the body arrives as
+  binary, so read `item.binary.data.data` (base64) and fall back to
+  `this.helpers.getBinaryDataBuffer(i, 'data')` for when n8n keeps binary off-item.
+  Signed content is `${svix-id}.${svix-timestamp}.${raw}`, HMAC-SHA256, key is the
+  `whsec_` secret base64-decoded **with the prefix stripped**, compared base64 against the
+  `v1,`-prefixed entries in `svix-signature`. Svix publishes a test vector; check against it
+  rather than against your own implementation.
+- **An endpoint that writes to a suppression list must fail closed.** Missing secret,
+  missing headers, bad signature and stale timestamp all throw before any statement reaches
+  the database. Otherwise anyone who guesses the URL can empty the campaign quietly.
+- **`require('crypto')`, `Buffer`, `timingSafeEqual`, `this.helpers` and `$vars` all work**
+  in Code nodes on this n8n Cloud instance — verified by running a throwaway two-node
+  workflow rather than assuming. Worth re-checking on a different instance before relying
+  on them.
 - **There is no repair order table.** The service drive writes one quote per visit, so
   `quotes.created_at` is the visit date. `customers.last_seen_date` is empty.
 - **Op codes do not exist.** There is no services line; do not add the merge tag back.

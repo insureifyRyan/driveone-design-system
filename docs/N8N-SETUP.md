@@ -115,11 +115,12 @@ Set these in n8n under **Settings, Variables**:
 
 | Variable | Value | Notes |
 |---|---|---|
-| `SEND_FROM` | `Bob Johnson Dodge Jeep Ram <northcountryrecalls@bobjohnsonauto.com>` | The warmed mailbox. |
+| `SEND_FROM` | `Bob Johnson Dodge Jeep Ram <northcountryrecalls@bobjohnsonauto.com>` | The dealership address Resend signs as. The domain must be verified in Resend first. |
 | `SEND_REPLY_TO` | `northcountryrecalls@bobjohnsonauto.com` | Monitored. Replies must reach a person. |
 | `UNSUBSCRIBE_URL_BASE` | `https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe` | Already deployed. |
 | `PREFERENCES_URL_BASE` | same as above | Points at the same function today. |
-| `CAMPAIGN_EVENT_URL` | `https://ryan-3522-williams.app.n8n.cloud/webhook/vsc/events/bob-johnson` | Where 06 posts bounces. |
+| `CAMPAIGN_EVENT_URL` | `https://ryan-3522-williams.app.n8n.cloud/webhook/vsc/events/bob-johnson` | The internal event endpoint, for DriveOne checkout and CRM exits. Header authenticated. |
+| `RESEND_WEBHOOK_SECRET` | *(the `whsec_...` signing secret from the Resend webhook)* | Workflow 03 verifies every Resend delivery against it and refuses the request if it is unset. |
 | `RATING_API_KEY` | *(the captured API key)* | Sent as the `x-captured-api-key` header. Workflow 05. |
 | `SLACK_ALERT_WEBHOOK` | *(the Slack incoming webhook)* | Workflow 04. Without it, failures are silent. |
 

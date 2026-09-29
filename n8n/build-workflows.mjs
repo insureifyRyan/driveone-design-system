@@ -589,21 +589,50 @@ const schedulerNodes = [
 
   codeNode('Render Merge Tags', [700, -100], RENDER_CODE),
 
-  node('Send via SMTP', 'emailSend', 2.1, [920, -100], {
-    fromEmail: '={{ $vars.SEND_FROM }}',
-    toEmail: "={{ $('Claim Due Enrollments').itemMatching($itemIndex).json.email }}",
-    subject: '={{ $json.subject }}',
-    emailFormat: 'html',
-    html: '={{ $json.html }}',
+  // Sends through Resend rather than the dealership's own mailbox over SMTP.
+  //
+  // The dealership does not permit SMTP access and authenticates its own
+  // systems with OAuth against Microsoft, so the original design of sending
+  // from their warmed mailbox is not available. Resend signs as the domain
+  // with DKIM instead, so mail still comes from bobjohnsonauto.com, the
+  // reputation still accrues to the dealership, and Reply-To still lands in
+  // their inbox. What is lost is the copy in their Sent Items.
+  //
+  // What is gained is worth naming. Bounces and complaints arrive as webhooks
+  // rather than as mail to be parsed out of an inbox, which deletes the IMAP
+  // watcher and the most fragile part of this system. And an HTTP call can set
+  // headers, which the SMTP node could not, so List-Unsubscribe finally works.
+  node('Send via Resend', 'httpRequest', 4.2, [920, -100], {
+    method: 'POST',
+    url: 'https://api.resend.com/emails',
+    authentication: 'genericCredentialType',
+    genericAuthType: 'httpHeaderAuth',
+    sendBody: true,
+    specifyBody: 'json',
+    // itemMatching($itemIndex) is correct HERE and wrong inside a Code node:
+    // node parameters are evaluated once per item, so $itemIndex is this item.
+    jsonBody: '={{ JSON.stringify({'
+      + ' from: $vars.SEND_FROM,'
+      + ' to: [ $("Claim Due Enrollments").itemMatching($itemIndex).json.email ],'
+      + ' reply_to: $vars.SEND_REPLY_TO,'
+      + ' subject: $json.subject,'
+      + ' html: $json.html,'
+      // One click unsubscribe, which Google and Yahoo expect from bulk senders
+      // and which the SMTP node could never provide. The Edge Function already
+      // only acts on POST, so it satisfies List-Unsubscribe-Post as written.
+      + ' headers: {'
+      + ' "List-Unsubscribe": "<" + $json.merge.unsubscribe_url + ">",'
+      + ' "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"'
+      + ' } }) }}',
     options: {
-      replyTo: '={{ $vars.SEND_REPLY_TO }}',
-      // n8n appends its own footer unless this is off, which would put
-      // "sent automatically with n8n" under a dealership's customer email.
-      appendAttribution: false,
+      // Resend allows two requests a second. A run of 45 fired at once would be
+      // rate limited, and a 429 here reads as a failed send rather than as
+      // back pressure, so the pace is set deliberately instead.
+      batching: { batch: { batchSize: 2, batchInterval: 1100 } },
     },
   }, {
-    credentials: { smtp: { id: 'REPLACE_SMTP_CRED_ID', name: 'Bob Johnson Sending Mailbox' } },
-    onError: 'continueErrorOutput', retryOnFail: true, maxTries: 3, waitBetweenTries: 8000,
+    credentials: { httpHeaderAuth: { id: 'REPLACE_RESEND_CRED_ID', name: 'Resend API' } },
+    onError: 'continueErrorOutput', retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
   }),
 
   pgNode('Log Send', [1140, -200],
@@ -675,8 +704,8 @@ const schedulerConnections = connect([
   ['Anything Due?', ['Prepare Send', 'Nothing Due']],
   ['Prepare Send', 'Load Template'],
   ['Load Template', 'Render Merge Tags'],
-  ['Render Merge Tags', 'Send via SMTP'],
-  ['Send via SMTP', ['Log Send', 'Record Send Failure']],
+  ['Render Merge Tags', 'Send via Resend'],
+  ['Send via Resend', ['Log Send', 'Record Send Failure']],
   ['Log Send', 'Advance State'],
   ['Record Send Failure', 'Fail Loudly'],
 ]);
@@ -720,9 +749,22 @@ const CLASSIFY_CODE = [
   '  const type = String(p.type || p.event || p.event_type || "").trim().toLowerCase();',
   '  const rule = EVENTS[type];',
   '',
+  '  // A bounce is not automatically permanent. Resend passes the underlying',
+  '  // classification through as data.bounce.type: Permanent, Transient or',
+  '  // Undetermined. Transient is a full mailbox or a greylisting server, and',
+  '  // suppressing on one would burn a good address over a condition that clears',
+  '  // by itself. Only Permanent ends the relationship. A bounce that arrives',
+  '  // without a classification is treated as permanent, which is what the old',
+  '  // IMAP watcher produced and what a hand posted event will look like.',
+  '  const bounceType = String(p.data?.bounce?.type || p.bounce?.type || "").trim().toLowerCase();',
+  '  const soft = type === "email.bounced" && bounceType !== "" && bounceType !== "permanent";',
+  '',
   '  // customer_key is preferred. Fall back to hashing whatever email we were given.',
   "  const crypto = require('crypto');",
-  '  const dealer_id = p.dealer_id || p.dealer || $json.params?.dealer || "' + DEALER.id + '";',
+  // item.json.params, not $json.params. This Code node runs once for all items,
+  // and $json is only bound in run-once-per-item mode: reading it here is a
+  // ReferenceError that takes down every event, valid ones included.
+  '  const dealer_id = p.dealer_id || p.dealer || item.json.params?.dealer || "' + DEALER.id + '";',
   '  const email = (p.email || p.data?.to?.[0] || p.to || "").toString().trim().toLowerCase();',
   '  const customer_key = p.customer_key',
   '    || (email ? crypto.createHash("sha256").update(dealer_id + ":" + email).digest("hex") : null);',
@@ -731,9 +773,11 @@ const CLASSIFY_CODE = [
   '    json: {',
   '      received_type: type,',
   '      known: !!rule,',
-  '      actionable: !!(rule && rule.exit && customer_key),',
+  '      actionable: !!(rule && rule.exit && customer_key && !soft),',
   '      exit_reason: rule ? rule.exit : null,',
-  '      suppress: rule ? !!rule.suppress : false,',
+  '      suppress: rule ? !!rule.suppress && !soft : false,',
+  '      soft_bounce: soft,',
+  '      bounce_type: bounceType || null,',
   '      dealer_id,',
   '      customer_key,',
   '      email,',
@@ -741,6 +785,122 @@ const CLASSIFY_CODE = [
   '    },',
   '  });',
   '}',
+  'return out;',
+].join('\n');
+
+// Resend signs its webhooks with Svix. Svix signs with an HMAC over the exact
+// bytes it sent and puts the result in svix-signature; it cannot be told to
+// send an Authorization header instead. So the header auth credential that
+// guards the internal endpoint is unsatisfiable here, and the choice is to
+// either drop authentication for Resend or verify the signature.
+//
+// This verifies. That is not a grudging compromise: a shared header proves only
+// that the caller knows a string that sits in two configs and travels in every
+// request, while a signature proves the body arrived unmodified from someone
+// holding a key that never leaves either end. It is the stronger control.
+//
+// It fails closed, in every direction. A missing secret, a missing header, a
+// signature that does not verify, or a timestamp outside the replay window all
+// throw before a single statement reaches the database. An open endpoint that
+// writes to a suppression list is an invitation to have your campaign quietly
+// emptied by anyone who guesses the URL.
+const VERIFY_RESEND_CODE = [
+  "const crypto = require('crypto');",
+  '',
+  'const secret = $vars.RESEND_WEBHOOK_SECRET;',
+  'if (!secret) {',
+  '  throw new Error(',
+  '    "RESEND_WEBHOOK_SECRET is not set in n8n Variables, so this webhook cannot be " +',
+  '    "verified. Refusing the request rather than trusting it."',
+  '  );',
+  '}',
+  '// Svix signing secrets are base64 behind a whsec_ prefix. The prefix is not',
+  '// part of the key, and leaving it on produces a signature that never matches.',
+  "const key = Buffer.from(String(secret).replace(/^whsec_/, ''), 'base64');",
+  '',
+  '// Five minutes, which is what Svix itself uses. Long enough to survive clock',
+  '// skew, short enough that a captured request is not replayable tomorrow.',
+  'const TOLERANCE_SECONDS = 300;',
+  '',
+  'const items = $input.all();',
+  'const out = [];',
+  '',
+  'for (let i = 0; i < items.length; i++) {',
+  '  const item = items[i];',
+  '  const headers = item.json.headers || {};',
+  '',
+  "  const id = headers['svix-id'] || headers['webhook-id'];",
+  "  const timestamp = headers['svix-timestamp'] || headers['webhook-timestamp'];",
+  "  const signature = headers['svix-signature'] || headers['webhook-signature'];",
+  '  if (!id || !timestamp || !signature) {',
+  '    throw new Error(',
+  '      "Missing Svix signature headers. This endpoint accepts signed Resend " +',
+  '      "webhooks only; internal events go to the /vsc/events endpoint instead."',
+  '    );',
+  '  }',
+  '',
+  '  const age = Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp));',
+  '  if (!Number.isFinite(age) || age > TOLERANCE_SECONDS) {',
+  '    throw new Error(',
+  '      "Webhook timestamp is " + age + "s from now, outside the " +',
+  '      TOLERANCE_SECONDS + "s replay window. Rejected."',
+  '    );',
+  '  }',
+  '',
+  '  // The signature covers the bytes as sent. Parsing the body and serialising',
+  '  // it again would produce a different byte string over whitespace alone and',
+  '  // fail in a way that looks exactly like an attack, which is the whole',
+  '  // reason the webhook node above is set to rawBody.',
+  '  let raw;',
+  '  const inline = item.binary && item.binary.data && item.binary.data.data;',
+  '  if (inline) {',
+  "    raw = Buffer.from(inline, 'base64').toString('utf8');",
+  "  } else if (typeof item.json.body === 'string') {",
+  '    raw = item.json.body;',
+  '  } else if (this.helpers && this.helpers.getBinaryDataBuffer) {',
+  '    // Binary stored outside the item, which is what happens when n8n is',
+  '    // configured to keep binary data on disk or in S3 rather than in memory.',
+  "    raw = (await this.helpers.getBinaryDataBuffer(i, 'data')).toString('utf8');",
+  '  } else {',
+  '    throw new Error(',
+  '      "Raw request body is missing. The webhook node needs options.rawBody " +',
+  '      "set to true, or the signature cannot be checked."',
+  '    );',
+  '  }',
+  '',
+  "  const expected = crypto.createHmac('sha256', key)",
+  "    .update(id + '.' + timestamp + '.' + raw).digest('base64');",
+  '',
+  '  // The header carries a space separated list of versioned signatures so that',
+  '  // a key can be rotated without dropping deliveries. Any one matching is a',
+  '  // pass; only v1 exists today.',
+  "  const offered = String(signature).split(' ')",
+  "    .map((part) => part.split(',')[1])",
+  '    .filter(Boolean);',
+  '',
+  '  const expectedBuf = Buffer.from(expected);',
+  '  const ok = offered.some((candidate) => {',
+  '    const buf = Buffer.from(candidate);',
+  '    // Length checked first because timingSafeEqual throws on a mismatch',
+  '    // rather than returning false.',
+  '    return buf.length === expectedBuf.length && crypto.timingSafeEqual(buf, expectedBuf);',
+  '  });',
+  '  if (!ok) {',
+  '    throw new Error("Svix signature did not verify. Body rejected untouched.");',
+  '  }',
+  '',
+  '  // Shaped like the other webhook node\'s output, so Classify Event does not',
+  '  // need to know which door the event came in by.',
+  '  out.push({',
+  '    json: {',
+  '      body: JSON.parse(raw),',
+  '      headers,',
+  "      params: { dealer: '" + DEALER.id + "' },",
+  '      verified: true,',
+  '    },',
+  '  });',
+  '}',
+  '',
   'return out;',
 ].join('\n');
 
@@ -752,6 +912,23 @@ const eventsNodes = [
     responseMode: 'responseNode',
     options: {},
   }, { webhookId: 'vsc-events-' + DEALER.id, credentials: { httpHeaderAuth: { id: 'REPLACE_EVENT_AUTH_CRED_ID', name: 'Campaign Event Shared Secret' } } }),
+
+  // A static path, not the ':dealer' form the internal endpoint uses. n8n
+  // prepends the node's webhookId to any path containing a dynamic segment,
+  // which produces a URL with a uuid buried in the middle of it. That is fine
+  // for something we configure ourselves and awkward for something a third
+  // party has to be given, so this one reads plainly.
+  node('Resend Event Webhook', 'webhook', 2, [-620, 240], {
+    httpMethod: 'POST',
+    path: 'vsc/resend/' + DEALER.id,
+    // Not an oversight. The next node verifies the Svix signature, which is a
+    // stronger check than the header credential could be. See VERIFY_RESEND_CODE.
+    authentication: 'none',
+    responseMode: 'responseNode',
+    options: { rawBody: true },
+  }, { webhookId: 'vsc-resend-' + DEALER.id }),
+
+  codeNode('Verify Resend Signature', [-400, 240], VERIFY_RESEND_CODE),
 
   codeNode('Classify Event', [-400, 0], CLASSIFY_CODE),
 
@@ -794,6 +971,8 @@ const eventsNodes = [
 
 const eventsConnections = connect([
   ['Campaign Event Webhook', 'Classify Event'],
+  ['Resend Event Webhook', 'Verify Resend Signature'],
+  ['Verify Resend Signature', 'Classify Event'],
   ['Classify Event', 'Actionable?'],
   ['Actionable?', ['Exit Enrollment', 'Ignored (unknown or non-exit event)']],
   ['Exit Enrollment', 'Needs Suppression?'],
@@ -1068,79 +1247,19 @@ writeFileSync(join(ROOT, 'n8n/workflows/05-pricing.json'),
 console.log('built 05-pricing.json');
 
 
-/* ================================================== 6. BOUNCE WATCHER == */
+/* =========================================== 6. BOUNCE WATCHER (RETIRED) == */
 
-// Sending over SMTP means no provider webhooks, so bounces and complaints
-// arrive as ordinary mail in the sending mailbox instead of as events. Left
-// alone, the campaign would keep mailing dead addresses for 60 days, which is
-// exactly how a warmed domain stops being warm. This workflow reads them back
-// out over IMAP and feeds the same exit endpoint an ESP webhook would have hit.
-const PARSE_BOUNCE_CODE = [
-  'const out = [];',
-  '',
-  '// Delivery status notifications are not standardised in practice, so match on',
-  '// the things that are actually stable: the RFC 3463 status code, and the',
-  '// original recipient echoed somewhere in the body.',
-  'const HARD = /\\b5\\.\\d\\.\\d\\b|user unknown|no such user|does not exist|mailbox unavailable|address rejected|recipient rejected/i;',
-  'const SOFT = /\\b4\\.\\d\\.\\d\\b|over quota|mailbox full|try again later|temporarily deferred/i;',
-  "const COMPLAINT = /feedback-type:\\s*abuse|this is an abuse report|complaint/i;",
-  '',
-  'for (const item of $input.all()) {',
-  '  const m = item.json || {};',
-  '  const from = String(m.from || m.fromEmail || "").toLowerCase();',
-  '  const subject = String(m.subject || "");',
-  '  const body = String(m.textPlain || m.text || m.textHtml || m.html || "");',
-  '  const blob = subject + "\\n" + body;',
-  '',
-  '  const looksAutomated = /mailer-daemon|postmaster|no-?reply/.test(from)',
-  '    || /undeliverable|delivery status|returned mail|failure notice|mail delivery/i.test(subject);',
-  '  if (!looksAutomated && !COMPLAINT.test(blob)) continue;',
-  '',
-  '  // The bounced address is whatever appears in the body that is not our own',
-  '  // sending address or the daemon.',
-  '  const sender = String($vars.SEND_FROM || "").toLowerCase().replace(/.*<|>.*/g, "");',
-  '  const candidates = (blob.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}/gi) || [])',
-  '    .map((e) => e.toLowerCase())',
-  '    .filter((e) => e !== sender && !/mailer-daemon|postmaster/.test(e));',
-  '  if (candidates.length === 0) continue;',
-  '',
-  '  const type = COMPLAINT.test(blob) ? "email.complained"',
-  '    : HARD.test(blob) ? "email.bounced"',
-  '    : SOFT.test(blob) ? null          // transient, do not suppress a real customer',
-  '    : null;',
-  '  if (!type) continue;',
-  '',
-  '  out.push({ json: { type, email: candidates[0], dealer_id: ' + JSON.stringify(DEALER.id) + ', subject } });',
-  '}',
-  'return out;',
-].join('\n');
+// There was a sixth workflow here. It logged into the sending mailbox over
+// IMAP, read the delivery status notifications back out with a pile of regular
+// expressions, and posted them to the exit endpoint. It existed for one reason:
+// SMTP gives you no webhooks, so a bounce arrives as ordinary mail and there is
+// nowhere else to learn about it.
+//
+// Sending moved to Resend, which reports bounces and complaints as signed
+// events, so the guesswork is gone. 03-events.json now has a second webhook
+// that takes them directly. Parsing English out of a mail server's apology was
+// always the most fragile thing in this system and it is a relief to delete it.
+//
+// `git log -- n8n/workflows/06-bounce-watcher.json` has it, if SMTP ever
+// returns.
 
-const bounceNodes = [
-  node('Sending Mailbox (IMAP)', 'emailReadImap', 2, [-560, 0], {
-    mailbox: 'INBOX',
-    postProcessAction: 'read',
-    format: 'simple',
-    options: {},
-  }, { credentials: { imap: { id: 'REPLACE_IMAP_CRED_ID', name: 'Bob Johnson Sending Mailbox' } } }),
-
-  codeNode('Parse Bounce Or Complaint', [-310, 0], PARSE_BOUNCE_CODE),
-
-  node('Post To Exit Endpoint', 'httpRequest', 4.2, [-60, 0], {
-    method: 'POST',
-    url: '={{ $vars.CAMPAIGN_EVENT_URL }}',
-    sendHeaders: true,
-    headerParameters: { parameters: [{ name: 'Content-Type', value: 'application/json' }] },
-    sendBody: true,
-    specifyBody: 'json',
-    jsonBody: '={{ JSON.stringify($json) }}',
-    options: {},
-  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 }),
-];
-
-writeFileSync(join(ROOT, 'n8n/workflows/06-bounce-watcher.json'),
-  JSON.stringify(workflow('DriveOne VSC 06 Bounce Watcher (' + DEALER.dealer.displayName + ')', bounceNodes, connect([
-    ['Sending Mailbox (IMAP)', 'Parse Bounce Or Complaint'],
-    ['Parse Bounce Or Complaint', 'Post To Exit Endpoint'],
-  ])), null, 2));
-
-console.log('built 06-bounce-watcher.json');

@@ -144,34 +144,40 @@
     },
     {
       "parameters": {
-        "fromEmail": "={{ $vars.SEND_FROM }}",
-        "toEmail": "={{ $('Claim Due Enrollments').itemMatching($itemIndex).json.email }}",
-        "subject": "={{ $json.subject }}",
-        "emailFormat": "html",
-        "html": "={{ $json.html }}",
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: $vars.SEND_FROM, to: [ $(\"Claim Due Enrollments\").itemMatching($itemIndex).json.email ], reply_to: $vars.SEND_REPLY_TO, subject: $json.subject, html: $json.html, headers: { \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">\", \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\" } }) }}",
         "options": {
-          "replyTo": "={{ $vars.SEND_REPLY_TO }}",
-          "appendAttribution": false
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 1100
+            }
+          }
         }
       },
-      "id": "n012-send-via-smtp",
-      "name": "Send via SMTP",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
+      "id": "n012-send-via-resend",
+      "name": "Send via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         920,
         -100
       ],
       "credentials": {
-        "smtp": {
-          "id": "REPLACE_SMTP_CRED_ID",
-          "name": "Bob Johnson Sending Mailbox"
+        "httpHeaderAuth": {
+          "id": "REPLACE_RESEND_CRED_ID",
+          "name": "Resend API"
         }
       },
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 8000
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -348,14 +354,14 @@
       "main": [
         [
           {
-            "node": "Send via SMTP",
+            "node": "Send via Resend",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send via SMTP": {
+    "Send via Resend": {
       "main": [
         [
           {

@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "n029-price-sweep",
+      "id": "n031-price-sweep",
       "name": "Price Sweep",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -41,7 +41,7 @@
         },
         "options": {}
       },
-      "id": "n030-campaign-config",
+      "id": "n032-campaign-config",
       "name": "Campaign Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -59,7 +59,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n031-claim-unpriced-enrolments",
+      "id": "n033-claim-unpriced-enrolments",
       "name": "Claim Unpriced Enrolments",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -99,7 +99,7 @@
           }
         }
       },
-      "id": "n032-get-quote",
+      "id": "n034-get-quote",
       "name": "Get Quote",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -116,7 +116,7 @@
       "parameters": {
         "jsCode": "// GET /api/partners/quotes/{quote_id} returns the whole quote: customer,\n// vehicle, the embedded rating, and the customer facing links. We take the\n// cheapest genuinely financed option and the best available link.\n\n// Every item must carry every key Store Price references, including the ones\n// that do not apply to it. n8n resolves queryReplacement into a positional\n// array, and a key that is undefined on the item is dropped rather than sent\n// as null, which silently shortens the array and shifts every parameter after\n// it. The first live pricing run died on \"there is no parameter $17\" because a\n// successful rating has no failure reason to report. Spreading this blank\n// first means a branch can only ever get the shape right.\nconst BLANK = {\n  enrollment_id: null, failed: false, monthly: null, down: null, price: null,\n  term: null, months: null, coverage_miles: null, plan_name: null,\n  policy_name: null, vehicle_class: null, rate_id: null, reason: null,\n  quote_url: null, short_link: null, quote_link: null, guided_purchase_link: null,\n  quote_expires_at: null,\n};\n\n// Paired by position, NOT by $itemIndex. A Code node runs once for all items,\n// so $itemIndex is fixed rather than the loop counter, and\n// itemMatching($itemIndex) returns item zero every pass. That is exactly how\n// a sweep rated 100 different vehicles correctly and then wrote all 100\n// results onto one enrolment: a Camry at 113,000 miles and a Durango at\n// 73,000 ended up with identical prices to the cent. Get Quote preserves\n// input order one for one, so index i is the right enrolment.\n// The links the quote API hands back are not permanent. guided_purchase_link\n// is a JWT and quote_link carries a Clerk sign-in token, and both are minted\n// with a seven day life while this campaign runs for sixty. A link stored\n// once at pricing time is dead by email 3, so eight of the ten would have\n// carried a Buy now button that goes nowhere. Reading the expiry out of the\n// token lets pricing refresh a row before it dies and lets the scheduler\n// refuse to send a dead one.\nconst tokenExpiry = (link) => {\n  try {\n    const m = String(link || \"\").match(/eyJ[A-Za-z0-9_-]+\\.([A-Za-z0-9_-]+)/);\n    if (!m) return null;\n    const claims = JSON.parse(Buffer.from(m[1], \"base64url\").toString());\n    return claims && claims.exp ? new Date(claims.exp * 1000).toISOString() : null;\n  } catch (e) {\n    // An unreadable token is treated as unknown rather than as expired, so a\n    // change in link format degrades to current behaviour instead of halting\n    // every send.\n    return null;\n  }\n};\n\nconst claimed = $(\"Claim Unpriced Enrolments\").all();\nconst quotes = $input.all();\nif (claimed.length !== quotes.length) {\n  throw new Error(\"Claimed \" + claimed.length + \" enrolments but Get Quote returned \" + quotes.length + \". Positional pairing is no longer safe, so no price is written.\");\n}\n\nconst out = [];\nfor (let i = 0; i < quotes.length; i++) {\n  const q = quotes[i].json || {};\n  const enrolment = claimed[i].json;\n  const options = (q.rating && Array.isArray(q.rating.quote_options)) ? q.rating.quote_options : [];\n\n  // guided_purchase_link is the buy flow, so it is what a Buy now button wants.\n  // Fall back to the short link, then the plain quote link.\n  const link = q.guided_purchase_link || q.short_link || q.quote_link || null;\n\n  const financed = options.filter((o) =>\n    Number(o.financing_term) > 0 &&\n    Number(o.monthly_payment) > 0 &&\n    Number(o.quote_price) > 0\n  );\n\n  if (financed.length === 0 || !link) {\n    // No real financed option, or nowhere to send them. Either way this row\n    // stays unpriced and the scheduler will not touch it, so nobody receives\n    // a blank price or a button that goes nowhere.\n    out.push({ json: {\n      ...BLANK,\n      enrollment_id: enrolment.id,\n      failed: true,\n      reason: (financed.length === 0\n        ? \"no financed quote_options (\" + options.length + \" returned)\"\n        : \"no customer facing link on the quote payload\"),\n    } });\n    continue;\n  }\n\n  financed.sort((a, b) => Number(a.monthly_payment) - Number(b.monthly_payment));\n  const best = financed[0];\n\n  out.push({ json: {\n    ...BLANK,\n    enrollment_id:  enrolment.id,\n    failed:         false,\n    reason:         null,\n    monthly:        Number(best.monthly_payment),\n    down:           Number(best.down_payment),\n    price:          Number(best.quote_price),\n    term:           Number(best.financing_term),\n    months:         Number(best.contract_term),\n    coverage_miles: best.coverage_miles === undefined ? null : Number(best.coverage_miles),\n    plan_name:      best.plan_name || null,\n    policy_name:    best.policy_name || null,\n    vehicle_class:  (q.rating && q.rating.vehicle_class) || q.vehicle_class || null,\n    rate_id:        best.rate_id === undefined ? null : Number(best.rate_id),\n    quote_url:            link,\n    short_link:           q.short_link || null,\n    quote_link:           q.quote_link || null,\n    guided_purchase_link: q.guided_purchase_link || null,\n    quote_expires_at:     tokenExpiry(link),\n  } });\n}\nreturn out;"
       },
-      "id": "n033-map-rating-to-enrolment",
+      "id": "n035-map-rating-to-enrolment",
       "name": "Map Rating To Enrolment",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -134,7 +134,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n034-store-price",
+      "id": "n036-store-price",
       "name": "Store Price",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -151,7 +151,7 @@
     },
     {
       "parameters": {},
-      "id": "n035-rating-failed-stays-unpriced-retried-later",
+      "id": "n037-rating-failed-stays-unpriced-retried-later",
       "name": "Rating Failed (stays unpriced, retried later)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,

@@ -93,9 +93,10 @@
     "days": [
       2,
       3,
-      4
+      4,
+      5
     ],
-    "daysNote": "Tuesday, Wednesday, Thursday. Monday inboxes are cleared in bulk and Friday afternoon decays. A send that falls due outside these days waits for the next one; because the cadence is computed from the enrolment date rather than from the last send, slipping a day never compresses the rest of the sequence.",
+    "daysNote": "Tuesday through Friday. Monday is excluded because Monday inboxes are cleared in bulk. Friday is INCLUDED for an arithmetic reason, not a preference: two days drawn from Tue/Wed/Thu alone can only ever be 1, 2, 5, 6 or 7 days apart, so a 3 or 4 day cadence gap is impossible to express and the deck opens with both. On the old window every gap silently became 7 days and the 60 day campaign became a flat 64 day weekly drip. Widening to Friday makes every gap in campaign.json achievable. If this is ever narrowed again, re-run n8n/verify.mjs: the cadence check is what catches it.",
     "hours": [
       9,
       10,

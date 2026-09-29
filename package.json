@@ -5,14 +5,16 @@
   "type": "module",
   "description": "DriveOne VSC co-branded dealer email design system and campaign automation",
   "scripts": {
-    "build": "node email/build.mjs && node n8n/build-workflows.mjs",
+    "build": "node email/build.mjs && node n8n/build-workflows.mjs && node n8n/verify.mjs",
     "build:dealer": "node email/build.mjs",
-    "build:n8n": "node n8n/build-workflows.mjs",
+    "build:n8n": "node n8n/build-workflows.mjs && node n8n/verify.mjs",
     "publish:static": "node scripts/publish-static.mjs",
     "vercel-build": "npm run build && npm run publish:static",
     "check": "node scripts/check.mjs",
     "publish:templates": "node scripts/publish-templates.mjs",
-    "n8n:sdk": "node scripts/to-n8n-sdk.mjs"
+    "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
+    "verify": "node n8n/verify.mjs",
+    "build:workflows": "node n8n/build-workflows.mjs && node n8n/verify.mjs"
   },
   "engines": {
     "node": ">=18"

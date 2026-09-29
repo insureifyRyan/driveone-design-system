@@ -476,6 +476,11 @@ basis for the service customer records.
 
 Then, in order:
 
+0. **Re-import the workflows from the repo, then run `npm run verify`.** The live drafts
+   drift: this campaign has been debugged by editing nodes in the n8n UI and through the
+   API, and a draft that disagrees with the generator is the single most productive source
+   of bugs in this project. The repo is the source of truth. Never publish a workflow whose
+   draft was not generated from the current `build-workflows.mjs`.
 1. Confirm the Code node runner is alive. Run any workflow with a Code node and watch it
    finish. If it times out at 60 seconds, nothing else on this list matters yet.
 2. Set the `$vars` (see `docs/N8N-SETUP.md`). `$env` does not work on Cloud.

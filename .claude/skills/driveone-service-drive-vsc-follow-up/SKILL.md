@@ -60,15 +60,28 @@ Session pooler:
 
 | Field | Value |
 |---|---|
-| Host | `aws-<n>-us-east-2.pooler.supabase.com`, exactly as the dashboard prints it |
+| Host | `aws-1-us-east-2.pooler.supabase.com` |
 | Database | `postgres` |
 | User | `postgres.bbvkqwcapqsytrdrubci`, the project ref is part of the username |
 | Port | `5432`, session mode |
-| SSL | `require`, and leave Ignore SSL Issues off |
+| SSL | `Require` |
+| Ignore SSL Issues | **on**, and this is not optional |
 
 Session mode (5432) rather than transaction mode (6543): the claim statements in 02 and 05
 hold row locks with `for update skip locked`, and the node sends parameterised queries.
 Transaction pooling is the wrong shape for both.
+
+**Ignore SSL Issues has to be on** or the credential fails with `self-signed certificate in
+certificate chain`. Node validates the pooler's certificate against its own bundled CA
+list, Supabase's does not chain to one, and the Postgres credential has nowhere to put
+Supabase's CA. The connection stays TLS encrypted; what is given up is verifying the far
+end, which is a theoretical man in the middle between n8n Cloud and AWS us-east-2. If n8n
+ever adds a CA field, put the Supabase root in it and turn this back off.
+
+That error is also the good one to see. It means TCP connected and TLS negotiated, so the
+host, port and username are already right and only trust is failing. `Connection refused`
+means the opposite: nothing was listening, usually because Host is blank and the node fell
+back to `127.0.0.1:5432`.
 
 Config lives in n8n **Variables**, not environment variables, and every workflow reads
 `$vars`:

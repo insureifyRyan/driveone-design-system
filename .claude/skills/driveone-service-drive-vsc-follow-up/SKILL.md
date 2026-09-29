@@ -53,6 +53,23 @@ Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, SMTP `qpZ7RhGkOTZjchlL`, IMAP
 `vCdTYNMkKDnlSPPB`, Header Auth `IoJuINMIbHzD6FJM` (shared with unrelated workflows, so
 the campaign should get its own secret before a second dealership).
 
+**The Postgres credential must use the Supabase session pooler, not the direct host.**
+n8n Cloud reaches the internet over IPv4 and `db.<ref>.supabase.co` resolves to IPv6 only
+without the IPv4 add-on. Copy the values out of the Supabase dashboard under Connect,
+Session pooler:
+
+| Field | Value |
+|---|---|
+| Host | `aws-<n>-us-east-2.pooler.supabase.com`, exactly as the dashboard prints it |
+| Database | `postgres` |
+| User | `postgres.bbvkqwcapqsytrdrubci`, the project ref is part of the username |
+| Port | `5432`, session mode |
+| SSL | `require`, and leave Ignore SSL Issues off |
+
+Session mode (5432) rather than transaction mode (6543): the claim statements in 02 and 05
+hold row locks with `for update skip locked`, and the node sends parameterised queries.
+Transaction pooling is the wrong shape for both.
+
 Config lives in n8n **Variables**, not environment variables, and every workflow reads
 `$vars`:
 
@@ -445,6 +462,12 @@ their customer relationship.
   characters. A short one still passes a `startsWith('https://hooks.slack.com/')` test,
   still returns HTTP 200, and returns Slack's developer *documentation page* instead of
   `ok`. Count the segments; do not trust the status code.
+- **An active workflow is not a working workflow.** 01 and 05 sat active and green in the
+  list for a day while every hourly run failed at its first Postgres node with
+  `Connection refused`, description `127.0.0.1:5432`: the credential had never been
+  pointed at Supabase, so it was dialling n8n's own container. Nothing in the workflow
+  list says this. Before believing a scheduled workflow works, read an execution, and read
+  the error's `description` field, which carries the host and port actually dialled.
 - **The Code node runner can be down while everything else looks healthy.** Executions sit
   at `running` and fail after exactly 60 seconds with `Task request timed out`. A Set-node
   workflow on the same instance finishes in milliseconds, which is how you tell the two

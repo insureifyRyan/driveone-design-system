@@ -247,10 +247,28 @@ does not exist.
 **This was not the original design, and the reason for the change is worth carrying
 forward.** The plan was to send over SMTP from the dealership's own warmed mailbox, which
 keeps the From address, the domain reputation and a copy in Sent Items all with the dealer.
-Bob Johnson's IT would not open SMTP: their environment authenticates with OAuth 2.0 against
-Microsoft and SMTP AUTH is off, which is now the default posture at most dealer groups.
-Assume it. The options at that point are to get an OAuth app registration approved by the
-dealer's Microsoft admin, or to authenticate the domain instead of the mailbox.
+
+That is closed, and it is worth being precise about why, because "the dealership would not
+allow SMTP" makes it sound like a decision someone could be talked out of. It is not. The
+mailbox has MFA enforced, and SMTP has nowhere to carry a second factor. Tested directly:
+the password authenticates fine at office.com and is immediately met with an Authenticator
+number prompt, while the same password over SMTP returns `535 5.7.3`. No password, app
+password or endpoint change gets around that. Assume this is the posture at every dealer
+from now on; it is the Microsoft default, not a quirk of this one.
+
+That leaves three routes, and only one of them asks the dealership for nothing beyond DNS:
+
+| Route | Needs from them | Gets you |
+|---|---|---|
+| Resend + 4 DNS records | DNS only, no access granted | Bounce webhooks, List-Unsubscribe |
+| Microsoft Graph via OAuth | App registration + admin consent | Sent Items copy, custom headers, no DNS |
+| SMTP | Impossible while MFA is on | — |
+
+The Outlook node is genuinely the best of the three on capability — it supports
+`internetMessageHeaders`, `saveToSentItems` and `replyTo`, so it beats even Resend — and it
+is what the dealership's other vendor already does. It costs an app registration. Put both
+live options in front of their IT and let them choose; a choice is a far easier
+conversation than a single take-it-or-leave-it request.
 
 Authenticating the domain is the smaller ask and it is worth knowing why when you have to
 make the case. It needs **four DNS records and nothing else**: no mailbox access, no app
@@ -484,6 +502,30 @@ their customer relationship.
 
 ## Gotchas worth knowing before you rediscover them
 
+- **MFA on the sending mailbox means SMTP can never work, and no password will fix it.**
+  An SMTP session has nowhere to carry a second factor: no prompt, no callback, nothing.
+  A correct password gets you `535 5.7.3 Authentication unsuccessful`, which reads exactly
+  like a wrong password and is not one. Settle it in two minutes before touching any SMTP
+  credential: sign in to office.com as the sending address. An Authenticator prompt means
+  SMTP is closed, whatever anyone says about the password. Note the sub-code, because they
+  mean different things — `5.7.139` with `SmtpClientAuthentication is disabled for the
+  tenant` is a policy switch an admin can flip; plain `5.7.3` is credentials, account
+  state, or MFA.
+  Do not go looking for an app password as the way around it. It needs the admin to permit
+  app passwords *and* enable SMTP AUTH on the mailbox, Security Defaults blocks app
+  passwords outright, and the whole point of the request is to weaken MFA on a mailbox that
+  sends to customers. Any IT person worth having says no, correctly.
+- **n8n Cloud cannot greet Office 365 without a client hostname set.** Before the auth
+  failure above there is an earlier one that looks unrelated: `501 5.5.4 Invalid domain
+  name` / `Invalid HELO`. n8n Cloud runs in a container whose hostname has no dots in it,
+  which is not a valid domain, and `smtp.office365.com` rejects it at the greeting. Set the
+  client hostname field on the SMTP credential to any valid FQDN. Worth knowing only so it
+  is not mistaken for a credential problem: it fails *before* authentication, so it tells
+  you nothing about whether the password works.
+- **Assume dealer mailboxes are MFA-protected and OAuth-only.** That is the default posture
+  at Microsoft tenants now, not an unusual restriction. Plan the sending path around it
+  from the start rather than discovering it three days in. See Sending for the three
+  routes and what each one costs.
 - **`$json` does not exist in a Code node that runs once for all items.** It is bound only
   in run-once-per-item mode, so reading `$json.params?.dealer` inside a `for` loop over
   `$input.all()` is a `ReferenceError` that takes the whole node down — valid events

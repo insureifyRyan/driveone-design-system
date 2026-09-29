@@ -9,7 +9,7 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "n017-campaign-event-webhook",
+      "id": "n018-campaign-event-webhook",
       "name": "Campaign Event Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -29,7 +29,7 @@
       "parameters": {
         "jsCode": "// ===================================================================\n// One map for every way a contact can leave the campaign. Adding a new\n// provider or a new exit signal means adding a line here, not rewiring.\n// Accepts DriveOne checkout events, Resend delivery events, and raw strings.\n// ===================================================================\n\nconst EVENTS = {\n  // DriveOne checkout and CRM\n  'vsc.purchased':      { exit: 'purchased',    suppress: false },\n  'vsc.quote_started':  { exit: null,           suppress: false },\n  'vehicle.sold':       { exit: 'vehicle_sold', suppress: false },\n  'customer.has_vsc':   { exit: 'has_vsc',      suppress: false },\n  'manual.exit':        { exit: 'manual',       suppress: false },\n\n  // Preference and consent\n  'email.unsubscribed': { exit: 'unsubscribed', suppress: true },\n  'unsubscribe':        { exit: 'unsubscribed', suppress: true },\n\n  // Resend webhook event names\n  'email.bounced':      { exit: 'bounced',      suppress: true },\n  'email.complained':   { exit: 'complained',   suppress: true },\n  'email.delivery_delayed': { exit: null,       suppress: false },\n};\n\nconst out = [];\nfor (const item of $input.all()) {\n  const p = item.json.body || item.json;\n\n  const type = String(p.type || p.event || p.event_type || \"\").trim().toLowerCase();\n  const rule = EVENTS[type];\n\n  // customer_key is preferred. Fall back to hashing whatever email we were given.\n  const crypto = require('crypto');\n  const dealer_id = p.dealer_id || p.dealer || $json.params?.dealer || \"bob-johnson\";\n  const email = (p.email || p.data?.to?.[0] || p.to || \"\").toString().trim().toLowerCase();\n  const customer_key = p.customer_key\n    || (email ? crypto.createHash(\"sha256\").update(dealer_id + \":\" + email).digest(\"hex\") : null);\n\n  out.push({\n    json: {\n      received_type: type,\n      known: !!rule,\n      actionable: !!(rule && rule.exit && customer_key),\n      exit_reason: rule ? rule.exit : null,\n      suppress: rule ? !!rule.suppress : false,\n      dealer_id,\n      customer_key,\n      email,\n      campaign_id: p.campaign_id || \"bj_postro_vsc_2026\",\n    },\n  });\n}\nreturn out;"
       },
-      "id": "n018-classify-event",
+      "id": "n019-classify-event",
       "name": "Classify Event",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -64,7 +64,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "n019-actionable",
+      "id": "n020-actionable",
       "name": "Actionable?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -82,7 +82,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n020-exit-enrollment",
+      "id": "n021-exit-enrollment",
       "name": "Exit Enrollment",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -123,7 +123,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "n021-needs-suppression",
+      "id": "n022-needs-suppression",
       "name": "Needs Suppression?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -141,7 +141,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n022-add-to-suppression-list",
+      "id": "n023-add-to-suppression-list",
       "name": "Add To Suppression List",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -164,7 +164,7 @@
           "responseCode": 200
         }
       },
-      "id": "n023-acknowledge",
+      "id": "n024-acknowledge",
       "name": "Acknowledge",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -175,7 +175,7 @@
     },
     {
       "parameters": {},
-      "id": "n024-ignored-unknown-or-non-exit-event",
+      "id": "n025-ignored-unknown-or-non-exit-event",
       "name": "Ignored (unknown or non-exit event)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,

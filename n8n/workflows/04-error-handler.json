@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "n025-on-any-workflow-error",
+      "id": "n026-on-any-workflow-error",
       "name": "On Any Workflow Error",
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
@@ -16,7 +16,7 @@
       "parameters": {
         "jsCode": "const e = $input.first().json;\nconst wf = e.workflow || {};\nconst err = e.execution || {};\n\nconst lines = [\n  \"DriveOne VSC campaign failure\",\n  \"Workflow: \" + (wf.name || \"unknown\"),\n  \"Node: \" + (err.lastNodeExecuted || \"unknown\"),\n  \"Message: \" + ((err.error && err.error.message) || \"no message\"),\n  \"Execution: \" + (err.url || err.id || \"n/a\"),\n  \"Time: \" + new Date().toISOString(),\n].join(\"\\n\");\n\nreturn [{ json: { text: lines } }];"
       },
-      "id": "n026-format-alert",
+      "id": "n027-format-alert",
       "name": "Format Alert",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -34,7 +34,7 @@
         "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
         "options": {}
       },
-      "id": "n027-alert-slack",
+      "id": "n028-alert-slack",
       "name": "Alert Slack",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

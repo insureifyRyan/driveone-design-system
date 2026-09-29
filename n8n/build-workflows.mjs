@@ -327,6 +327,10 @@ const CLAIM_SQL = [
   '    -- never claim a row that cannot produce a complete email',
   '    and monthly_payment is not null',
   '    and quote_url is not null',
+  '    -- give up eventually. Without a ceiling one undeliverable address is',
+  '    -- claimed, fails and is re-claimed every run for sixty days, taking a',
+  '    -- slot from someone reachable each time.',
+  '    and send_attempts < 5',
   '  order by next_send_at',
   '  -- The daily cap is applied here, inside the same statement that leases the',
   '  -- rows, so two scheduler runs racing cannot jointly exceed it.',
@@ -579,7 +583,42 @@ const schedulerNodes = [
     ].join('\n'),
     "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.is_last_step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.next_send_at }}"),
 
-  node('Send Failed', 'noOp', 1, [1140, 0], {}),
+  // A send that failed used to land on a no-op, which meant the run finished
+  // GREEN with zero emails out. A dead campaign looked exactly like a quiet
+  // one: the cron ticking hourly, every execution a green tick, and nobody
+  // finding out until someone asked why there were no replies. Every SMTP
+  // failure now leaves a trace in the row and then takes the run down, so it
+  // reaches the error workflow and the Slack alert.
+  pgNode('Record Send Failure', [1140, 0],
+    [
+      '-- The claim already pushed next_send_at two hours out, so a transient',
+      '-- failure retries on its own. This is about leaving evidence, and about',
+      '-- giving up eventually: five failures and the row stops being claimed,',
+      '-- the same ceiling pricing uses, so one poisoned address cannot occupy',
+      '-- a slot in every run forever.',
+      'update vsc_enrollment',
+      'set send_attempts       = send_attempts + 1,',
+      '    send_error          = left($2, 500),',
+      '    last_send_error_at  = now(),',
+      '    updated_at          = now()',
+      'where id = $1;',
+    ].join('\n'),
+    "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown SMTP failure' }}"),
+
+  codeNode('Fail Loudly', [1360, 0], [
+    '// Turns a swallowed SMTP failure into a red execution. n8n routes send',
+    '// errors to this branch instead of stopping the run, which is right for',
+    '// the other items in the batch but wrong for the run as a whole: without',
+    '// this throw the workflow reports success having sent nothing.',
+    'const failures = $input.all();',
+    'const reasons = [...new Set(failures.map((f) => String((f.json && f.json.error) || "unknown")))];',
+    'throw new Error(',
+    '  failures.length + " of this run\'s sends failed and were not delivered. " +',
+    '  "Reasons: " + reasons.join(" | ") + ". " +',
+    '  "The rows carry send_error and will retry in two hours, up to five attempts."',
+    ');',
+  ].join('\n')),
+
   node('Nothing Due', 'noOp', 1, [260, 140], {}),
 ];
 
@@ -591,8 +630,9 @@ const schedulerConnections = connect([
   ['Prepare Send', 'Load Template'],
   ['Load Template', 'Render Merge Tags'],
   ['Render Merge Tags', 'Send via SMTP'],
-  ['Send via SMTP', ['Log Send', 'Send Failed']],
+  ['Send via SMTP', ['Log Send', 'Record Send Failure']],
   ['Log Send', 'Advance State'],
+  ['Record Send Failure', 'Fail Loudly'],
 ]);
 
 writeFileSync(join(ROOT, 'n8n/workflows/02-scheduler.json'),

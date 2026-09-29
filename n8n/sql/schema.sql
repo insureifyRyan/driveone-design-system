@@ -35,6 +35,15 @@ create table if not exists vsc_enrollment (
 
   quote_url         text,
 
+  -- Send failures. Pricing already recorded its errors and capped its retries;
+  -- sending recorded nothing, so a run that delivered zero emails finished
+  -- green and looked exactly like a quiet one. send_attempts is the ceiling the
+  -- scheduler checks, so one undeliverable address stops occupying a slot in
+  -- every run for sixty days.
+  send_attempts      integer not null default 0,
+  send_error         text,
+  last_send_error_at timestamptz,
+
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now(),
 

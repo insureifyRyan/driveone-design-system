@@ -1,44 +1,74 @@
-Subject: Four DNS records for bobjohnsonauto.com - not the SMTP request
+Subject: bobjohnsonauto.com sending authorisation - two options, neither is SMTP
 
 
 Hi Mike,
 
-This is a different request from the SMTP one, and a much smaller one. Four DNS
-records, and nothing else.
+We need to authorise one sending platform to send the customer follow-up series on
+the dealership's behalf, from Northcountryrecalls@bobjohnsonauto.com.
 
-Declining SMTP access was the right call. A standing credential into the mail
-system is exactly the kind of thing to say no to, and we are not asking you to
-reconsider it. What follows asks for no access of any kind.
+There are two ways to do that. Both are below. Neither is SMTP, and neither asks
+you to weaken anything.
 
 
-WHAT THIS DOES NOT INVOLVE
+FIRST, TO CLOSE OUT THE SMTP QUESTION
 --------------------------------------------------------------------
+We tested it rather than assume. The mailbox has MFA enforced, and an SMTP
+session has nowhere to carry a second factor - the password authenticates fine
+and is then met with an Authenticator prompt that SMTP cannot answer.
+
+So SMTP is not a policy we are asking you to revisit. It is closed by the MFA
+you have correctly turned on, and we are not proposing app passwords or any
+other way around it. That route is done.
+
+
+OPTION A - FOUR DNS RECORDS  (our recommendation)
+--------------------------------------------------------------------
+What it asks for: four DNS entries. Nothing else.
+
   - No mailbox access. Nobody gains the ability to read, send from, or
     sign in to any Microsoft 365 account.
-  - No app registration, no OAuth consent, no Microsoft admin approval.
-  - No change to how your mail flows. Inbound and outbound mail through
-    Microsoft 365 is completely untouched.
+  - No app registration, no OAuth consent, no admin approval in Microsoft.
+  - No change to how your mail flows. Inbound and outbound through
+    Microsoft 365 is untouched.
   - No credential of any kind is issued to us.
 
-For scale: an OAuth app registration, of the sort already in place for your
-existing system, grants an application standing permission against your tenant.
 DNS records grant permission to nothing. They are public entries, in the same
 category as the record that already points your mail at Microsoft, and all they
-say is that one named platform is allowed to sign messages for this domain.
+say is that one named platform may sign messages for this domain.
+
+We recommend this one because it is the smaller grant of the two. If DNS for
+bobjohnsonauto.com sits with your registrar or whoever maintains the website
+rather than with you, this may be a forward rather than a task.
+
+The records are listed at the end of this email.
 
 
-WHY IT IS NEEDED
+OPTION B - APP REGISTRATION  (if you would rather keep it inside Microsoft)
 --------------------------------------------------------------------
-We are sending a customer follow-up email series on the dealership's behalf,
-from Northcountryrecalls@bobjohnsonauto.com.
+If you would prefer the mail go through your own tenant rather than an outside
+platform, we can send through Microsoft Graph instead. This is the same
+mechanism your existing system already uses.
 
-Without these records, receiving mail servers see messages claiming to come from
-your domain that your domain has not authorised. They treat that as spoofing.
-The practical result is that the mail lands in spam, and a run of unauthenticated
-mail claiming your domain does the domain's own reputation no favours either.
+What it needs:
 
-Adding the records is what makes the mail provably authorised by you. It is the
-same mechanism that protects the domain from genuine spoofing.
+  - An Entra ID app registration in your tenant with the Mail.Send
+    application permission.
+  - An application access policy scoping that permission to
+    Northcountryrecalls@bobjohnsonauto.com only, so the registration cannot
+    touch any other mailbox in the organisation.
+  - The Tenant ID, Client ID and a client secret passed to us.
+
+This grants more than Option A does - it is a credential, where DNS records are
+not - but it is properly scoped, revocable by you at any time, and it keeps
+everything inside Microsoft. It also leaves a copy of every message in the
+mailbox's Sent Items, which Option A does not.
+
+If you prefer this route, say so and we will send the exact steps.
+
+
+================================================================
+THE RECORDS FOR OPTION A
+================================================================
 
 
 PLEASE DO NOT CHANGE YOUR EXISTING SPF RECORD
@@ -128,8 +158,8 @@ COMMON MISTAKES
 
 WHEN YOU ARE DONE
 --------------------------------------------------------------------
-Just reply to confirm and we will run verification, which takes a few minutes
-once DNS has propagated. Nothing further is needed from you after that.
+Reply to confirm and we will run verification, which takes a few minutes once
+DNS has propagated. Nothing further is needed from you after that.
 
 If any of the above conflicts with a record you already have, please tell us
 rather than overwriting it and we will work out the right merge together.

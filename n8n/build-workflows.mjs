@@ -147,6 +147,13 @@ const INTAKE_SQL = [
   'join customer_vehicles cv  on cv.id = q.customer_vehicle_id',
   
   'where q.partner_id = $3::uuid',
+  '  -- The whole premise of the campaign: no coverage on file. This is the',
+  '  -- filter that matters, and payment_status is not a substitute for it.',
+  '  -- Every service drive quote is pending, so that predicate excludes nobody;',
+  '  -- it only ever meant "has not bought from us", which is a different thing.',
+  '  -- Written as = false rather than coalesce(..., false): a null is unknown,',
+  '  -- not "no coverage", and an unknown is not worth a complaint.',
+  '  and c.has_existing_warranty = false',
   '  -- anyone who already bought is not a prospect',
   "  and q.payment_status = 'pending'",
   "  and q.created_at > now() - ($4 || ' days')::interval",

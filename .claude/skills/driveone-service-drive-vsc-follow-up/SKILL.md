@@ -324,9 +324,16 @@ their customer relationship.
 - **There is no repair order table.** The service drive writes one quote per visit, so
   `quotes.created_at` is the visit date. `customers.last_seen_date` is empty.
 - **Op codes do not exist.** There is no services line; do not add the merge tag back.
-- **No VSC-ownership flag exists** anywhere with data. Intake uses
-  `payment_status = 'pending'` as the proxy. That is "has not bought from us", not "has no
-  coverage anywhere".
+- **`customers.has_existing_warranty` is the ownership flag, and it is populated.** An
+  earlier version of this file claimed no such flag existed with data; that was wrong and
+  it nearly cost 29 wrong sends. For Bob Johnson it reads 436 false, 38 true, no nulls.
+  Intake filters `c.has_existing_warranty = false`. Write it that way rather than
+  `coalesce(..., false)`: a null is unknown, not "no coverage", and an unknown is not
+  worth a complaint.
+- **`payment_status = 'pending'` filters nobody.** Every service drive quote is pending,
+  so the predicate excludes zero people. It only ever meant "has not bought from us",
+  which is a different question from "has no coverage". Keep it for purchase exits, never
+  lean on it for eligibility.
 - **`customers.state` is mostly null**, so a state-based exclusion silently passes almost
   everyone. Do not rely on it alone.
 - **Backlog is old.** Quotes ran Feb to Sep 2026 with only 107 inside 30 days. A 30 day

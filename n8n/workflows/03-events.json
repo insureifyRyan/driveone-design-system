@@ -78,7 +78,8 @@
         "operation": "executeQuery",
         "query": "update vsc_enrollment\nset status = 'exited',\n    exit_reason = $3,\n    updated_at = now(),\n    -- park it rather than delete it so attribution survives\n    next_send_at = now() + interval '100 years'\nwhere dealer_id = $1\n  and customer_key = $2\n  and status = 'active'\nreturning id, email, current_step, exit_reason;",
         "options": {
-          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.customer_key }}, {{ $json.exit_reason }}"
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.customer_key }}, {{ $json.exit_reason }}",
+          "queryBatching": "independently"
         }
       },
       "id": "n020-exit-enrollment",
@@ -136,7 +137,8 @@
         "operation": "executeQuery",
         "query": "insert into vsc_suppression (dealer_id, customer_key, reason)\nvalues ($1, $2, $3)\n-- Suppression is permanent and idempotent. First reason wins.\non conflict (dealer_id, customer_key) do nothing;",
         "options": {
-          "queryReplacement": "={{ $('Classify Event').itemMatching($itemIndex).json.dealer_id }}, {{ $('Classify Event').itemMatching($itemIndex).json.customer_key }}, {{ $('Classify Event').itemMatching($itemIndex).json.exit_reason }}"
+          "queryReplacement": "={{ $('Classify Event').itemMatching($itemIndex).json.dealer_id }}, {{ $('Classify Event').itemMatching($itemIndex).json.customer_key }}, {{ $('Classify Event').itemMatching($itemIndex).json.exit_reason }}",
+          "queryBatching": "independently"
         }
       },
       "id": "n022-add-to-suppression-list",

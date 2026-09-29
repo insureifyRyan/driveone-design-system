@@ -74,7 +74,26 @@ function pgNode(name, position, query, replacement, options = {}) {
   return node(name, 'postgres', 2.5, position, {
     operation: 'executeQuery',
     query,
-    options: { queryReplacement: replacement, ...options },
+    options: {
+      queryReplacement: replacement,
+      // n8n defaults queryBatching to "single": one execution for ALL incoming
+      // items, using only the first item's replacements. Every other item is
+      // silently discarded. On a node fed one item that is invisible; on a node
+      // fed forty-five it is a disaster, and this campaign has five of the
+      // latter. Left at the default, Advance State would have advanced one
+      // enrolment and left the rest to be re-claimed and re-sent the same
+      // email, Log Send would have logged one send so the daily cap
+      // undercounted, and the bounce handler would have suppressed one address
+      // out of a batch. Found when a pricing run rated 100 vehicles and wrote
+      // exactly one price.
+      //
+      // "independently" rather than "transaction" on purpose: these writes
+      // record things that already happened out in the world. An email that
+      // was sent cannot be unsent by a rollback, so one bad row must not
+      // discard the record of ninety-nine good ones.
+      queryBatching: 'independently',
+      ...options,
+    },
   }, { credentials: { postgres: { id: 'REPLACE_PG_CRED_ID', name: 'DriveOne Postgres' } } });
 }
 
@@ -162,6 +181,21 @@ const INTAKE_SQL = [
   '  and c.opted_out = false',
   '  and coalesce(c.email_bounced, false)    = false',
   '  and coalesce(c.email_complained, false) = false',
+
+  '  -- Not a customer. The service drive carries internal records alongside',
+  '  -- real ones: fleet rows, PDI entries, test rows, the group\'s other',
+  '  -- rooftops, and rival dealers who took a trade. Thirteen of the first',
+  '  -- 132 enrolled were one of these, two of them competing dealerships,',
+  '  -- which is a phone call nobody at the store wants to take.',
+  "  and c.first_name !~* '(bob ?johnson|widrick|caprara|fleet|test|pdi|auto sales|motors)'",
+  '  -- Placeholder addresses. These are worse than bounces: noemail@gmail.com',
+  '  -- and ask@gmail.com are real accounts belonging to strangers, so a send',
+  '  -- costs a complaint on a domain that is still earning its reputation.',
+  "  and lower(trim(c.email)) !~ '^(noemail|no|ask|test|tomtest|none|na)@'",
+  "  and lower(trim(c.email)) !~ '@(no|a|abc|noemail|none|test)\\.(com|net|org)$'",
+  '  -- the dealership\'s own staff do not need the pitch',
+  "  and lower(trim(c.email)) !~ '@bobjohnsonauto\\.com$'",
+
   '  -- VSCs are not sold in California',
   "  and upper(coalesce(c.state, '')) <> 'CA'",
 
@@ -320,6 +354,20 @@ const PREPARE_SEND_CODE = [
   "const fmtMoney = (v) => (v === null || v === undefined || v === '') ? null",
   '  : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(v));',
   '',
+  '// Names arrive from the DMS in block capitals: 129 of the first 132 enrolled',
+  '// were like this. "ERIC, one thing was missing from your file" reads as a',
+  '// broken mail merge, which is the exact impression a note written as if from',
+  '// the service drive cannot afford. Only recased when the source is entirely',
+  '// upper case, so a name someone typed properly is never mangled, and McBride',
+  "// and O'Brien survive the round trip.",
+  'const properName = (s) => {',
+  '  const t = String(s == null ? "" : s).trim();',
+  '  if (!t || t !== t.toUpperCase()) return t;',
+  '  return t.toLowerCase()',
+  '    .replace(/(^|[\\s\'\\-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase())',
+  "    .replace(/\\bMc([a-z])/g, (m, ch) => 'Mc' + ch.toUpperCase());",
+  '};',
+  '',
   '// Coverage is ADDITIVE from the day the policy is bought: the term and the',
   '// mileage are added on top of where the car is today, not measured back to',
   '// its in-service date. So this reads as "more", never as a ceiling.',
@@ -382,7 +430,7 @@ const PREPARE_SEND_CODE = [
   '      is_last_step: nextStep >= LAST_STEP,',
   '      next_send_at: nextSendAt ? nextSendAt.toISOString() : null,',
   '      merge: {',
-  '        first_name: r.first_name || "there",',
+  '        first_name: properName(r.first_name) || "there",',
   '        vehicle_year: r.vehicle_year || "",',
   '        vehicle_make: r.vehicle_make || "",',
   '        vehicle_model: r.vehicle_model || "your vehicle",',
@@ -718,6 +766,20 @@ const MAP_RATING_CODE = [
   '// vehicle, the embedded rating, and the customer facing links. We take the',
   '// cheapest genuinely financed option and the best available link.',
   '',
+  '// Every item must carry every key Store Price references, including the ones',
+  '// that do not apply to it. n8n resolves queryReplacement into a positional',
+  '// array, and a key that is undefined on the item is dropped rather than sent',
+  '// as null, which silently shortens the array and shifts every parameter after',
+  '// it. The first live pricing run died on "there is no parameter $17" because a',
+  '// successful rating has no failure reason to report. Spreading this blank',
+  '// first means a branch can only ever get the shape right.',
+  'const BLANK = {',
+  '  enrollment_id: null, failed: false, monthly: null, down: null, price: null,',
+  '  term: null, months: null, coverage_miles: null, plan_name: null,',
+  '  policy_name: null, vehicle_class: null, rate_id: null, reason: null,',
+  '  quote_url: null, short_link: null, quote_link: null, guided_purchase_link: null,',
+  '};',
+  '',
   'const out = [];',
   'for (const item of $input.all()) {',
   '  const q = item.json || {};',
@@ -739,6 +801,7 @@ const MAP_RATING_CODE = [
   '    // stays unpriced and the scheduler will not touch it, so nobody receives',
   '    // a blank price or a button that goes nowhere.',
   '    out.push({ json: {',
+  '      ...BLANK,',
   '      enrollment_id: enrolment.id,',
   '      failed: true,',
   '      reason: (financed.length === 0',
@@ -752,8 +815,10 @@ const MAP_RATING_CODE = [
   '  const best = financed[0];',
   '',
   '  out.push({ json: {',
+  '    ...BLANK,',
   '    enrollment_id:  enrolment.id,',
   '    failed:         false,',
+  '    reason:         null,',
   '    monthly:        Number(best.monthly_payment),',
   '    down:           Number(best.down_payment),',
   '    price:          Number(best.quote_price),',

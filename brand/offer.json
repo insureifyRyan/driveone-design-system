@@ -17,6 +17,8 @@
   "deductible_basis": "Form: 'Your Deductible is $0 per claim visit if You return the Vehicle to the selling Dealer for repair. If You do not return to the Vehicle's selling Dealer for repair, Your Deductible is $100 per claim visit.' Bob Johnson is the selling dealer on these contracts, so $0 at store is correct.",
   "repair_network": "any licensed repair facility authorized by the administrator",
   "repair_network_note": "DO NOT say 'any ASE certified shop nationwide'. The form defines Repair Facility as 'A licensed Repair Facility (licensed as a retail merchant to perform mechanical repairs) authorized by the Administrator/Obligor'. Authorization is required.",
+  "seals_gaskets_mileage_limit": 125000,
+  "seals_gaskets_basis": "Seals and gaskets are covered only while the vehicle is under 125,000 miles at the time of a claim. Confirmed correct and accurate by Ryan Williams on 29 Sep 2026, after the claim was found live in step 9 copy with no entry here. Phrase it as the rule, not as a deadline: 13 of the first cohort were already past 125,000 when they were enrolled, the highest at 149,999, so 'stop being covered once you pass' told them a boundary was ahead of them when it was behind.",
   "refund_days": "30",
   "refund_basis": "Form: full refund of the Service Contract Price if cancelled within the first thirty (30) days from the Service Contract Purchase Date provided no claims have been made. Pro rata after that.",
   "transferable": true,

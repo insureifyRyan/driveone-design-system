@@ -38,11 +38,11 @@ The six workflows are live in n8n, created from the generated JSON via
 
 | Workflow | ID | Nodes | State |
 |---|---|---|---|
-| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active** |
+| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active**, 148 enrolled |
 | 02 Scheduler | `8ajOLclNiDmo4jyR` | 12 | inactive, the one that sends |
 | 03 Events | `0qJrCUa2YYHrls0d` | 8 | inactive |
 | 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 | **active** |
-| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active** |
+| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active**, 148 priced, 0 errors |
 | 06 Bounce Watcher | `HQeTdMk8tyg7qfLl` | 3 | inactive |
 
 01 and 05 are safe to run alone: they enrol and price, and nothing in either touches a
@@ -487,6 +487,58 @@ their customer relationship.
   characters. A short one still passes a `startsWith('https://hooks.slack.com/')` test,
   still returns HTTP 200, and returns Slack's developer *documentation page* instead of
   `ok`. Count the segments; do not trust the status code.
+- **`update_workflow` writes the DRAFT. An active workflow keeps running its
+  published version.** Nothing warns you. Edits are applied, the API returns
+  success, and the schedule goes on running the old code. Half an afternoon went
+  into debugging a fix that was never live. After every `update_workflow`, call
+  `publish_workflow`, then confirm from an execution rather than from the editor:
+  the execution record carries the node parameters it actually ran with, so grep
+  those for something only the new version contains.
+- **n8n runs ONE query for all items unless you tell it otherwise.** The Postgres
+  node defaults `queryBatching` to `single`: one execution for the whole batch,
+  using only the first item's replacements, silently discarding every other item.
+  Found when a pricing sweep claimed 100 rows, made 100 rating calls, mapped 100
+  results and wrote exactly one price. Five nodes here take multi-item input, and
+  left alone this would have meant repeat sends (Advance State advancing one
+  enrolment a run), an unenforced daily cap (Log Send logging one send in
+  forty-five), and ignored bounces (one address suppressed per batch). Set
+  `queryBatching: 'independently'` on every Postgres node. Prefer it over
+  `transaction`: these writes record things that already happened outside the
+  database, and an email that was sent cannot be unsent by a rollback.
+- **`$itemIndex` does not advance inside a Code node.** A Code node runs once for
+  all items, so `$itemIndex` is fixed and `itemMatching($itemIndex)` returns item
+  zero on every pass of your loop. It is the documented idiom for *node parameter*
+  expressions, which are evaluated per item, and it is wrong everywhere else. In
+  pricing it wrote 100 rating results onto one enrolment, so a Camry at 113,000
+  miles and a Durango at 73,000 came out with identical prices to the cent. In the
+  sender it would have rendered every email in a batch from the first recipient's
+  data. Pair by position instead, and throw if the two sides differ in length.
+- **A key that is `undefined` is dropped from `queryReplacement`, not sent as
+  null.** It shortens the positional array and shifts every parameter after it,
+  and Postgres reports `there is no parameter $N`. Build a blank object carrying
+  every key the query names and spread it first, so no branch can get the shape
+  wrong.
+- **Subject lines need merging too, and are easy to forget.** Render Merge Tags
+  rewrote the HTML and passed the subject through untouched, so step 1 variant A
+  was going to arrive as a literal `{{first_name}}, one thing was missing from
+  your file` on the first email of the campaign. Merge the subject with the same
+  loop and the same loud failure on leftovers.
+- **The service drive is not a customer list.** 13 of the first 132 enrolled were
+  fleet rows, PDI entries, a test record, the group's other rooftops, the
+  dealership's own staff address, and two rival dealerships. Emailing a competitor
+  a pitch signed by the dealer is a phone call nobody wants. Placeholder addresses
+  are worse than bounces: `noemail@gmail.com` and `ask@gmail.com` are real
+  accounts belonging to strangers, so they cost a complaint rather than a bounce.
+  Intake filters the pattern and the 13 are suppressed, but eyeball the first
+  cohort of any new rooftop by hand.
+- **Names arrive in block capitals**, 129 of the first 132. `properName` in
+  Prepare Send recases only when the source is entirely upper case, so a properly
+  typed name is left alone and McBride and O'Brien survive.
+- **Never state an offer term the quote does not carry.** Email 5 promised
+  everyone 36 months; of 148 priced, only 69 are on 36, with 53 on 30, 25 on 18
+  and one on 24. The body was already right because it says "up to 36 months",
+  which is true. The subject was not. Use `{{payment_term}}` for anything a
+  particular customer's quote decides.
 - **An active workflow is not a working workflow.** 01 and 05 sat active and green in the
   list for a day while every hourly run failed at its first Postgres node with
   `Connection refused`, description `127.0.0.1:5432`: the credential had never been

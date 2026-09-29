@@ -1,6 +1,6 @@
 ---
 name: driveone-service-drive-vsc-follow-up
-description: Operations manual for the DriveOne Service Drive VSC follow up campaign, the co-branded email drip sent on a dealership's behalf to its own service drive customers after a visit. Use this whenever the user mentions the service drive follow up, the dealer VSC campaign, the post-service or post-RO emails, the Bob Johnson campaign, enrolling service customers, the vsc_enrollment tables, the rating or quote API at getelevatewarranty.com, auto-quoting a monthly payment into an email, adding a new dealership or rooftop to the campaign, or the driveone-design-system repo. Also use it when asked to change campaign copy, the checkout card, the send cadence, eligibility rules, or the co-branded email design, even if the campaign is not named. This is the DEALER channel, sent as the dealership; for DTC use driveone-direct-retargeting, for pre-sale abandoned quotes use driveone-workflow, and for customers who already bought use driveone-sold-nurture.
+description: Operations manual for the DriveOne Service Drive VSC follow up campaign, the co-branded email drip sent on a dealership's behalf to its own service drive customers after a visit. Use this whenever the user mentions the service drive follow up, the dealer VSC campaign, the post-service or post-RO emails, the Bob Johnson campaign, enrolling service customers, the vsc_enrollment tables, the rating or quote API at getelevatewarranty.com, auto-quoting a monthly payment into an email, adding a new dealership or rooftop to the campaign, the No Warranty Bucket or any other audience bucket for this campaign, or the driveone-design-system repo. Also use it when asked to change campaign copy, the checkout card, the send cadence, eligibility rules, or the co-branded email design, even if the campaign is not named. This is the DEALER channel, sent as the dealership; for DTC use driveone-direct-retargeting, for pre-sale abandoned quotes use driveone-workflow, and for customers who already bought use driveone-sold-nurture.
 ---
 
 # DriveOne Service Drive VSC follow up
@@ -9,6 +9,10 @@ A co-branded follow up sent **as the dealership**, to its own service drive cust
 their visit, offering the
 DriveOne VSC they do not yet have. Ten emails over 60 days, each carrying that customer's
 real vehicle, real visit, and a real monthly price with a Buy now button.
+
+**Audience today: the No Warranty Bucket** — customers with no coverage on file,
+`customers.has_existing_warranty = false`. More buckets follow once this one has run. See
+Buckets.
 
 **Scope.** Dealer channel only. Not DriveOne Direct (DTC), not the abandoned-quote engine,
 not sold-customer nurture. The dealership is the sender; DriveOne is the provider.
@@ -138,6 +142,43 @@ unratable vehicle does not call the API forever.
 Do not impose a local mileage ceiling. Rating decides what it can price. An early 99,999
 ceiling, copied from the local bracket table, was holding back 163 of 432 people for no
 reason: the API uses a finer bracket scheme entirely (`15001-50000`).
+
+## Buckets
+
+The audience is cut into buckets, launched one at a time. Each bucket is a distinct
+population with its own reason to hear from the dealer, so each gets its own eligibility
+predicate and eventually its own copy. Do not blur two buckets into one send.
+
+### Bucket 1, the No Warranty Bucket — live
+
+**Definition: `customers.has_existing_warranty = false`.** Service drive customers with no
+coverage on file. They are the whole premise of the ten email sequence in this repo: the
+copy says "your profile shows no vehicle service contract", and that sentence has to be
+true of every person receiving it.
+
+This is the only bucket currently wired. Everything else in this file — the cadence, the
+copy deck, the checkout card — was written for it.
+
+Write the predicate as `= false`, never `coalesce(has_existing_warranty, false)`. A null is
+unknown, not "no coverage", and an unknown is not worth a complaint. For Bob Johnson the
+column reads 436 false, 38 true, no nulls.
+
+**Do not use `payment_status` as a stand-in for this.** Every service drive quote is
+pending, so that predicate excludes nobody; it means "has not bought from us", which is a
+different question. Leaning on it as a proxy left 37 covered customers in a 432 person
+audience, 29 of them inside the freshest 150 — nearly one in five of the first send would
+have pitched a VSC to someone who already owned one.
+
+### Later buckets
+
+Not yet defined. When one arrives, settle three things before writing any SQL: the
+predicate that defines it, whether the existing copy is still honest for that population,
+and whether it can share the sending cap with a bucket already running. A bucket whose
+members already own coverage cannot reuse email 1 at all — it opens on the absence of it.
+
+Buckets share `vsc_enrollment`, keyed by `dealer_id` and `campaign_id`, so a second bucket
+should get its own `campaign_id` rather than being mixed into this one. That keeps
+reporting, suppression scope and cadence independent.
 
 ## Sending
 
@@ -325,15 +366,10 @@ their customer relationship.
   `quotes.created_at` is the visit date. `customers.last_seen_date` is empty.
 - **Op codes do not exist.** There is no services line; do not add the merge tag back.
 - **`customers.has_existing_warranty` is the ownership flag, and it is populated.** An
-  earlier version of this file claimed no such flag existed with data; that was wrong and
-  it nearly cost 29 wrong sends. For Bob Johnson it reads 436 false, 38 true, no nulls.
-  Intake filters `c.has_existing_warranty = false`. Write it that way rather than
-  `coalesce(..., false)`: a null is unknown, not "no coverage", and an unknown is not
-  worth a complaint.
-- **`payment_status = 'pending'` filters nobody.** Every service drive quote is pending,
-  so the predicate excludes zero people. It only ever meant "has not bought from us",
-  which is a different question from "has no coverage". Keep it for purchase exits, never
-  lean on it for eligibility.
+  earlier version of this file claimed no such flag existed with data. That was wrong, and
+  believing it nearly sent 29 pitches to people who already owned the product. See
+  Buckets. The general lesson: when this file says a column is empty, re-check the column
+  before building on it. Schemas get backfilled and notes go stale.
 - **`customers.state` is mostly null**, so a state-based exclusion silently passes almost
   everyone. Do not rely on it alone.
 - **Backlog is old.** Quotes ran Feb to Sep 2026 with only 107 inside 30 days. A 30 day

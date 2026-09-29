@@ -53,6 +53,18 @@ Credentials attached: Postgres `lb0H0xZWFnSnRsBz`, SMTP `qpZ7RhGkOTZjchlL`, IMAP
 `vCdTYNMkKDnlSPPB`, Header Auth `IoJuINMIbHzD6FJM` (shared with unrelated workflows, so
 the campaign should get its own secret before a second dealership).
 
+**Two credentials, two different ports, and they are easy to confuse.** Most of the
+setup conversation is about the Postgres credential, so when talk turns to SMTP it is
+very easy to edit the one you already had open. Putting 587 into the Postgres
+credential broke intake, pricing and events at once, and the giveaway was a database
+node reporting `connect ETIMEDOUT <aws ip>:587`: a Postgres node has no business on a
+mail port. Say which credential you mean, every time.
+
+| Credential | Port | SSL |
+|---|---|---|
+| Postgres account `lb0H0xZWFnSnRsBz` | `5432` | `Require`, Ignore SSL Issues **on** |
+| SMTP account `qpZ7RhGkOTZjchlL` | `587` | SSL/TLS **off**, so STARTTLS is used |
+
 **The Postgres credential must use the Supabase session pooler, not the direct host.**
 n8n Cloud reaches the internet over IPv4 and `db.<ref>.supabase.co` resolves to IPv6 only
 without the IPv4 add-on. Copy the values out of the Supabase dashboard under Connect,

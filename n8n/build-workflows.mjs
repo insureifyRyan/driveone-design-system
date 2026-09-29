@@ -661,8 +661,8 @@ const schedulerNodes = [
   // A send that failed used to land on a no-op, which meant the run finished
   // GREEN with zero emails out. A dead campaign looked exactly like a quiet
   // one: the cron ticking hourly, every execution a green tick, and nobody
-  // finding out until someone asked why there were no replies. Every SMTP
-  // failure now leaves a trace in the row and then takes the run down, so it
+  // finding out until someone asked why there were no replies. Every failed
+  // send now leaves a trace in the row and then takes the run down, so it
   // reaches the error workflow and the Slack alert.
   pgNode('Record Send Failure', [1140, 0],
     [
@@ -678,10 +678,10 @@ const schedulerNodes = [
       '    updated_at          = now()',
       'where id = $1;',
     ].join('\n'),
-    "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown SMTP failure' }}"),
+    "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown Resend failure' }}"),
 
   codeNode('Fail Loudly', [1360, 0], [
-    '// Turns a swallowed SMTP failure into a red execution. n8n routes send',
+    '// Turns a swallowed send failure into a red execution. n8n routes send',
     '// errors to this branch instead of stopping the run, which is right for',
     '// the other items in the batch but wrong for the run as a whole: without',
     '// this throw the workflow reports success having sent nothing.',

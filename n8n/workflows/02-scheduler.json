@@ -232,7 +232,7 @@
         "operation": "executeQuery",
         "query": "-- The claim already pushed next_send_at two hours out, so a transient\n-- failure retries on its own. This is about leaving evidence, and about\n-- giving up eventually: five failures and the row stops being claimed,\n-- the same ceiling pricing uses, so one poisoned address cannot occupy\n-- a slot in every run forever.\nupdate vsc_enrollment\nset send_attempts       = send_attempts + 1,\n    send_error          = left($2, 500),\n    last_send_error_at  = now(),\n    updated_at          = now()\nwhere id = $1;",
         "options": {
-          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown SMTP failure' }}",
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown Resend failure' }}",
           "queryBatching": "independently"
         }
       },
@@ -253,7 +253,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Turns a swallowed SMTP failure into a red execution. n8n routes send\n// errors to this branch instead of stopping the run, which is right for\n// the other items in the batch but wrong for the run as a whole: without\n// this throw the workflow reports success having sent nothing.\nconst failures = $input.all();\nconst reasons = [...new Set(failures.map((f) => String((f.json && f.json.error) || \"unknown\")))];\nthrow new Error(\n  failures.length + \" of this run's sends failed and were not delivered. \" +\n  \"Reasons: \" + reasons.join(\" | \") + \". \" +\n  \"The rows carry send_error and will retry in two hours, up to five attempts.\"\n);"
+        "jsCode": "// Turns a swallowed send failure into a red execution. n8n routes send\n// errors to this branch instead of stopping the run, which is right for\n// the other items in the batch but wrong for the run as a whole: without\n// this throw the workflow reports success having sent nothing.\nconst failures = $input.all();\nconst reasons = [...new Set(failures.map((f) => String((f.json && f.json.error) || \"unknown\")))];\nthrow new Error(\n  failures.length + \" of this run's sends failed and were not delivered. \" +\n  \"Reasons: \" + reasons.join(\" | \") + \". \" +\n  \"The rows carry send_error and will retry in two hours, up to five attempts.\"\n);"
       },
       "id": "n016-fail-loudly",
       "name": "Fail Loudly",

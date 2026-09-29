@@ -552,6 +552,14 @@ their customer relationship.
 - **Names arrive in block capitals**, 129 of the first 132. `properName` in
   Prepare Send recases only when the source is entirely upper case, so a properly
   typed name is left alone and McBride and O'Brien survive.
+- **Check the copy against the real spread of data, not against one example.**
+  Email 5 promised everyone 36 months when only 69 of 148 had that term. The
+  same sweep found a RAM 1500 whose model in the DMS is the string "1500" and
+  nothing else, so a subject rendered as "1500 math, briefly" for 24 of the
+  first 150 people. Pull the distribution of every field the copy leans on
+  (`payment_term`, `contract_months`, `coverage_miles`, `vehicle_model`) before
+  a first send, and read one rendered email for the ugliest row rather than the
+  prettiest.
 - **Never state an offer term the quote does not carry.** Email 5 promised
   everyone 36 months; of 148 priced, only 69 are on 36, with 53 on 30, 25 on 18
   and one on 24. The body was already right because it says "up to 36 months",

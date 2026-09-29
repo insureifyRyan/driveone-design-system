@@ -1,0 +1,143 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Campaign Walkthrough</title>
+<style>
+ :root{--bg:#F4F7FA;--fg:#0E1B2C;--mut:#5A6B80;--line:#D9E4EE;--card:#fff;--acc:#E8A33C;--chip:#EEF3F8}
+ @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1420;--fg:#EDF2F7;--mut:#9BA9BC;--line:#24303F;--card:#151D2B;--chip:#1E2938}}
+ :root[data-theme="dark"]{--bg:#0E1420;--fg:#EDF2F7;--mut:#9BA9BC;--line:#24303F;--card:#151D2B;--chip:#1E2938}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--bg);color:var(--fg);
+   font:16px/1.55 'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;padding:0 16px 64px}
+ header{max-width:780px;margin:0 auto;padding:44px 0 4px}
+ h1{font-size:clamp(26px,5vw,36px);letter-spacing:-.8px;margin:0 0 12px;font-weight:800;line-height:1.15}
+ .sub{color:var(--mut);margin:0 0 8px;max-width:60ch}
+ .facts{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0}
+ .f{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:13px;color:var(--mut)}
+ .f b{color:var(--fg);font-weight:700}
+ .meta{color:var(--mut);font-size:13.5px;margin:22px 0 0;padding-top:16px;border-top:1px solid var(--line);max-width:64ch}
+ main{max-width:780px;margin:0 auto}
+ .c{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:26px 0;overflow:hidden}
+ .h{display:flex;gap:14px;align-items:flex-start;padding:17px 20px;border-bottom:1px solid var(--line)}
+ .n{flex:none;width:34px;height:34px;border-radius:9px;background:var(--acc);color:#141414;
+   display:grid;place-items:center;font-weight:800;font-size:14px}
+ .t{min-width:0}
+ .d{margin:0 0 4px;font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--mut);font-weight:700}
+ .v{opacity:.65;letter-spacing:.8px}
+ h2{margin:0;font-size:16.5px;line-height:1.35;font-weight:700;overflow-wrap:break-word}
+ iframe{display:block;width:100%;height:780px;border:0;background:#fff}
+</style></head><body>
+<header>
+  <h1>The whole arc, on one real customer</h1>
+  <p class="sub">Every price, link, date and name below is live data pulled from the enrolment table. Nothing is a placeholder.</p>
+  <div class="facts">
+    <span class="f">Kevin, <b>2014 RAM 1500</b></span>
+    <span class="f"><b>149,999</b> miles</span>
+    <span class="f"><b>$177.54</b>/mo</span>
+    <span class="f"><b>18</b> month term</span>
+    <span class="f"><b>$168.20</b> down</span>
+    <span class="f">36 months, 45,000 miles added</span>
+  </div>
+  <p class="meta">He is the highest-mileage row in the cohort, chosen on purpose rather than a flattering one. Subject lines are split A/B deterministically from his customer key, so he always receives the same arm. Email 5 quotes his real 18 month term, not the 36 the copy used to promise everyone.</p>
+</header>
+<main>
+    <section class="c">
+      <div class="h">
+        <span class="n">01</span>
+        <div class="t">
+          <p class="d">Day 0 <span class="v">variant A</span></p>
+          <h2>Kevin, one thing was missing from your file</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-01.html" title="Email 1" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">02</span>
+        <div class="t">
+          <p class="d">Day 3 <span class="v">variant B</span></p>
+          <h2>RAM 1500 math, briefly</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-02.html" title="Email 2" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">03</span>
+        <div class="t">
+          <p class="d">Day 7 <span class="v">variant B</span></p>
+          <h2>This email has no salesperson attached to it</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-03.html" title="Email 3" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">04</span>
+        <div class="t">
+          <p class="d">Day 12 <span class="v">variant A</span></p>
+          <h2>Your deductible disappears when you come back</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-04.html" title="Email 4" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">05</span>
+        <div class="t">
+          <p class="d">Day 18 <span class="v">variant A</span></p>
+          <h2>0% for 18 months, no credit check</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-05.html" title="Email 5" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">06</span>
+        <div class="t">
+          <p class="d">Day 25 <span class="v">variant B</span></p>
+          <h2>Exclusionary. Terrible word, excellent thing.</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-06.html" title="Email 6" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">07</span>
+        <div class="t">
+          <p class="d">Day 32 <span class="v">variant B</span></p>
+          <h2>Your car&#x27;s extended warranty, and other famous phone calls</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-07.html" title="Email 7" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">08</span>
+        <div class="t">
+          <p class="d">Day 40 <span class="v">variant B</span></p>
+          <h2>Roadside, rental, and the rest of it</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-08.html" title="Email 8" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">09</span>
+        <div class="t">
+          <p class="d">Day 48 <span class="v">variant A</span></p>
+          <h2>Why we keep saying now</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-09.html" title="Email 9" loading="lazy"></iframe>
+    </section>
+    <section class="c">
+      <div class="h">
+        <span class="n">10</span>
+        <div class="t">
+          <p class="d">Day 60 <span class="v">variant A</span></p>
+          <h2>Last one from us on this</h2>
+        </div>
+      </div>
+      <iframe src="kevin-step-10.html" title="Email 10" loading="lazy"></iframe>
+    </section>
+</main></body></html>

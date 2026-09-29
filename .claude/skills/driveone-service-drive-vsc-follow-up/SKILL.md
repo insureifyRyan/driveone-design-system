@@ -287,6 +287,54 @@ not in `brand/offer.json` with a basis, it does not go in an email.
 Openbay, a fixed contract term ceiling, or any repair-cost figure that is not current and
 dated on the creative.
 
+## Two arguments that are locked in
+
+These are requirements, not suggestions. They are already written into
+`email/copy/campaign.json` at steps 2 and 7. If the copy is ever rewritten, they come with
+it, and if a new bucket gets its own campaign file, they go in that one too.
+
+### The zero-dollar covered repair, off the back of the visit they just paid for
+
+**Email 2 owns this.** The customer paid a real bill on a date the email names. The argument
+is that the next one could have a zero on it, and that they can prepare for it now.
+
+The guardrail is the whole reason this needs to be written down. **No vehicle service
+contract covers routine maintenance**, ours included, so an oil change or a brake job would
+not have been free under a VSC either. Implying the ticket they just paid would have been
+zero is a claim the contract does not support, and it is the kind of thing a customer
+notices when they read the form. Email 2 therefore says so out loud:
+
+> Routine maintenance is not covered by any vehicle service contract, ours included, so we
+> are not going to pretend that particular ticket would have been free.
+
+and then pivots to the claim that **is** true and is stronger anyway: a covered repair
+brought back to the selling dealer costs **$0**, because the deductible disappears at our
+store. Not reduced, zero. At another authorized shop it is $100. That is `brand/offer.json`,
+not a flourish.
+
+Keep the split clean whenever you touch this: **maintenance stays theirs, covered breakdowns
+become ours,** and that line is in the contract rather than only in the email.
+
+### Not the TV people, not a subscription, the store that already fixes your car
+
+**Email 7 owns this.** Two things to contrast against, not one:
+
+1. **The robocall and late-night TV sellers.** A call center that bought their number,
+   selling a product they will never service. This is the one deliberate place the word
+   *warranty* appears for our own category, because we are quoting the robocall
+   (`"your vehicle's extended warranty"`), and `scripts/check.mjs` allows exactly that form.
+2. **Monthly subscription coverage plans.** A subscription covers you for as long as you
+   keep paying, at whatever the price becomes. What we sell is a **contract**: term, mileage
+   allowance and price all fixed on the day of purchase, transferable if the car is sold,
+   refundable in full for 30 days. That distinction is the argument, so the feature row
+   carries it as "Fixed at purchase, not month to month".
+
+The resolution in both cases is the same and is the only one available to a dealership:
+**the trusted partner is the store that already has the car's service history and will do
+the repair in its own bays.** Never name a competitor, and never characterise the
+subscription sellers as dishonest. The fixed-versus-open-ended difference does all the work
+on its own, which is the register this campaign is written in.
+
 ## Voice
 
 Deadpan and confident, addressing someone who just paid a service bill. Sell what the
@@ -402,9 +450,25 @@ their customer relationship.
   workflow on the same instance finishes in milliseconds, which is how you tell the two
   apart. Four of the six workflows use Code nodes, so this stops the campaign dead.
 - **Never trust a published template you have not checksummed.** Relaying 200 KB of SQL
-  dropped 18 characters out of step 3's preheader padding, invisible to review and
-  harmless only by luck. Compare `md5(html)` in `vsc_email_template` against `md5sum
-  email/dist/*.html` after every publish; they must match exactly.
+  drops characters. It has now happened twice, both times taking exactly one
+  `&#847;&zwnj;&nbsp;` (18 characters) out of the preheader padding run, on step 3 and
+  later on step 7, invisible to review and harmless only by luck. Compare `md5(html)` in
+  `vsc_email_template` against `md5sum email/dist/*.html` after **every** publish; they
+  must match exactly, and a row 18 bytes short is this bug rather than a copy change.
+  Repair by rebuilding the whole run rather than inserting the missing entity, because an
+  insert at a character offset lands mid-entity and produces a row of the right length
+  that is still wrong:
+
+  ```sql
+  update vsc_email_template
+  set html = substring(html from 1 for <bytes before the run>)
+          || repeat('&#847;&zwnj;&nbsp;', 60)
+          || substring(html from strpos(html, E'\n</div>'))
+  where dealer_id = 'bob-johnson' and step = <n>;
+  ```
+
+  Get the prefix length from the local file, not by counting: find the first occurrence of
+  the entity in `email/dist/<n>-*.html` and use its index. Then checksum again.
 - **Manual executions started through the API never run.** They stay queued until the
   editor is open in a browser. Publish the workflow and execute in production mode when
   you need a real run from a tool.

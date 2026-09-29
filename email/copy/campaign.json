@@ -53,22 +53,22 @@
       "sendDay": 3,
       "slug": "02-todays-visit-was-the-cheap-one",
       "goal": "Reframe the repair math without fear-mongering",
-      "subject": "That visit was the cheap one",
+      "subject": "That bill had a number on it. The next one might not.",
       "subjectAlt": "{{vehicle_model}} math, briefly",
-      "preheader": "Modern cars are wonderful. Their parts are priced accordingly.",
+      "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
       "eyebrow": "THE ARITHMETIC",
-      "headline": "Today was the [[cheap]] one.",
-      "subhead": "Routine service is the small number. The large numbers live somewhere in the next few years.",
+      "headline": "Your last bill had a number on it. [[The next one might not.]]",
+      "subhead": "Covered repair, brought back to us, deductible zero. That is the whole idea.",
       "body": [
-        "Nothing about your {{vehicle_year}} {{vehicle_model}} is unusual. It is a normal car having a normal life.",
-        "Normal cars have alternators, and transmissions, and infotainment units that cost more than the first car you owned. Those parts do not fail on a schedule you get to see in advance.",
-        "A vehicle service contract is simply the decision to price that now, while the car is healthy, instead of later, when it is not."
+        "You paid something on {{last_ro_date}}. Routine maintenance is not covered by any vehicle service contract, ours included, so we are not going to pretend that particular ticket would have been free.",
+        "But your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
+        "That is the bill this is for. A covered repair, brought back to {{dealer_name}}, costs you nothing at all. The only decision is whether to price that now, while the car is healthy, or later, when it is not."
       ],
       "featureRows": [
         {
-          "icon": "R",
-          "title": "Covered repairs, covered parts and labor",
-          "subtitle": "You pay your deductible. We handle the rest of the conversation."
+          "icon": "0",
+          "title": "A covered repair here costs you zero",
+          "subtitle": "Your $100 deductible disappears at our store. At another authorized shop it is $100."
         },
         {
           "icon": "S",
@@ -81,7 +81,7 @@
           "subtitle": "Match the coverage to how long you actually plan to keep the car."
         }
       ],
-      "benefitStrip": "Repair cost examples are verified and dated on request. We do not quote scary numbers we cannot source.",
+      "benefitStrip": "Maintenance stays yours. Covered breakdowns become ours. That line is in the contract, not just in this email.",
       "cta": {
         "label": "Check out now",
         "path": "math"
@@ -255,16 +255,21 @@
       "goal": "Differentiate from direct-response VSC telemarketers without naming anyone",
       "subject": "We are not the people from the commercial",
       "subjectAlt": "Your car's extended warranty, and other famous phone calls",
-      "preheader": "You have had that call. This is not that. We are the store that fixed your car.",
+      "preheader": "Not a robocall. Not a monthly subscription. The store that already fixes your car.",
       "eyebrow": "A NECESSARY CLARIFICATION",
       "headline": "We are not [[the people from the commercial.]]",
-      "subhead": "You have received the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice.",
+      "subhead": "You have had the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice. You have also seen the ads offering coverage by monthly subscription.",
       "body": [
         "Here is the difference, and it is not subtle. Those callers do not know your car. We have it in our system, with its service history, its mileage and the ticket we closed on {{last_ro_date}}.",
-        "We are not a call center that bought your number. We are the service department you drove to.",
-        "Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize. It is a real contract with a real obligor, sold by a store with a physical address you have parked at."
+        "The subscription pitch is its own thing. A subscription covers you for as long as you keep paying it, at whatever the price becomes. What we sell is a contract: a term, a mileage allowance and a price, all fixed on the day you buy, transferable if you sell the car, refundable in full for 30 days.",
+        "So we are not a call center that bought your number, and we are not an app with a monthly charge. We are the service department you drove to. Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize, which makes it a real contract with a real obligor, sold by a store with a physical address you have parked at."
       ],
       "featureRows": [
+        {
+          "icon": "F",
+          "title": "Fixed at purchase, not month to month",
+          "subtitle": "Your term, your mileage and your price are set the day you buy."
+        },
         {
           "icon": "A",
           "title": "A real administrator",
@@ -274,11 +279,6 @@
           "icon": "B",
           "title": "A real building",
           "subtitle": "{{dealer_name}}, serving {{service_area}}."
-        },
-        {
-          "icon": "R",
-          "title": "24/7 roadside assistance included",
-          "subtitle": "Up to three events per year."
         }
       ],
       "benefitStrip": "No robocall has ever known your mileage. We do.",

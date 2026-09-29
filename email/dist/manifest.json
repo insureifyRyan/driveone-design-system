@@ -1,7 +1,7 @@
 {
   "dealer": "bob-johnson",
   "campaign": "bj_postro_vsc_2026",
-  "generated": "2026-09-28",
+  "generated": "2026-09-29",
   "emails": [
     {
       "step": 1,
@@ -20,9 +20,9 @@
       "sendDay": 3,
       "slug": "02-todays-visit-was-the-cheap-one",
       "goal": "Reframe the repair math without fear-mongering",
-      "subject": "That visit was the cheap one",
+      "subject": "That bill had a number on it. The next one might not.",
       "subjectAlt": "{{vehicle_model}} math, briefly",
-      "preheader": "Modern cars are wonderful. Their parts are priced accordingly.",
+      "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
       "cta": "Check out now",
       "ctaPath": "math",
       "file": "email/dist/02-todays-visit-was-the-cheap-one.html"
@@ -82,7 +82,7 @@
       "goal": "Differentiate from direct-response VSC telemarketers without naming anyone",
       "subject": "We are not the people from the commercial",
       "subjectAlt": "Your car's extended warranty, and other famous phone calls",
-      "preheader": "You have had that call. This is not that. We are the store that fixed your car.",
+      "preheader": "Not a robocall. Not a monthly subscription. The store that already fixes your car.",
       "cta": "Check out now",
       "ctaPath": "real",
       "file": "email/dist/07-not-the-tv-people.html"

@@ -38,11 +38,11 @@ The workflows are live in n8n, created from the generated JSON via
 
 | Workflow | ID | Nodes | State |
 |---|---|---|---|
-| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active**, 148 enrolled |
+| 01 Intake | `hLKeSkYbQfQgJIsO` | 4 | **active**, 150 enrolled, 13 suppressed |
 | 02 Scheduler | `8ajOLclNiDmo4jyR` | 13 | inactive, the one that sends |
 | 03 Events | `0qJrCUa2YYHrls0d` | 10 | **active**, two webhooks |
 | 04 Error Handler | `7e7gFQtQMHZJduxL` | 3 | **active** |
-| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active**, 148 priced, 0 errors |
+| 05 Pricing | `1eAnSbVAYI6Ez8CU` | 7 | **active**, 150 priced, 0 errors |
 | ~~06 Bounce Watcher~~ | `HQeTdMk8tyg7qfLl` | — | **archived**, see Sending |
 
 01 and 05 are safe to run alone: they enrol and price, and nothing in either sends. 02 is
@@ -127,15 +127,38 @@ Config lives in n8n **Variables**, not environment variables, and every workflow
 ## Build and check
 
 ```bash
-npm run build       # emails + n8n workflows, both generated from the copy deck
-npm run check       # pre-send guard, exits non-zero on a real problem
+npm run build       # emails + n8n workflows, then verify. Fails the build on a bad cadence.
+npm run check       # pre-send guard on the EMAILS, exits non-zero on a real problem
+npm run verify      # pre-send guard on the WORKFLOWS, run alone when iterating
 npm run n8n:sdk n8n/workflows/02-scheduler.json   # JSON -> n8n Workflow SDK code
 node scripts/publish-templates.mjs bob-johnson 1 2  # emit template SQL, in slices
 ```
 
 `npm run check` is not decoration. It fails on unknown merge tags, a missing unsubscribe
 link, a template over Gmail's clip threshold, a missing price, and on register violations.
-Run it before every push.
+
+`npm run verify` (`n8n/verify.mjs`) asserts **behaviour, not shape**, and that distinction is
+the point. Every bug in this project's history was findable by reading output and invisible
+by reading config: the weekday spreading was measured against the metric it improved (peak
+daily volume, 178 down to 103) and never against the thing it broke (the gap between two
+emails to one person). So the cadence check runs the generated Prepare Send code once per
+send, advancing a fake clock to each send time, and compares where emails actually land
+against `campaign.json`. Every other check in the file is a bug that shipped: `$json` in a
+run-once-for-all-items node, the `queryBatching` default that discards items, the
+replacement count that shifted every positional parameter.
+
+Both are wired into `npm run build`, so they gate rather than wait to be remembered. When
+you add a check, prove it fails: revert the fix and watch it go red. A check that has only
+ever agreed with the current state is not evidence of anything.
+
+**Simulate at the right granularity.** Evaluating all ten steps at a single instant reports
+every email on the same date, which reads as a catastrophic bug and is only the harness.
+Advance the clock to each send.
+
+**Build test fixtures by reading the row, never by typing it.** A hand-typed Kevin omitted
+`contract_price`, so a preview went out with a hole in the card reading "18 payments ·
+total", and the design feedback that came back was partly aimed at a defect that did not
+exist in the real send. `select * from vsc_enrollment where id = ...` costs one query.
 
 ## Architecture, and why it is shaped this way
 
@@ -303,9 +326,40 @@ Configured under `sending` in the dealer file and compiled into workflow 02.
 | Setting | Bob Johnson | Why |
 |---|---|---|
 | `dailyCap` | 200 | Ceiling per dealer-local calendar day. |
-| `days` | Tue, Wed, Thu | Monday inboxes get cleared in bulk, Friday afternoon decays. |
+| `days` | Tue, Wed, Thu, **Fri** | Monday inboxes get cleared in bulk. Friday is in for an arithmetic reason, below. |
 | `hours` | 9, 10, 11, 13, 14, 15, 16 | Mid morning and early afternoon, skipping lunch. |
 | `maxPerRun` | 45 | Stops a backlog arriving as one spike. |
+
+**The send window has to be able to express the deck's gaps, and that is arithmetic rather
+than taste.** Two days drawn from Tue/Wed/Thu can only ever be 1, 2, 5, 6 or 7 days apart:
+3 and 4 are impossible. The deck opens with gaps of 3 and 4. On the old three day window
+every gap silently became 7, email 2 was written to land three days after the service visit
+and landed eight days after, and a 60 day campaign became a flat 64 day weekly drip with
+nothing erroring anywhere. Before narrowing `days` on any dealer, check the set can still
+produce every gap in `campaign.json`; `npm run verify` does exactly this and fails the build
+when it cannot.
+
+Two more traps in the same code, both of which produced the flat 7 day result:
+
+- **Snap to the nearest day in the window, never the next one.** Searching forward only
+  pins each contact to one weekday, and once pinned a 3 day gap and an 8 day gap land on
+  the same next occurrence. Searching outward keeps the shape and still spreads the load,
+  because the days outside the window divide between the two nearest inside it rather than
+  all draining into Tuesday.
+- **Normalise the send hour before applying the minimum gap floor, not after.** Clamping raw
+  timestamps and then setting the hour lets the hour move a date back under the floor by up
+  to a day, which pushes it a full week forward.
+
+`next_send_at` is floored at **three days from now**, the tightest real gap in the deck.
+Without it a contact enrolled weeks before launch has several steps dated in the past and
+receives them in consecutive hourly runs. The daily cap does not catch that: it counts sends
+across the campaign, not per person, so 150 people getting three emails each still sits
+inside 200 a day and looks healthy from outside.
+
+Perfect fidelity is not achievable and the target is not zero drift. A 3 day gap from a
+Wednesday lands on a Saturday, and the nearest sending days are 2 days out (under the floor)
+or 6. Any window excluding weekends has holes like that. Worst drift is 3 days, which is the
+calendar's floor rather than a tolerance picked to make a check pass.
 
 `Send Window Gate` runs **before** the claim, so an out-of-window hour costs one cheap check
 rather than a wasted lease. It spreads what is left for the day across the hours still to
@@ -452,12 +506,70 @@ then Coverage added / Due today / a rule / the monthly figure large, then Buy no
 reassurance row. Two purchase points per email, card and foot, sharing one button
 implementation.
 
+**The monthly payment is the loudest thing in the email, and the contract total is fine
+print.** 34px weight 800 in ink against 12px weight 400 in muted grey, roughly three times
+the size. Two rules follow, and they pull in opposite directions on purpose:
+
+- Nothing else may tie the payment for prominence. The hero headline and the payment were
+  both 32/800 for a while, so the two loudest things on the page were the same size and
+  neither won. The headline sits at 30 now.
+- The total is never removed. An email showing a monthly payment with no total anywhere is
+  the shape that draws complaints, and the number is disclosed on the Budco form at the
+  point of sale regardless. Small is the answer; absent is not.
+
+Whole dollar amounts drop their cents: "$3,364 total" is easier to hold in your head than
+"$3,364.00". A total that genuinely has cents still shows them, and the monthly keeps its
+cents always, because that is the figure the customer is agreeing to.
+
+Watch the register in microcopy. "149,999 miles on the clock" is British and shipped for a
+while to a Watertown truck owner; it reads "149,999 miles".
+
+**Updating a published template without the publish script.** The container this is usually
+built in cannot reach Supabase, so `npm run publish:templates` may not run. A chained
+`replace()` inside one `update vsc_email_template` handles small edits across all ten rows
+at once, because the card markup is shared. Then prove it landed: `md5(html)` from the
+database must equal `md5sum email/dist/*.html` for all ten. Ten matching hashes is proof;
+"the query returned ten rows" is not.
+
 Email-safe, not web: 600px tables, inline styles, MSO conditionals, VML buttons, hidden
 preheader, forced light scheme, ~19KB against Gmail's 102KB clip.
 
 **Logos are type, not hosted images.** A hosted file cannot be verified from a sandboxed
 environment and does not render with images blocked, which is a large share of opens. If you
 must switch to a file, set `logo.useImage` and verify it actually loads first.
+
+## The list is not yours, and it is too small anyway
+
+This comes up as "can we upload these to Meta and Google and retarget them", and the answer
+has two independent halves. Both need settling before anyone exports a CSV.
+
+**Whose data it is.** These are the dealership's service customers. Processing them to send
+a co-branded campaign on the dealer's behalf is a narrow purpose; loading the same list into
+a Kovara ad account to advertise DriveOne Direct is a different one, and both platforms make
+you warrant you hold the rights and gave notice. The clean resolution is to run the ads from
+**the dealership's ad account, as the dealership**, exactly as the email does. Anything
+feeding the DTC funnel is a specific conversation to have with the dealer, not an assumption.
+
+**Whether it would even work.** Bob Johnson is 447 customers, 446 with a usable email, 37 of
+whom already own a VSC. There are **zero** usable cell numbers and 10 zip codes, so email is
+the only match key and match rates sit at the low end. Google Customer Match needs roughly
+1,000 matched members before it will serve: 446 uploaded becomes maybe 250-300 matched and
+the audience will build and never deliver. Meta will accept it and optimise badly.
+
+**The unlock is multi-dealer, not this dealer.** Five to ten rooftops is 2,000-4,000 and
+Customer Match becomes real. Build it then.
+
+**Meanwhile the better audience is people who clicked.** Every link already carries
+`utm_source=email&utm_medium=crm&utm_campaign=<campaign_id>` and `step=N`, so traffic is
+attributable per email. Someone who opened a note about their 149,999 mile RAM, clicked, and
+landed on a priced quote has told you far more than a cold address. Confirm before launch
+that the quote pages actually carry a Google Ads tag and a Meta pixel, not only GA4 — GA4
+lets you *see* the traffic and not *retarget* it, and there is no backfilling a pixel that
+was not firing.
+
+Two rules whenever a list does go up: hash to SHA-256 first, never plaintext; and wire
+`vsc_suppression` into audience exclusion as well as email, or you will chase someone across
+Instagram who told you to stop. Purchasers and the `has_existing_warranty` group come out too.
 
 ## Adding a dealership
 
@@ -491,7 +603,19 @@ Then, in order:
 5. Activate 01, then 05. Confirm `vsc_enrollment` rows carry both a `monthly_payment` and
    a `quote_url` before anything can send: the scheduler skips rows missing either, which
    is the last of the four guards against mailing a blank price.
-6. Send one to yourself and read it in a real client. Then publish 02.
+6. Send one to yourself and read it in a real client. **Do not publish 02 to do this.**
+   Rows go due while the scheduler is off, so publishing during a send window mails real
+   customers within the hour. Use a throwaway workflow that reads one real row, renders it
+   through the real template, and sends only to you; archive it afterwards. Same pattern
+   works for probing SMTP, a webhook signature, or anything else you would otherwise test
+   by switching on production.
+7. **Re-spread anything overdue, immediately before publishing 02.** Every send date that
+   passes while the scheduler is off becomes due-now, so the backlog grows the longer
+   go-live slips and then arrives on day one as a single burst under the daily cap. The
+   three day floor protects steps 2 to 10 but not step 1. One `update` spreading
+   `next_send_at` across the window fixes it, and a domain that has never sent should not
+   open with its largest day.
+8. Delete any internal test rows from `vsc_enrollment`, then publish 02. That is go-live.
 
 Do the volume arithmetic at step 5, before enrolling anyone: if `backlog × 10` is close to
 `dailyCap × send days per week × campaign weeks`, throttle enrolment rather than letting
@@ -678,7 +802,7 @@ their customer relationship.
 - **The Code node runner can be down while everything else looks healthy.** Executions sit
   at `running` and fail after exactly 60 seconds with `Task request timed out`. A Set-node
   workflow on the same instance finishes in milliseconds, which is how you tell the two
-  apart. Four of the six workflows use Code nodes, so this stops the campaign dead.
+  apart. Four of the five workflows use Code nodes, so this stops the campaign dead.
 - **Never trust a published template you have not checksummed.** Relaying 200 KB of SQL
   drops characters. It has now happened twice, both times taking exactly one
   `&#847;&zwnj;&nbsp;` (18 characters) out of the preheader padding run, on step 3 and

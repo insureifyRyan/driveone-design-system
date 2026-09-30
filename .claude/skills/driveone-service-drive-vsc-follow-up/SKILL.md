@@ -573,12 +573,34 @@ Instagram who told you to stop. Purchasers and the `has_existing_warranty` group
 
 ## Adding a dealership
 
-1. Copy `brand/dealers/<id>.json`. Set colours, wordmark, address, `state`, `supabase.partner_id`, `supabase.slug`.
-2. `node email/build.mjs <id>` and `node n8n/build-workflows.mjs`.
-3. Import the five workflows under a `dealer:<id>` tag.
+**Everything is keyed by dealer, and every build command takes the dealer id. Passing it to
+one command and not the next is how a dealership gets another one's branding.**
+
+1. Copy `brand/dealers/<id>.json`. Set colours, wordmark, address, `state`,
+   `supabase.partner_id`, `supabase.slug`, and **`campaign.id`**. The campaign id must be
+   unique per dealership: enrolment and template rows are keyed on
+   `(dealer_id, campaign_id, ...)`, so a shared one puts two stores in one namespace.
+   Never change an id that is already live; rows already carry it.
+2. `node email/build.mjs <id>` then `node n8n/build-workflows.mjs <id>` then
+   `node n8n/verify.mjs <id>`, or just `npm run build:<id>` once you add the script.
+3. `node scripts/publish-templates.mjs <id>` and apply the SQL.
+4. Import the five workflows from `n8n/workflows/<id>/` under a `dealer:<id>` tag.
+
+Output is namespaced: `email/dist/<id>/`, `preview/filled/<id>/`, `n8n/workflows/<id>/`.
+That is a correctness requirement, not tidiness. All three used to be shared paths written
+by commands that each took their own dealer argument, so building one dealership and
+publishing another wrote the wrong branding into live template rows with nothing erroring.
+`publish-templates.mjs` now refuses when the manifest's dealer does not match its argument.
 
 Enrollment rows are keyed by `dealer_id`, so dealerships share the database without
-touching each other. `dealer.state` drives the footer obligor automatically.
+touching each other. `dealer.state` drives the footer obligor automatically, so it must be
+the DEALERSHIP's state, not the customer's.
+
+**Size the cohort before enrolling anyone.** `cohort x 10 / send days` is the daily rate,
+and the daily cap cannot rescue a cohort that is too big: it just pins the domain at its
+ceiling for weeks. Ferrario is 1,244 eligible against Bob Johnson's 447, which is 366 a day
+against a 200 cap if you enrol everyone. `supabase.initial_cohort` is the only lever that
+lowers total volume.
 
 ## Before any first send
 

@@ -1,0 +1,351 @@
+{
+  "name": "DriveOne VSC 03 Events (Ferrario Ford)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vsc/events/:dealer",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n018-campaign-event-webhook",
+      "name": "Campaign Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        0
+      ],
+      "webhookId": "vsc-events-ferrario-ford",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_EVENT_AUTH_CRED_ID",
+          "name": "Campaign Event Shared Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vsc/resend/ferrario-ford",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "n019-resend-event-webhook",
+      "name": "Resend Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        240
+      ],
+      "webhookId": "vsc-resend-ferrario-ford"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst secret = $vars.RESEND_WEBHOOK_SECRET;\nif (!secret) {\n  throw new Error(\n    \"RESEND_WEBHOOK_SECRET is not set in n8n Variables, so this webhook cannot be \" +\n    \"verified. Refusing the request rather than trusting it.\"\n  );\n}\n// Svix signing secrets are base64 behind a whsec_ prefix. The prefix is not\n// part of the key, and leaving it on produces a signature that never matches.\nconst key = Buffer.from(String(secret).replace(/^whsec_/, ''), 'base64');\n\n// Five minutes, which is what Svix itself uses. Long enough to survive clock\n// skew, short enough that a captured request is not replayable tomorrow.\nconst TOLERANCE_SECONDS = 300;\n\nconst items = $input.all();\nconst out = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const headers = item.json.headers || {};\n\n  const id = headers['svix-id'] || headers['webhook-id'];\n  const timestamp = headers['svix-timestamp'] || headers['webhook-timestamp'];\n  const signature = headers['svix-signature'] || headers['webhook-signature'];\n  if (!id || !timestamp || !signature) {\n    throw new Error(\n      \"Missing Svix signature headers. This endpoint accepts signed Resend \" +\n      \"webhooks only; internal events go to the /vsc/events endpoint instead.\"\n    );\n  }\n\n  const age = Math.abs(Math.floor(Date.now() / 1000) - Number(timestamp));\n  if (!Number.isFinite(age) || age > TOLERANCE_SECONDS) {\n    throw new Error(\n      \"Webhook timestamp is \" + age + \"s from now, outside the \" +\n      TOLERANCE_SECONDS + \"s replay window. Rejected.\"\n    );\n  }\n\n  // The signature covers the bytes as sent. Parsing the body and serialising\n  // it again would produce a different byte string over whitespace alone and\n  // fail in a way that looks exactly like an attack, which is the whole\n  // reason the webhook node above is set to rawBody.\n  let raw;\n  const inline = item.binary && item.binary.data && item.binary.data.data;\n  if (inline) {\n    raw = Buffer.from(inline, 'base64').toString('utf8');\n  } else if (typeof item.json.body === 'string') {\n    raw = item.json.body;\n  } else if (this.helpers && this.helpers.getBinaryDataBuffer) {\n    // Binary stored outside the item, which is what happens when n8n is\n    // configured to keep binary data on disk or in S3 rather than in memory.\n    raw = (await this.helpers.getBinaryDataBuffer(i, 'data')).toString('utf8');\n  } else {\n    throw new Error(\n      \"Raw request body is missing. The webhook node needs options.rawBody \" +\n      \"set to true, or the signature cannot be checked.\"\n    );\n  }\n\n  const expected = crypto.createHmac('sha256', key)\n    .update(id + '.' + timestamp + '.' + raw).digest('base64');\n\n  // The header carries a space separated list of versioned signatures so that\n  // a key can be rotated without dropping deliveries. Any one matching is a\n  // pass; only v1 exists today.\n  const offered = String(signature).split(' ')\n    .map((part) => part.split(',')[1])\n    .filter(Boolean);\n\n  const expectedBuf = Buffer.from(expected);\n  const ok = offered.some((candidate) => {\n    const buf = Buffer.from(candidate);\n    // Length checked first because timingSafeEqual throws on a mismatch\n    // rather than returning false.\n    return buf.length === expectedBuf.length && crypto.timingSafeEqual(buf, expectedBuf);\n  });\n  if (!ok) {\n    throw new Error(\"Svix signature did not verify. Body rejected untouched.\");\n  }\n\n  // Shaped like the other webhook node's output, so Classify Event does not\n  // need to know which door the event came in by.\n  out.push({\n    json: {\n      body: JSON.parse(raw),\n      headers,\n      params: { dealer: 'ferrario-ford' },\n      verified: true,\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "n020-verify-resend-signature",
+      "name": "Verify Resend Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===================================================================\n// One map for every way a contact can leave the campaign. Adding a new\n// provider or a new exit signal means adding a line here, not rewiring.\n// Accepts DriveOne checkout events, Resend delivery events, and raw strings.\n// ===================================================================\n\nconst EVENTS = {\n  // DriveOne checkout and CRM\n  'vsc.purchased':      { exit: 'purchased',    suppress: false },\n  'vsc.quote_started':  { exit: null,           suppress: false },\n  'vehicle.sold':       { exit: 'vehicle_sold', suppress: false },\n  'customer.has_vsc':   { exit: 'has_vsc',      suppress: false },\n  'manual.exit':        { exit: 'manual',       suppress: false },\n\n  // Preference and consent\n  'email.unsubscribed': { exit: 'unsubscribed', suppress: true },\n  'unsubscribe':        { exit: 'unsubscribed', suppress: true },\n\n  // Resend webhook event names\n  'email.bounced':      { exit: 'bounced',      suppress: true },\n  'email.complained':   { exit: 'complained',   suppress: true },\n  'email.delivery_delayed': { exit: null,       suppress: false },\n};\n\nconst out = [];\nfor (const item of $input.all()) {\n  const p = item.json.body || item.json;\n\n  const type = String(p.type || p.event || p.event_type || \"\").trim().toLowerCase();\n  const rule = EVENTS[type];\n\n  // A bounce is not automatically permanent. Resend passes the underlying\n  // classification through as data.bounce.type: Permanent, Transient or\n  // Undetermined. Transient is a full mailbox or a greylisting server, and\n  // suppressing on one would burn a good address over a condition that clears\n  // by itself. Only Permanent ends the relationship. A bounce that arrives\n  // without a classification is treated as permanent, which is what the old\n  // IMAP watcher produced and what a hand posted event will look like.\n  const bounceType = String(p.data?.bounce?.type || p.bounce?.type || \"\").trim().toLowerCase();\n  const soft = type === \"email.bounced\" && bounceType !== \"\" && bounceType !== \"permanent\";\n\n  // customer_key is preferred. Fall back to hashing whatever email we were given.\n  const crypto = require('crypto');\n  const dealer_id = p.dealer_id || p.dealer || item.json.params?.dealer || \"ferrario-ford\";\n  const email = (p.email || p.data?.to?.[0] || p.to || \"\").toString().trim().toLowerCase();\n  const customer_key = p.customer_key\n    || (email ? crypto.createHash(\"sha256\").update(dealer_id + \":\" + email).digest(\"hex\") : null);\n\n  out.push({\n    json: {\n      received_type: type,\n      known: !!rule,\n      actionable: !!(rule && rule.exit && customer_key && !soft),\n      exit_reason: rule ? rule.exit : null,\n      suppress: rule ? !!rule.suppress && !soft : false,\n      soft_bounce: soft,\n      bounce_type: bounceType || null,\n      dealer_id,\n      customer_key,\n      email,\n      campaign_id: p.campaign_id || \"ff_postro_vsc_2026\",\n    },\n  });\n}\nreturn out;"
+      },
+      "id": "n021-classify-event",
+      "name": "Classify Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c40b07f",
+              "leftValue": "={{ $json.actionable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "n022-actionable",
+      "name": "Actionable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update vsc_enrollment\nset status = 'exited',\n    exit_reason = $3,\n    updated_at = now(),\n    -- park it rather than delete it so attribution survives\n    next_send_at = now() + interval '100 years'\nwhere dealer_id = $1\n  and customer_key = $2\n  and status = 'active'\nreturning id, email, current_step, exit_reason;",
+        "options": {
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.customer_key }}, {{ $json.exit_reason }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n023-exit-enrollment",
+      "name": "Exit Enrollment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        40,
+        -100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c00d73d",
+              "leftValue": "={{ $('Classify Event').itemMatching($itemIndex).json.suppress }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "n024-needs-suppression",
+      "name": "Needs Suppression?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        260,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into vsc_suppression (dealer_id, customer_key, reason)\nvalues ($1, $2, $3)\n-- Suppression is permanent and idempotent. First reason wins.\non conflict (dealer_id, customer_key) do nothing;",
+        "options": {
+          "queryReplacement": "={{ $('Classify Event').itemMatching($itemIndex).json.dealer_id }}, {{ $('Classify Event').itemMatching($itemIndex).json.customer_key }}, {{ $('Classify Event').itemMatching($itemIndex).json.exit_reason }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n025-add-to-suppression-list",
+      "name": "Add To Suppression List",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, type: $('Classify Event').first().json.received_type, known: $('Classify Event').first().json.known }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "n026-acknowledge",
+      "name": "Acknowledge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "n027-ignored-unknown-or-non-exit-event",
+      "name": "Ignored (unknown or non-exit event)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Campaign Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "Classify Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resend Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify Resend Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Resend Signature": {
+      "main": [
+        [
+          {
+            "node": "Classify Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Event": {
+      "main": [
+        [
+          {
+            "node": "Actionable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actionable?": {
+      "main": [
+        [
+          {
+            "node": "Exit Enrollment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignored (unknown or non-exit event)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exit Enrollment": {
+      "main": [
+        [
+          {
+            "node": "Needs Suppression?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Suppression?": {
+      "main": [
+        [
+          {
+            "node": "Add To Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acknowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add To Suppression List": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ignored (unknown or non-exit event)": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:ferrario-ford"
+    }
+  ]
+}

@@ -1,0 +1,420 @@
+{
+  "name": "DriveOne VSC 02 Scheduler (Ferrario Ford)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "7 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "n005-every-hour",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -620,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decides whether this hour is a send moment and how many may go out in it.\n// Runs before the claim so an out of window hour costs one cheap check rather\n// than a wasted database lease.\n\nconst CFG = {\n  \"timezone\": \"America/New_York\",\n  \"dailyCap\": 200,\n  \"days\": [\n    2,\n    3,\n    4,\n    5\n  ],\n  \"hours\": [\n    9,\n    10,\n    11,\n    13,\n    14,\n    15,\n    16\n  ],\n  \"maxPerRun\": 45\n};\n\nconst now = new Date();\nconst parts = new Intl.DateTimeFormat(\"en-US\", {\n  timeZone: CFG.timezone, weekday: \"short\", hour: \"numeric\", hour12: false,\n  year: \"numeric\", month: \"2-digit\", day: \"2-digit\",\n}).formatToParts(now).reduce((a, p) => (a[p.type] = p.value, a), {});\n\nconst DOW = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };\nconst weekday = DOW[parts.weekday];\nconst hour = parseInt(parts.hour, 10) % 24;\n\nif (!CFG.days.includes(weekday)) return [];\nif (!CFG.hours.includes(hour)) return [];\n\n// Start of the dealer local day, as an instant the database can compare against.\n// Offset is derived rather than hardcoded so daylight saving is handled.\nconst localNoon = new Date(parts.year + \"-\" + parts.month + \"-\" + parts.day + \"T12:00:00Z\");\nconst shown = new Date(localNoon.toLocaleString(\"en-US\", { timeZone: CFG.timezone }));\nconst offsetMs = localNoon.getTime() - shown.getTime();\nconst dayStart = new Date(localNoon.getTime() - (12 * 3600 * 1000) + offsetMs);\n\n// Spread whatever is left for today across the hours still to come, so a\n// backlog drains smoothly instead of arriving as one spike on a warmed domain.\nconst hoursLeft = CFG.hours.filter((h) => h >= hour).length || 1;\nconst perRun = Math.min(CFG.maxPerRun, Math.max(1, Math.ceil(CFG.dailyCap / hoursLeft)));\n\nreturn [{ json: {\n  dealer_id: \"ferrario-ford\",\n  campaign_id: \"ff_postro_vsc_2026\",\n  day_start: dayStart.toISOString(),\n  daily_cap: CFG.dailyCap,\n  per_run: perRun,\n} }];"
+      },
+      "id": "n006-send-window-gate",
+      "name": "Send Window Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Atomic lease. Claims up to 200 due rows and pushes next_send_at two hours\n-- out in the same statement, so two scheduler runs can never double send and a\n-- crashed run retries instead of stranding the contact.\nupdate vsc_enrollment e\nset next_send_at = now() + interval '2 hours', updated_at = now()\nwhere e.id in (\n  select id from vsc_enrollment\n  where status = 'active'\n    and next_send_at <= now()\n    and dealer_id = $1\n    and campaign_id = $2\n    -- suppression is re-checked here, not just at intake, because someone can\n    -- unsubscribe on day 11 of a 60 day campaign\n    and not exists (\n      select 1 from vsc_suppression s\n      where s.dealer_id = vsc_enrollment.dealer_id\n        and s.customer_key = vsc_enrollment.customer_key\n    )\n    -- never claim a row that cannot produce a complete email\n    and monthly_payment is not null\n    and quote_url is not null\n    -- and never a link that has already expired. Better a missed send than\n    -- a Buy now button that goes nowhere; pricing refreshes these and the\n    -- row comes back on the next sweep.\n    and (quote_expires_at is null or quote_expires_at > now() + interval '30 minutes')\n    -- give up eventually. Without a ceiling one undeliverable address is\n    -- claimed, fails and is re-claimed every run for sixty days, taking a\n    -- slot from someone reachable each time.\n    and send_attempts < 5\n  order by next_send_at\n  -- The daily cap is applied here, inside the same statement that leases the\n  -- rows, so two scheduler runs racing cannot jointly exceed it.\n  limit least(\n    $3::int,\n    greatest(0, $4::int - (\n      select count(*) from vsc_send_log\n      where dealer_id = $1 and campaign_id = $2 and sent_at >= $5::timestamptz\n    ))\n  )\n  for update skip locked\n)\nreturning e.*;",
+        "options": {
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.per_run }}, {{ $json.daily_cap }}, {{ $json.day_start }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n007-claim-due-enrollments",
+      "name": "Claim Due Enrollments",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -180,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c473b0c",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "n008-anything-due",
+      "name": "Anything Due?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const SCHEDULE = [\n  {\n    \"step\": 1,\n    \"day\": 0,\n    \"slug\": \"01-missing-from-your-profile\",\n    \"subject\": \"{{first_name}}, one thing was missing from your file\",\n    \"subjectAlt\": \"Your {{vehicle_model}} is covered. You are not.\"\n  },\n  {\n    \"step\": 2,\n    \"day\": 3,\n    \"slug\": \"02-todays-visit-was-the-cheap-one\",\n    \"subject\": \"That bill had a number on it. The next one might not.\",\n    \"subjectAlt\": \"{{vehicle_model}} math, briefly\"\n  },\n  {\n    \"step\": 3,\n    \"day\": 7,\n    \"slug\": \"03-nobody-is-going-to-call-you\",\n    \"subject\": \"Nobody is going to call you\",\n    \"subjectAlt\": \"This email has no salesperson attached to it\"\n  },\n  {\n    \"step\": 4,\n    \"day\": 12,\n    \"slug\": \"04-the-disappearing-deductible\",\n    \"subject\": \"Your deductible disappears when you come back\",\n    \"subjectAlt\": \"A number that goes to zero\"\n  },\n  {\n    \"step\": 5,\n    \"day\": 18,\n    \"slug\": \"05-zero-percent-thirty-six-months\",\n    \"subject\": \"0% for {{payment_term}} months, no credit check\",\n    \"subjectAlt\": \"Coverage, divided by {{payment_term}}\"\n  },\n  {\n    \"step\": 6,\n    \"day\": 25,\n    \"slug\": \"06-exclusionary-explained\",\n    \"subject\": \"The good kind of coverage has an ugly name\",\n    \"subjectAlt\": \"Exclusionary. Terrible word, excellent thing.\"\n  },\n  {\n    \"step\": 7,\n    \"day\": 32,\n    \"slug\": \"07-not-the-tv-people\",\n    \"subject\": \"We are not the people from the commercial\",\n    \"subjectAlt\": \"Your car's extended warranty, and other famous phone calls\"\n  },\n  {\n    \"step\": 8,\n    \"day\": 40,\n    \"slug\": \"08-the-stuff-you-forget-you-have\",\n    \"subject\": \"The parts of coverage nobody talks about\",\n    \"subjectAlt\": \"Roadside, rental, and the rest of it\"\n  },\n  {\n    \"step\": 9,\n    \"day\": 48,\n    \"slug\": \"09-the-window\",\n    \"subject\": \"Why we keep saying now\",\n    \"subjectAlt\": \"{{vehicle_model}} eligibility, plainly\"\n  },\n  {\n    \"step\": 10,\n    \"day\": 60,\n    \"slug\": \"10-we-will-stop\",\n    \"subject\": \"Last one from us on this\",\n    \"subjectAlt\": \"We are going to stop emailing you about this\"\n  }\n];\nconst LAST_STEP = 10;\n\n// Timing and throughput are decided by Send Window Gate before the claim, so\n// this step is only about turning a claimed row into a renderable email.\n\nconst crypto = require('crypto');\n\nconst fmtMoney = (v) => (v === null || v === undefined || v === '') ? null\n  : new Intl.NumberFormat(\"en-US\", { style: \"currency\", currency: \"USD\" }).format(Number(v));\n\n// Whole dollar amounts lose the cents. The monthly figure keeps them because\n// that is the number the customer is agreeing to and it has to be exact.\n// The contract total is a reference figure sitting in small type under it,\n// and \"$3,364 total\" is easier to hold in your head than \"$3,364.00 total\".\n// A total that genuinely has cents still shows them.\nconst fmtWhole = (v) => (v === null || v === undefined || v === '') ? null\n  : new Intl.NumberFormat(\"en-US\", { style: \"currency\", currency: \"USD\",\n      maximumFractionDigits: Number(v) % 1 === 0 ? 0 : 2 }).format(Number(v));\n\n// Names arrive from the DMS in block capitals: 129 of the first 132 enrolled\n// were like this. \"ERIC, one thing was missing from your file\" reads as a\n// broken mail merge, which is the exact impression a note written as if from\n// the service drive cannot afford. Only recased when the source is entirely\n// upper case, so a name someone typed properly is never mangled, and McBride\n// and O'Brien survive the round trip.\nconst properName = (s) => {\n  const t = String(s == null ? \"\" : s).trim();\n  if (!t || t !== t.toUpperCase()) return t;\n  return t.toLowerCase()\n    .replace(/(^|[\\s'\\-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase())\n    .replace(/\\bMc([a-z])/g, (m, ch) => 'Mc' + ch.toUpperCase());\n};\n\n// The DMS stores a RAM 1500 with a model of \"1500\" and nothing else, so a\n// subject reading \"{{vehicle_model}} math, briefly\" arrives as \"1500 math,\n// briefly\" and a body line becomes \"your 1500\". 24 of the first 150 enrolled\n// are RAM 1500s, so that is one in six people getting a subject line that\n// reads like a typo. Prefixing the make only when the model is bare digits\n// fixes every usage at once, and the copy never prints the make on its own,\n// so \"RAM RAM 1500\" cannot happen. Makes of three characters or fewer keep\n// their capitals, because GMC and BMW are not Gmc and Bmw.\nconst vehicleLabel = (make, model) => {\n  const mo = String(model == null ? \"\" : model).trim();\n  const mk = String(make == null ? \"\" : make).trim();\n  if (!mo) return \"your vehicle\";\n  if (!/^[0-9]+$/.test(mo) || !mk) return mo;\n  return (mk.length <= 3 ? mk.toUpperCase() : properName(mk)) + \" \" + mo;\n};\n\n// Coverage is ADDITIVE from the day the policy is bought: the term and the\n// mileage are added on top of where the car is today, not measured back to\n// its in-service date. So this reads as \"more\", never as a ceiling.\n// A null is unknown, not unlimited, so it falls back to a neutral line rather\n// than claiming a benefit we cannot prove.\nconst coverageLabel = (miles, months) => {\n  const n = Number(miles);\n  const m = Number(months);\n  const milePart = (miles === null || miles === undefined || !isFinite(n) || n <= 0) ? null\n    : (n >= 999999 ? \"unlimited miles\" : n.toLocaleString(\"en-US\") + \" more miles\");\n  const monthPart = (!isFinite(m) || m <= 0) ? null : m + \" more months\";\n  if (monthPart && milePart) return monthPart + \", \" + milePart;\n  if (milePart)  return milePart;\n  if (monthPart) return monthPart;\n  return \"Coverage shown on your quote\";\n};\n\nconst out = [];\n\nfor (const item of $input.all()) {\n  const r = item.json;\n\n  // An email that shows a blank or wrong price is worse than an email not sent.\n  // The enrollment row is priced by the same engine that prices quotes; if that\n  // has not happened yet, skip and pick it up on a later sweep.\n  if (r.monthly_payment === null || r.monthly_payment === undefined) continue;\n  if (!r.quote_url) continue;  // a Buy now button must have somewhere to go\n\n  const nextStep = (r.current_step || 0) + 1;\n  if (nextStep > LAST_STEP) continue;\n\n  const plan = SCHEDULE.find((s) => s.step === nextStep);\n  if (!plan) continue;\n\n  // Deterministic subject line split. Same contact always gets the same arm,\n  // so results stay readable across the whole 60 days.\n  const bucket = parseInt(crypto.createHash('md5').update(r.customer_key + ':' + nextStep).digest('hex').slice(0, 2), 16);\n  const variant = bucket % 2 === 0 ? 'a' : 'b';\n  const subject = variant === \"a\" ? plan.subject : plan.subjectAlt;\n\n  // Compute the real next_send_at from enrolment date, not from \"now\", so a\n  // delayed run never compresses or stretches the rest of the cadence.\n  const created = new Date(r.created_at);\n  const following = SCHEDULE.find((s) => s.step === nextStep + 1);\n  const nextSendAt = following\n    ? new Date(created.getTime() + following.day * 86400000)\n    : null;\n  if (nextSendAt) {\n    // Never sooner than three days from now, whatever the enrolment date says.\n    //\n    // Every step is dated from created_at so that a delayed run cannot\n    // compress the cadence. That is right while the campaign is running and\n    // catastrophic on the day it starts, because a contact enrolled weeks\n    // before launch has steps 1, 2 and 3 all dated in the past. Nothing in\n    // the claim stops a row being re-claimed the moment it is advanced, so\n    // they arrive in three consecutive hourly runs. Three marketing emails\n    // in three hours is the fastest way to turn someone who would have\n    // bought into a spam complaint, and the daily cap does not catch it:\n    // the cap counts sends across the campaign, not per person.\n    //\n    // Three days is the tightest real gap in the cadence (d0 to d3), so the\n    // floor can never make the sequence faster than it was designed to be.\n    // It only ever slows a backlog down.\n    const MIN_GAP_DAYS = 3;\n\n    // Normalise the hour BEFORE comparing against the floor, and build the\n    // floor at the same hour. Clamping raw timestamps and then setting the\n    // hour lets the hour change move a date back under the floor by up to a\n    // day: a send computed for Friday 23:00 became Friday 14:00, which was\n    // below a floor of Friday 23:00, so it was rejected and pushed a full\n    // week to the next window day. That alone turned a 3 day gap into 7.\n    // 14:00 UTC is 10:00 in America/New_York, inside the morning window and\n    // safely clear of both ends of it either side of a daylight saving shift.\n    nextSendAt.setUTCHours(14, 0, 0, 0);\n    const floor = new Date(Date.now());\n    floor.setUTCHours(14, 0, 0, 0);\n    floor.setUTCDate(floor.getUTCDate() + MIN_GAP_DAYS);\n    if (nextSendAt.getTime() < floor.getTime()) nextSendAt.setTime(floor.getTime());\n\n    // Move the send onto the nearest day in the window, not the next one.\n    //\n    // Weekends are excluded, so many target dates have to move. How they\n    // move decides whether the deck ships intact.\n    //\n    // Searching forward only, which is the obvious implementation, destroys\n    // the cadence. Pin a contact to one weekday and every gap becomes\n    // exactly seven days, because a 3 day gap and an 8 day gap both land on\n    // the same next occurrence of that weekday. The deck says 3,4,5,6,7,7,\n    // 8,8,12 and what shipped was 7,7,7,7,7,7,7,7,7: email 2 was written to\n    // arrive three days after the visit and arrived eight days after, and a\n    // 60 day campaign quietly became 64. Nothing errored, which is why it\n    // survived a volume simulation that only ever measured peak daily load.\n    //\n    // Searching outward keeps the shape. A Friday target falls back to\n    // Thursday rather than waiting until Tuesday, so the gap stays close to\n    // what was written. It still spreads the load, which was the original\n    // point: Fri and Sat fall back to Thu, Sun and Mon push forward to Tue,\n    // so the four days outside the window divide between two days inside it\n    // instead of all draining into Tuesday.\n    //\n    // The hash only breaks ties now, so the choice stays deterministic: the\n    // same contact and step always resolve to the same date however often\n    // the sweep runs.\n    const WINDOW_DAYS = [2,3,4,5];\n    const tieBreak = parseInt(crypto.createHash(\"md5\").update(r.customer_key + \":dow\").digest(\"hex\").slice(0, 4), 16) % 2 === 0 ? -1 : 1;\n    let snapped = null;\n    for (let delta = 0; delta <= 6 && snapped === null; delta++) {\n      const dirs = delta === 0 ? [0] : [tieBreak, -tieBreak];\n      for (const dir of dirs) {\n        const cand = new Date(nextSendAt.getTime() + dir * delta * 86400000);\n        if (!WINDOW_DAYS.includes(cand.getUTCDay())) continue;\n        // Falling back must never breach the floor, or a backlog would\n        // land earlier than the three day minimum it was just given.\n        if (cand.getTime() < floor.getTime()) continue;\n        snapped = cand;\n        break;\n      }\n    }\n    if (snapped) nextSendAt.setTime(snapped.getTime());\n  }\n\n  out.push({\n    json: {\n      enrollment_id: r.id,\n      dealer_id: r.dealer_id,\n      campaign_id: r.campaign_id,\n      customer_key: r.customer_key,\n      step: nextStep,\n      slug: plan.slug,\n      variant,\n      subject,\n      is_last_step: nextStep >= LAST_STEP,\n      next_send_at: nextSendAt ? nextSendAt.toISOString() : null,\n      merge: {\n        first_name: properName(r.first_name) || \"there\",\n        vehicle_year: r.vehicle_year || \"\",\n        vehicle_make: r.vehicle_make || \"\",\n        vehicle_model: vehicleLabel(r.vehicle_make, r.vehicle_model),\n        vehicle_mileage: r.vehicle_mileage ? Number(r.vehicle_mileage).toLocaleString(\"en-US\") : \"\",\n        monthly_payment: fmtMoney(r.monthly_payment),\n        down_payment: fmtMoney(r.down_payment),\n        coverage_label: coverageLabel(r.coverage_miles, r.contract_months),\n        payment_term: r.payment_term === null || r.payment_term === undefined ? \"\" : String(r.payment_term),\n        contract_price: fmtWhole(r.contract_price),\n        last_ro_date: r.ro_closed_date\n          ? new Intl.DateTimeFormat(\"en-US\", { month: \"long\", day: \"numeric\", timeZone: \"UTC\" }).format(new Date(r.ro_closed_date))\n          : \"your last visit\",\n        advisor_name: r.advisor_name || \"\",\n        // The API owns this URL. Append tracking only, never rebuild it.\n        quote_url: r.quote_url + (r.quote_url.indexOf(\"?\") === -1 ? \"?\" : \"&\") + \"step=\" + nextStep + \"&\" + \"utm_source=email&utm_medium=crm&utm_campaign=ff_postro_vsc_2026\",\n        unsubscribe_url: $vars.UNSUBSCRIBE_URL_BASE + \"?k=\" + r.customer_key + \"&d=\" + r.dealer_id,\n        preferences_url: $vars.PREFERENCES_URL_BASE + \"?k=\" + r.customer_key + \"&d=\" + r.dealer_id,\n      },\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "n009-prepare-send",
+      "name": "Prepare Send",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Templates live in the same database as the enrolment state, published by\n-- npm run publish:templates. Reading them here rather than fetching them over\n-- HTTPS removes the need for public hosting, a deployment protection carve\n-- out, and a base URL in config, and removes a failure mode: a template that\n-- could not be loaded used to mean a failed send.\nselect html from vsc_email_template\nwhere dealer_id = $1 and campaign_id = $2 and slug = $3;",
+        "options": {
+          "queryReplacement": "={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.slug }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n010-load-template",
+      "name": "Load Template",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        -100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge tag substitution. The templates ship with offer facts already baked in\n// by email/build.mjs, so only recipient level tags remain here.\n\n// Paired by position, NOT by $itemIndex. A Code node runs once for all items,\n// so $itemIndex does not advance with the loop: it is fixed, and\n// itemMatching($itemIndex) hands back item zero on every pass. Here that\n// would have rendered all forty five emails in a batch from the first\n// recipient's data and sent one person's name, price and quote link to\n// forty four strangers. Caught in the pricing sweep, where the same mistake\n// pointed 100 rating results at a single enrolment row.\n// Load Template returns one row per input item in order, so index i lines up.\nconst prep = $('Prepare Send').all();\nconst rows = $input.all();\nif (prep.length !== rows.length) {\n  throw new Error(\"Prepare Send produced \" + prep.length + \" items but Load Template returned \" + rows.length + \". Positional pairing is no longer safe, so nothing is sent.\");\n}\n\nconst out = [];\nfor (let i = 0; i < rows.length; i++) {\n  const item = rows[i];\n  const prepared = prep[i].json;\n  let html = item.json.html || \"\";\n  // The subject is merged too. It used to be passed through untouched, which\n  // meant step 1 variant A went out reading literally\n  // \"{{first_name}}, one thing was missing from your file\" to half the cohort:\n  // a perfect email behind the one line that proves nobody checked. Four\n  // subject variants across steps 1, 2 and 9 carry tags.\n  let subject = String(prepared.subject == null ? \"\" : prepared.subject);\n\n  if (typeof html !== \"string\" || html.length < 500) {\n    throw new Error(\"No template row for step \" + prepared.step + \" (\" + prepared.slug + \"). Run npm run publish:templates.\");\n  }\n\n  for (const [k, v] of Object.entries(prepared.merge)) {\n    const tag = \"{{\" + k + \"}}\";\n    const val = String(v == null ? \"\" : v);\n    html    = html.split(tag).join(val);\n    subject = subject.split(tag).join(val);\n  }\n\n  const leftover = (html + \"\\n\" + subject).match(/\\{\\{[a-z_]+\\}\\}/g);\n  if (leftover) {\n    // Fail loudly. A merge tag reaching a customer inbox is worse than a missed send.\n    throw new Error(\"Unresolved merge tags in step \" + prepared.step + \": \" + [...new Set(leftover)].join(\", \"));\n  }\n  if (!subject.trim()) {\n    throw new Error(\"Empty subject for step \" + prepared.step + \" (\" + prepared.slug + \").\");\n  }\n\n  out.push({ json: { ...prepared, subject, html } });\n}\nreturn out;"
+      },
+      "id": "n011-render-merge-tags",
+      "name": "Render Merge Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: $vars.SEND_FROM, to: [ $(\"Claim Due Enrollments\").itemMatching($itemIndex).json.email ], reply_to: $vars.SEND_REPLY_TO, subject: $json.subject, html: $json.html, headers: { \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">\", \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\" } }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 2,
+              "batchInterval": 1100
+            }
+          }
+        }
+      },
+      "id": "n012-send-via-resend",
+      "name": "Send via Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_RESEND_CRED_ID",
+          "name": "Resend API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into vsc_send_log (enrollment_id, dealer_id, campaign_id, step, subject, variant, provider_message_id)\nvalues ($1, $2, $3, $4, $5, $6, $7)\n-- vsc_send_log_once makes a retry after a partial failure safe.\non conflict (enrollment_id, step) do nothing;",
+        "options": {
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.dealer_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.campaign_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.subject }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.variant }}, {{ $json.id }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n013-log-send",
+      "name": "Log Send",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1140,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update vsc_enrollment\nset current_step = $2,\n    last_sent_at = now(),\n    updated_at  = now(),\n    status      = case when $3::boolean then 'completed' else 'active' end,\n    -- a completed row parks far in the future rather than being deleted,\n    -- so reporting and re-entry logic still have something to read\n    next_send_at = coalesce($4::timestamptz, now() + interval '100 years')\nwhere id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.is_last_step }}, {{ $('Render Merge Tags').itemMatching($itemIndex).json.next_send_at }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n014-advance-state",
+      "name": "Advance State",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        -200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- The claim already pushed next_send_at two hours out, so a transient\n-- failure retries on its own. This is about leaving evidence, and about\n-- giving up eventually: five failures and the row stops being claimed,\n-- the same ceiling pricing uses, so one poisoned address cannot occupy\n-- a slot in every run forever.\nupdate vsc_enrollment\nset send_attempts       = send_attempts + 1,\n    send_error          = left($2, 500),\n    last_send_error_at  = now(),\n    updated_at          = now()\nwhere id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Render Merge Tags').itemMatching($itemIndex).json.enrollment_id }}, {{ $json.error || 'unknown Resend failure' }}",
+          "queryBatching": "independently"
+        }
+      },
+      "id": "n015-record-send-failure",
+      "name": "Record Send Failure",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1140,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "REPLACE_PG_CRED_ID",
+          "name": "DriveOne Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turns a swallowed send failure into a red execution. n8n routes send\n// errors to this branch instead of stopping the run, which is right for\n// the other items in the batch but wrong for the run as a whole: without\n// this throw the workflow reports success having sent nothing.\nconst failures = $input.all();\nconst reasons = [...new Set(failures.map((f) => String((f.json && f.json.error) || \"unknown\")))];\nthrow new Error(\n  failures.length + \" of this run's sends failed and were not delivered. \" +\n  \"Reasons: \" + reasons.join(\" | \") + \". \" +\n  \"The rows carry send_error and will retry in two hours, up to five attempts.\"\n);"
+      },
+      "id": "n016-fail-loudly",
+      "name": "Fail Loudly",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "n017-nothing-due",
+      "name": "Nothing Due",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        260,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Send Window Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Window Gate": {
+      "main": [
+        [
+          {
+            "node": "Claim Due Enrollments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Due Enrollments": {
+      "main": [
+        [
+          {
+            "node": "Anything Due?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anything Due?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Send",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nothing Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Send": {
+      "main": [
+        [
+          {
+            "node": "Load Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Template": {
+      "main": [
+        [
+          {
+            "node": "Render Merge Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Merge Tags": {
+      "main": [
+        [
+          {
+            "node": "Send via Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Resend": {
+      "main": [
+        [
+          {
+            "node": "Log Send",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Send Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Send": {
+      "main": [
+        [
+          {
+            "node": "Advance State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Send Failure": {
+      "main": [
+        [
+          {
+            "node": "Fail Loudly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:ferrario-ford"
+    }
+  ]
+}

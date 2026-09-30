@@ -424,10 +424,20 @@ function minify(html) {
 
 /* ------------------------------------------------------------------ main */
 
-rmSync(join(ROOT, 'email/dist'), { recursive: true, force: true });
-rmSync(join(ROOT, 'preview/filled'), { recursive: true, force: true });
-mkdirSync(join(ROOT, 'email/dist'), { recursive: true });
-mkdirSync(join(ROOT, 'preview/filled'), { recursive: true });
+// Output is namespaced by dealer, and that is a correctness requirement rather
+// than tidiness. The build takes a dealer id but used to wipe and rewrite one
+// shared email/dist, while publish-templates.mjs takes its OWN dealer id and
+// read from that same folder. So building Ferrario and then publishing Bob
+// Johnson wrote Ferrario's HTML into Bob Johnson's template rows, and every one
+// of his customers would have received an email branded for another dealership.
+// Nothing errored, and the only clue was a byte count.
+const DIST = `email/dist/${DEALER_ID}`;
+const FILLED = `preview/filled/${DEALER_ID}`;
+
+rmSync(join(ROOT, DIST), { recursive: true, force: true });
+rmSync(join(ROOT, FILLED), { recursive: true, force: true });
+mkdirSync(join(ROOT, DIST), { recursive: true });
+mkdirSync(join(ROOT, FILLED), { recursive: true });
 
 const manifest = [];
 
@@ -436,8 +446,8 @@ for (const e of DECK.emails) {
   const dist = minify(resolve(raw, false));  // offer tags baked, recipient tags intact
   const filled = minify(resolve(raw, true)); // everything filled, for review
 
-  writeFileSync(join(ROOT, `email/dist/${e.slug}.html`), dist);
-  writeFileSync(join(ROOT, `preview/filled/${e.slug}.html`), filled);
+  writeFileSync(join(ROOT, `${DIST}/${e.slug}.html`), dist);
+  writeFileSync(join(ROOT, `${FILLED}/${e.slug}.html`), filled);
 
   manifest.push({
     step: e.step,
@@ -449,12 +459,12 @@ for (const e of DECK.emails) {
     preheader: resolve(e.preheader, false),
     cta: resolve(e.cta.label, false),
     ctaPath: e.cta.path,
-    file: `email/dist/${e.slug}.html`,
+    file: `${DIST}/${e.slug}.html`,
   });
 }
 
 writeFileSync(
-  join(ROOT, 'email/dist/manifest.json'),
+  join(ROOT, `${DIST}/manifest.json`),
   JSON.stringify({ dealer: D.id, campaign: DECK.campaign.id, generated: new Date().toISOString().slice(0, 10), emails: manifest }, null, 2)
 );
 

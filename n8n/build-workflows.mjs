@@ -22,15 +22,30 @@
  * keeps the sending address and the API key out of this repo, which is the other
  * reason to prefer it over inlining the values here.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
-const DEALER = JSON.parse(readFileSync(join(ROOT, 'brand/dealers/bob-johnson.json'), 'utf8'));
+// Dealer comes from argv, like email/build.mjs. This was hardcoded to
+// bob-johnson while the skill told people to run it when adding a dealership,
+// so a second rooftop would have silently regenerated the first one's
+// workflows and written them over the shared output path.
+const DEALER_ID = process.argv[2] || 'bob-johnson';
+const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
 const OFFER = JSON.parse(readFileSync(join(ROOT, 'brand/offer.json'), 'utf8'));
+
+// The deck describes the CREATIVE, which every dealership shares. The campaign
+// id identifies one dealership's run of it and must not be shared, because
+// enrolment and template rows are keyed on (dealer_id, campaign_id, ...).
+const CAMPAIGN_ID = (DEALER.campaign && DEALER.campaign.id) || DECK.campaign.id;
+
+// Workflows land per dealer for the same reason the emails do: one shared
+// output path plus a dealer argument is a silent overwrite waiting to happen.
+const WF_DIR = `n8n/workflows/${DEALER_ID}`;
+mkdirSync(join(ROOT, WF_DIR), { recursive: true });
 
 const SCHEDULE = DECK.emails.map((e) => ({ step: e.step, day: e.sendDay, slug: e.slug, subject: e.subject, subjectAlt: e.subjectAlt }));
 const LAST_STEP = SCHEDULE.length;
@@ -231,7 +246,7 @@ const intakeNodes = [
 
   setNode('Campaign Config', [-380, 0], [
     ['dealer_id', DEALER.id],
-    ['campaign_id', DECK.campaign.id],
+    ['campaign_id', CAMPAIGN_ID],
     ['partner_id', DEALER.supabase.partner_id],
     ['window_days', String(DEALER.supabase.intake_window_days)],
     ['max_mileage', String(DEALER.supabase.max_mileage)],
@@ -250,7 +265,7 @@ const intakeConnections = connect([
   ['Enroll Eligible Service Customers', 'Enrolled'],
 ]);
 
-writeFileSync(join(ROOT, 'n8n/workflows/01-intake.json'),
+writeFileSync(join(ROOT, `${WF_DIR}/01-intake.json`),
   JSON.stringify(workflow('DriveOne VSC 01 Intake (' + DEALER.dealer.displayName + ')', intakeNodes, intakeConnections), null, 2));
 
 console.log('built 01-intake.json');
@@ -298,7 +313,7 @@ const SEND_GATE_CODE = [
   '',
   'return [{ json: {',
   '  dealer_id: ' + JSON.stringify(DEALER.id) + ',',
-  '  campaign_id: ' + JSON.stringify(DECK.campaign.id) + ',',
+  '  campaign_id: ' + JSON.stringify(CAMPAIGN_ID) + ',',
   '  day_start: dayStart.toISOString(),',
   '  daily_cap: CFG.dailyCap,',
   '  per_run: perRun,',
@@ -770,7 +785,7 @@ const schedulerConnections = connect([
   ['Record Send Failure', 'Fail Loudly'],
 ]);
 
-writeFileSync(join(ROOT, 'n8n/workflows/02-scheduler.json'),
+writeFileSync(join(ROOT, `${WF_DIR}/02-scheduler.json`),
   JSON.stringify(workflow('DriveOne VSC 02 Scheduler (' + DEALER.dealer.displayName + ')', schedulerNodes, schedulerConnections), null, 2));
 
 console.log('built 02-scheduler.json');
@@ -841,7 +856,7 @@ const CLASSIFY_CODE = [
   '      dealer_id,',
   '      customer_key,',
   '      email,',
-  '      campaign_id: p.campaign_id || "' + DECK.campaign.id + '",',
+  '      campaign_id: p.campaign_id || "' + CAMPAIGN_ID + '",',
   '    },',
   '  });',
   '}',
@@ -1041,7 +1056,7 @@ const eventsConnections = connect([
   ['Ignored (unknown or non-exit event)', 'Acknowledge'],
 ]);
 
-writeFileSync(join(ROOT, 'n8n/workflows/03-events.json'),
+writeFileSync(join(ROOT, `${WF_DIR}/03-events.json`),
   JSON.stringify(workflow('DriveOne VSC 03 Events (' + DEALER.dealer.displayName + ')', eventsNodes, eventsConnections), null, 2));
 
 console.log('built 03-events.json');
@@ -1078,7 +1093,7 @@ const errorNodes = [
   }),
 ];
 
-writeFileSync(join(ROOT, 'n8n/workflows/04-error-handler.json'),
+writeFileSync(join(ROOT, `${WF_DIR}/04-error-handler.json`),
   JSON.stringify(workflow('DriveOne VSC 04 Error Handler', errorNodes, connect([
     ['On Any Workflow Error', 'Format Alert'],
     ['Format Alert', 'Alert Slack'],
@@ -1239,7 +1254,7 @@ const pricingNodes = [
 
   setNode('Campaign Config', [-450, 0], [
     ['dealer_id', DEALER.id],
-    ['campaign_id', DECK.campaign.id],
+    ['campaign_id', CAMPAIGN_ID],
   ]),
 
   pgNode('Claim Unpriced Enrolments', [-220, 0], CLAIM_UNPRICED_SQL,
@@ -1295,7 +1310,7 @@ const pricingNodes = [
   node('Rating Failed (stays unpriced, retried later)', 'noOp', 1, [240, 110], {}),
 ];
 
-writeFileSync(join(ROOT, 'n8n/workflows/05-pricing.json'),
+writeFileSync(join(ROOT, `${WF_DIR}/05-pricing.json`),
   JSON.stringify(workflow('DriveOne VSC 05 Pricing (' + DEALER.dealer.displayName + ')', pricingNodes, connect([
     ['Price Sweep', 'Campaign Config'],
     ['Campaign Config', 'Claim Unpriced Enrolments'],

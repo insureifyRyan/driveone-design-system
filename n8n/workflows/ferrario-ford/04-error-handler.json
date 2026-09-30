@@ -1,0 +1,86 @@
+{
+  "name": "DriveOne VSC 04 Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "n028-on-any-workflow-error",
+      "name": "On Any Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst wf = e.workflow || {};\nconst err = e.execution || {};\n\nconst lines = [\n  \"DriveOne VSC campaign failure\",\n  \"Workflow: \" + (wf.name || \"unknown\"),\n  \"Node: \" + (err.lastNodeExecuted || \"unknown\"),\n  \"Message: \" + ((err.error && err.error.message) || \"no message\"),\n  \"Execution: \" + (err.url || err.id || \"n/a\"),\n  \"Time: \" + new Date().toISOString(),\n].join(\"\\n\");\n\nreturn [{ json: { text: lines } }];"
+      },
+      "id": "n029-format-alert",
+      "name": "Format Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.SLACK_ALERT_WEBHOOK }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "n030-alert-slack",
+      "name": "Alert Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "On Any Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Format Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Alert": {
+      "main": [
+        [
+          {
+            "node": "Alert Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "driveone-vsc"
+    },
+    {
+      "name": "dealer:ferrario-ford"
+    }
+  ]
+}

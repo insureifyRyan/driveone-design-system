@@ -1,0 +1,115 @@
+{
+  "$comment": "DEALER BRAND FILE. The only file you edit to rebrand the whole campaign. Run `npm run build` after editing.",
+  "$status": "NOT READY TO SEND. Everything sourced from MetricBridge and Supabase is confirmed and marked so. Three things are placeholders and are called out individually below: brand colours, the street address, and the sending mailbox. Shipping with the placeholder palette would put a guessed blue in a Ford store's customer email, so `npm run check` is not the gate here, a human confirming the brand sheet is.",
+  "id": "ferrario-ford",
+  "dealer": {
+    "name": "Ferrario Ford",
+    "legalName": "NEEDS CONFIRMATION",
+    "displayName": "Ferrario Ford",
+    "shortName": "Ferrario",
+    "state": "NY",
+    "stateNote": "CONFIRMED enough to rely on: the program contact's number is a 607 area code, which is NY, and NY is the modal state across their 1,244 service customers. dealer.state drives the ORIAS obligor in the footer, so it has to be the DEALERSHIP's state and not the customer's.",
+    "website": "NEEDS CONFIRMATION",
+    "tagline": "",
+    "serviceArea": "NEEDS CONFIRMATION",
+    "storeNote": "Ford rooftop. Confirm whether customer-facing material should read Ferrario Ford or a group name, the same question that came up on Bob Johnson where the group site and the rooftop page disagreed."
+  },
+  "color": {
+    "$note": "PLACEHOLDER, DO NOT SHIP. These are generic Ford-blue values, not read from Ferrario's brand. The build environment cannot reach their site, so nobody has looked at the real palette. Replace all seven before the first send. Structure to match: primary is the dark ground, accent is the one colour that carries buttons and rules, accentDark exists only because a mid-tone accent at 9px on white does not have the contrast to read.",
+    "primary": "#00142E",
+    "primaryDark": "#000B1A",
+    "accent": "#1B6BB5",
+    "primarySoft": "#EDF3FA",
+    "onPrimary": "#FFFFFF",
+    "accentDark": "#0E4478",
+    "onAccent": "#FFFFFF"
+  },
+  "logo": {
+    "$note": "useImage stays false for the same reason it is false on Bob Johnson: a hosted file cannot be inspected from the build environment and does not render when the client blocks images, which is a large share of opens. A type lockup we control beats an image we have never seen. There IS a real logo on the partner record (light, below) so it is worth a human opening it and deciding.",
+    "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "widthPx": 190,
+    "altText": "Ferrario Ford",
+    "wordmark": {
+      "line1": "FERRARIO",
+      "line2": "FORD",
+      "italic": true,
+      "$note": "The rule colour is always color.accent, never set here, so the two can never drift apart. Confirm the real lockup: line2 may want to be a group descriptor rather than FORD."
+    },
+    "useImage": false
+  },
+  "contact": {
+    "storeName": "Ferrario Ford",
+    "addressLine1": "NEEDS CONFIRMATION",
+    "addressLine2": "NEEDS CONFIRMATION",
+    "addressNote": "REQUIRED before sending. A physical postal address in the footer is a CAN-SPAM requirement, not a nicety.",
+    "servicePhone": "NEEDS CONFIRMATION",
+    "phoneNote": "607-526-7748 is Geoff Crossley's number on the partner record, which is the PROGRAM contact, not a customer-facing service line. Bob Johnson made the same distinction: the footer prints the public service number instead. Get the service department's number.",
+    "replyTo": "NEEDS CONFIRMATION",
+    "replyToNote": "Needs a monitored mailbox on ferrario.com. Replies must reach a human at the dealership, because the emails are written as though the service drive sent them. Expect the same authentication conversation as Bob Johnson: see Sending in the skill."
+  },
+  "campaign": {
+    "quoteUrlBase": "SET VIA SHORT_LINK_BASE_URL IN n8n",
+    "utm": "utm_source=email&utm_medium=crm&utm_campaign=ff_postro_vsc_2026",
+    "linkMode": "short",
+    "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
+    "unsubscribeNote": "Same deployed Supabase Edge Function as Bob Johnson. It is keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
+    "id": "ff_postro_vsc_2026",
+    "idNote": "Distinct from Bob Johnson on purpose. vsc_enrollment and vsc_email_template are keyed on (dealer_id, campaign_id, ...), so a shared id would put two dealerships in one campaign namespace."
+  },
+  "metricbridge": {
+    "$comment": "CONFIRMED from the MetricBridge dealer record, 30 Sep 2026.",
+    "source": "elevate_service_drive",
+    "dealer_id": "f97b1597-e7ef-46e0-981a-ac83cdda34d7",
+    "source_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "slug": "ferrario-ford",
+    "business_name": "Ferrario Ford",
+    "program_contact": "Geoff Crossley, Gcrossley@ferrario.com, 607-526-7748",
+    "down_payment_percentage": 0.05,
+    "down_payment_note": "CONFIRMED 0.050 on the partner record, the same 5% Bob Johnson uses, so emails 1 and 5 need no change."
+  },
+  "supabase": {
+    "$comment": "CONFIRMED. partners.id here equals dealers.source_id in MetricBridge, which is the join between the two systems.",
+    "project_id": "bbvkqwcapqsytrdrubci",
+    "partner_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "partner_type": "service-drive-ferrario",
+    "partner_type_note": "Note this is NOT 'service-drive' as on Bob Johnson. Do not copy that value across.",
+    "initial_cohort": 350,
+    "initial_cohort_note": "Ferrario is 1,244 distinct service customers, every one with a usable email, against Bob Johnson's 447. Enrolling all of them is 12,440 sends, and over a 60 day campaign at four send days a week that is roughly 34 send days, so about 366 a day against a 200 ceiling. The cap cannot absorb that: it would simply pin the domain at its ceiling for weeks. Cohort is the only lever that lowers total volume, since total sends are cohort x 10 however slowly you feed people in. 350 lands near 103 a day, which leaves real headroom under the cap and is a sane opening rate for a domain that has never sent. Raise it after the first cohort's bounce and complaint numbers come back clean.",
+    "intake_window_days": 90,
+    "intake_window_note": "Their quotes run 30 Apr to 14 Sep 2026, and 1,222 of the 1,244 fall inside 90 days, so a 90 day window captures effectively the whole list. Only 33 are inside 30 days, so a 30 day window would strand 97% of it.",
+    "max_mileage": 999999,
+    "max_mileage_note": "Effectively off, same as Bob Johnson. The rating API is keyed on VIN and decides what it can rate; a local ceiling only second guesses it, and a vehicle it cannot price records a pricing_error, never sends, and stops being retried after five attempts.",
+    "slug": "ferrario-ford",
+    "data_quality_flag": "CHECK BEFORE ENROLLING. has_existing_warranty is true for exactly 1 of 1,244 Ferrario customers, or 0.08%. On Bob Johnson it is 37 of 447, or 8.3%: a hundredfold difference. The column is populated rather than null, so this is not obviously a missing feed, but the whole premise of Bucket 1 is that it excludes people who already own coverage. If that flag is not being written for this partner the filter passes everyone through and the campaign pitches the product to existing owners. Verify against the DMS before the first send rather than trusting the number."
+  },
+  "brandLead": {
+    "$comment": "dealer means the dealership colour leads the layout and DriveOne is reduced to the provider mark in the header. Correct for a send made on their behalf.",
+    "mode": "dealer"
+  },
+  "sending": {
+    "$comment": "Copied from Bob Johnson deliberately. These are starting heuristics rather than measured truths, and the two stores are close enough in audience that starting from the same numbers is more honest than inventing different ones.",
+    "timezone": "America/New_York",
+    "dailyCap": 200,
+    "dailyCapNote": "Hard ceiling per calendar day in dealer local time, enforced inside the atomic claim so two scheduler runs cannot jointly exceed it.",
+    "days": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "daysNote": "Tuesday through Friday. Monday is excluded because Monday inboxes are cleared in bulk. Friday is INCLUDED for an arithmetic reason rather than a preference: two days drawn from Tue/Wed/Thu alone can only ever be 1, 2, 5, 6 or 7 days apart, so the 3 and 4 day gaps the deck opens with are impossible to express and every gap silently collapses to 7. Do not narrow this without re-running n8n/verify.mjs.",
+    "hours": [
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16
+    ],
+    "hoursNote": "Local. Mid morning and early afternoon, skipping the lunch hour.",
+    "maxPerRun": 45,
+    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike."
+  }
+}

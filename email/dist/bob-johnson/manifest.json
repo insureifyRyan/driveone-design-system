@@ -1,5 +1,5 @@
 {
-  "dealer": "ferrario-ford",
+  "dealer": "bob-johnson",
   "campaign": "bj_postro_vsc_2026",
   "generated": "2026-09-30",
   "emails": [
@@ -13,7 +13,7 @@
       "preheader": "No coverage on file. That is fixable in about four minutes, online, without talking to anybody.",
       "cta": "Check out now",
       "ctaPath": "welcome",
-      "file": "email/dist/01-missing-from-your-profile.html"
+      "file": "email/dist/bob-johnson/01-missing-from-your-profile.html"
     },
     {
       "step": 2,
@@ -25,7 +25,7 @@
       "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
       "cta": "Check out now",
       "ctaPath": "math",
-      "file": "email/dist/02-todays-visit-was-the-cheap-one.html"
+      "file": "email/dist/bob-johnson/02-todays-visit-was-the-cheap-one.html"
     },
     {
       "step": 3,
@@ -37,7 +37,7 @@
       "preheader": "That is not an oversight. That is the product.",
       "cta": "Buy now, online",
       "ctaPath": "online",
-      "file": "email/dist/03-nobody-is-going-to-call-you.html"
+      "file": "email/dist/bob-johnson/03-nobody-is-going-to-call-you.html"
     },
     {
       "step": 4,
@@ -46,10 +46,10 @@
       "goal": "The $0-at-our-store deductible, the strongest dealer-specific hook",
       "subject": "Your deductible disappears when you come back",
       "subjectAlt": "A number that goes to zero",
-      "preheader": "Bring the car back to Ferrario and the deductible on a covered repair goes away.",
+      "preheader": "Bring the car back to Bob Johnson and the deductible on a covered repair goes away.",
       "cta": "Buy now",
       "ctaPath": "deductible",
-      "file": "email/dist/04-the-disappearing-deductible.html"
+      "file": "email/dist/bob-johnson/04-the-disappearing-deductible.html"
     },
     {
       "step": 5,
@@ -61,7 +61,7 @@
       "preheader": "5% down. The rest spread out at zero percent. No credit pull.",
       "cta": "Check out now",
       "ctaPath": "payments",
-      "file": "email/dist/05-zero-percent-thirty-six-months.html"
+      "file": "email/dist/bob-johnson/05-zero-percent-thirty-six-months.html"
     },
     {
       "step": 6,
@@ -73,7 +73,7 @@
       "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
       "cta": "Buy now",
       "ctaPath": "exclusionary",
-      "file": "email/dist/06-exclusionary-explained.html"
+      "file": "email/dist/bob-johnson/06-exclusionary-explained.html"
     },
     {
       "step": 7,
@@ -85,7 +85,7 @@
       "preheader": "Not a robocall. Not a monthly subscription. The store that already fixes your car.",
       "cta": "Check out now",
       "ctaPath": "real",
-      "file": "email/dist/07-not-the-tv-people.html"
+      "file": "email/dist/bob-johnson/07-not-the-tv-people.html"
     },
     {
       "step": 8,
@@ -97,7 +97,7 @@
       "preheader": "Coverage is not only for the day the transmission goes. Most of it is for smaller, more annoying days.",
       "cta": "Buy now",
       "ctaPath": "included",
-      "file": "email/dist/08-the-stuff-you-forget-you-have.html"
+      "file": "email/dist/bob-johnson/08-the-stuff-you-forget-you-have.html"
     },
     {
       "step": 9,
@@ -109,7 +109,7 @@
       "preheader": "Eligibility runs on mileage and model year. Both of yours are moving in one direction.",
       "cta": "Check out now",
       "ctaPath": "window",
-      "file": "email/dist/09-the-window.html"
+      "file": "email/dist/bob-johnson/09-the-window.html"
     },
     {
       "step": 10,
@@ -121,7 +121,7 @@
       "preheader": "Ten emails is a reasonable limit. Your quote link stays alive regardless.",
       "cta": "Buy now",
       "ctaPath": "last",
-      "file": "email/dist/10-we-will-stop.html"
+      "file": "email/dist/bob-johnson/10-we-will-stop.html"
     }
   ]
 }

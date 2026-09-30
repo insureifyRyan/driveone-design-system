@@ -25,12 +25,24 @@ const FROM = Number(process.argv[3] || 1);
 const TO   = Number(process.argv[4] || 99);
 const D = read(`brand/dealers/${DEALER_ID}.json`);
 const DECK = read('email/copy/campaign.json');
-const MANIFEST = read('email/dist/manifest.json');
+// Read from THIS dealer's build directory, never a shared one. The publisher
+// takes a dealer id and the builder takes a dealer id, and when they disagreed
+// the publisher silently wrote whichever dealership was built last into the
+// dealer_id it was given. A guard here rather than a convention, because the
+// failure mode is a customer receiving another dealership's branding.
+const DIST = `email/dist/${DEALER_ID}`;
+const MANIFEST = read(`${DIST}/manifest.json`);
+if (MANIFEST.dealer !== DEALER_ID) {
+  throw new Error(
+    `${DIST}/manifest.json was built for "${MANIFEST.dealer}" but this is publishing ` +
+    `"${DEALER_ID}". Run: node email/build.mjs ${DEALER_ID}`
+  );
+}
 
 const q = (v) => (v === null || v === undefined ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
 
 const rows = MANIFEST.emails.filter((m) => m.step >= FROM && m.step <= TO).map((m) => {
-  const html = readFileSync(join(ROOT, 'email/dist', `${m.slug}.html`), 'utf8');
+  const html = readFileSync(join(ROOT, DIST, `${m.slug}.html`), 'utf8');
   return `(${q(DEALER_ID)}, ${q(DECK.campaign.id)}, ${q(m.slug)}, ${m.step}, ${q(m.subject)}, ${q(m.subjectAlt)}, ${q(m.preheader)}, ${q(html)}, now())`;
 });
 

@@ -35,7 +35,11 @@ const nodeRequire = createRequire(pathToFileURL(import.meta.url));
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
 
-const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', f), 'utf8'));
+// Verify a specific dealer's build. Defaults to bob-johnson to match the
+// generator, and takes the same argument so `verify ferrario-ford` checks
+// Ferrario's cadence rather than silently re-checking someone else's.
+const DEALER_ID = process.argv[2] || 'bob-johnson';
+const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json'].map((f) => ({ file: f, wf: load(f) }));
 

@@ -14,7 +14,8 @@
     "publish:templates": "node scripts/publish-templates.mjs",
     "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
     "verify": "node n8n/verify.mjs",
-    "build:workflows": "node n8n/build-workflows.mjs && node n8n/verify.mjs"
+    "build:workflows": "node n8n/build-workflows.mjs && node n8n/verify.mjs",
+    "build:ferrario": "node email/build.mjs ferrario-ford && node n8n/build-workflows.mjs ferrario-ford && node n8n/verify.mjs ferrario-ford"
   },
   "engines": {
     "node": ">=18"

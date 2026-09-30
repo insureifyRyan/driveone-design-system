@@ -686,11 +686,21 @@ const schedulerNodes = [
     specifyBody: 'json',
     // itemMatching($itemIndex) is correct HERE and wrong inside a Code node:
     // node parameters are evaluated once per item, so $itemIndex is this item.
+    // $vars.DRY_RUN is an email address. Set it and every message in the run
+    // goes there instead of to the customer, with the intended recipient
+    // printed in the subject line, so a full forty five row run can be read in
+    // one inbox before anybody outside sees anything. Unset, this is a normal
+    // send: absent means live, which is the safe default for a variable
+    // someone might forget exists.
+    //
+    // The lookup is repeated rather than hoisted into a local. n8n expressions
+    // are evaluated in a sandbox and an IIFE is not worth the risk on the node
+    // that talks to customers.
     jsonBody: '={{ JSON.stringify({'
       + ' from: $vars.SEND_FROM,'
-      + ' to: [ $("Claim Due Enrollments").itemMatching($itemIndex).json.email ],'
+      + ' to: [ $vars.DRY_RUN || $("Claim Due Enrollments").itemMatching($itemIndex).json.email ],'
       + ' reply_to: $vars.SEND_REPLY_TO,'
-      + ' subject: $json.subject,'
+      + ' subject: ($vars.DRY_RUN ? "[DRY RUN -> " + $("Claim Due Enrollments").itemMatching($itemIndex).json.email + "] " : "") + $json.subject,'
       + ' html: $json.html,'
       // One click unsubscribe, which Google and Yahoo expect from bulk senders
       // and which the SMTP node could never provide. The Edge Function already
@@ -709,6 +719,18 @@ const schedulerNodes = [
     credentials: { httpHeaderAuth: { id: 'REPLACE_RESEND_CRED_ID', name: 'Resend API' } },
     onError: 'continueErrorOutput', retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
   }),
+
+  // A dry run must not advance anybody. Redirecting the mail and then writing
+  // the send log and bumping current_step would mark forty five real customers
+  // as having received email 1 that they never got, and they would silently
+  // start at email 2. So the state writes sit behind this gate, and a dry run
+  // stops here.
+  //
+  // What a dry run does still do is claim, which pushes next_send_at two hours
+  // out. That is self healing: the rows come back on a later sweep.
+  ifNode('Dry Run?', [1140, -300], [cond('={{ !!$vars.DRY_RUN }}', 'true', '', 'boolean')]),
+
+  node('Dry Run Stop (nothing advanced)', 'noOp', 1, [1360, -380], {}),
 
   pgNode('Log Send', [1140, -200],
     [
@@ -780,7 +802,8 @@ const schedulerConnections = connect([
   ['Prepare Send', 'Load Template'],
   ['Load Template', 'Render Merge Tags'],
   ['Render Merge Tags', 'Send via Resend'],
-  ['Send via Resend', ['Log Send', 'Record Send Failure']],
+  ['Send via Resend', ['Dry Run?', 'Record Send Failure']],
+  ['Dry Run?', ['Dry Run Stop (nothing advanced)', 'Log Send']],
   ['Log Send', 'Advance State'],
   ['Record Send Failure', 'Fail Loudly'],
 ]);

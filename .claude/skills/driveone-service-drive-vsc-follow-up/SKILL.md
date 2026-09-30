@@ -633,19 +633,38 @@ Then, in order:
 5. Activate 01, then 05. Confirm `vsc_enrollment` rows carry both a `monthly_payment` and
    a `quote_url` before anything can send: the scheduler skips rows missing either, which
    is the last of the four guards against mailing a blank price.
-6. Send one to yourself and read it in a real client. **Do not publish 02 to do this.**
+6. **Dry run the whole thing.** Set `$vars.DRY_RUN` to your own address and publish 02
+   for one send window. Every message in the run goes to you instead of the customer, with
+   the intended recipient printed in the subject as `[DRY RUN -> name@example.com]`, so a
+   full forty five row run arrives in one inbox and can be read end to end. This is the
+   only way to exercise claim, prepare, load, render and send as a chain against real
+   claimed rows before real people are on the other end.
+
+   The state writes sit behind a gate, so a dry run logs nothing and advances nobody.
+   Without that gate the redirect would be worse than useless: forty five customers marked
+   as having received email 1 they never got, silently resuming at email 2, and nobody
+   finding out until someone asked why the first email had no replies.
+
+   A dry run does still claim, which pushes `next_send_at` two hours out. That is self
+   healing; the rows come back on a later sweep.
+
+   **Then unset `DRY_RUN` before the real launch.** Absent means live, which is the right
+   default, but it also means a forgotten value silently sends the whole campaign to one
+   inbox and nothing looks wrong.
+7. Send one to yourself and read it in a real client. **Do not publish 02 to do this**
+   outside a dry run.
    Rows go due while the scheduler is off, so publishing during a send window mails real
    customers within the hour. Use a throwaway workflow that reads one real row, renders it
    through the real template, and sends only to you; archive it afterwards. Same pattern
    works for probing SMTP, a webhook signature, or anything else you would otherwise test
    by switching on production.
-7. **Re-spread anything overdue, immediately before publishing 02.** Every send date that
+8. **Re-spread anything overdue, immediately before publishing 02.** Every send date that
    passes while the scheduler is off becomes due-now, so the backlog grows the longer
    go-live slips and then arrives on day one as a single burst under the daily cap. The
    three day floor protects steps 2 to 10 but not step 1. One `update` spreading
    `next_send_at` across the window fixes it, and a domain that has never sent should not
    open with its largest day.
-8. Delete any internal test rows from `vsc_enrollment`, then publish 02. That is go-live.
+9. Delete any internal test rows from `vsc_enrollment`, then publish 02. That is go-live.
 
 Do the volume arithmetic at step 5, before enrolling anyone: if `backlog × 10` is close to
 `dailyCap × send days per week × campaign weeks`, throttle enrolment rather than letting

@@ -150,7 +150,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: $vars.SEND_FROM, to: [ $(\"Claim Due Enrollments\").itemMatching($itemIndex).json.email ], reply_to: $vars.SEND_REPLY_TO, subject: $json.subject, html: $json.html, headers: { \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">\", \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\" } }) }}",
+        "jsonBody": "={{ JSON.stringify({ from: $vars.SEND_FROM, to: [ $vars.DRY_RUN || $(\"Claim Due Enrollments\").itemMatching($itemIndex).json.email ], reply_to: $vars.SEND_REPLY_TO, subject: ($vars.DRY_RUN ? \"[DRY RUN -> \" + $(\"Claim Due Enrollments\").itemMatching($itemIndex).json.email + \"] \" : \"\") + $json.subject, html: $json.html, headers: { \"List-Unsubscribe\": \"<\" + $json.merge.unsubscribe_url + \">\", \"List-Unsubscribe-Post\": \"List-Unsubscribe=One-Click\" } }) }}",
         "options": {
           "batching": {
             "batch": {
@@ -181,6 +181,52 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c910636",
+              "leftValue": "={{ !!$vars.DRY_RUN }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "n013-dry-run",
+      "name": "Dry Run?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        -300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "n014-dry-run-stop-nothing-advanced",
+      "name": "Dry Run Stop (nothing advanced)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -380
+      ]
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
         "query": "insert into vsc_send_log (enrollment_id, dealer_id, campaign_id, step, subject, variant, provider_message_id)\nvalues ($1, $2, $3, $4, $5, $6, $7)\n-- vsc_send_log_once makes a retry after a partial failure safe.\non conflict (enrollment_id, step) do nothing;",
         "options": {
@@ -188,7 +234,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n013-log-send",
+      "id": "n015-log-send",
       "name": "Log Send",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -212,7 +258,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n014-advance-state",
+      "id": "n016-advance-state",
       "name": "Advance State",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -236,7 +282,7 @@
           "queryBatching": "independently"
         }
       },
-      "id": "n015-record-send-failure",
+      "id": "n017-record-send-failure",
       "name": "Record Send Failure",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -255,7 +301,7 @@
       "parameters": {
         "jsCode": "// Turns a swallowed send failure into a red execution. n8n routes send\n// errors to this branch instead of stopping the run, which is right for\n// the other items in the batch but wrong for the run as a whole: without\n// this throw the workflow reports success having sent nothing.\nconst failures = $input.all();\nconst reasons = [...new Set(failures.map((f) => String((f.json && f.json.error) || \"unknown\")))];\nthrow new Error(\n  failures.length + \" of this run's sends failed and were not delivered. \" +\n  \"Reasons: \" + reasons.join(\" | \") + \". \" +\n  \"The rows carry send_error and will retry in two hours, up to five attempts.\"\n);"
       },
-      "id": "n016-fail-loudly",
+      "id": "n018-fail-loudly",
       "name": "Fail Loudly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -266,7 +312,7 @@
     },
     {
       "parameters": {},
-      "id": "n017-nothing-due",
+      "id": "n019-nothing-due",
       "name": "Nothing Due",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -365,7 +411,7 @@
       "main": [
         [
           {
-            "node": "Log Send",
+            "node": "Dry Run?",
             "type": "main",
             "index": 0
           }
@@ -373,6 +419,24 @@
         [
           {
             "node": "Record Send Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry Run?": {
+      "main": [
+        [
+          {
+            "node": "Dry Run Stop (nothing advanced)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Send",
             "type": "main",
             "index": 0
           }

@@ -228,6 +228,44 @@ check('one batch, one recipient per email', () => {
   return `${rows.length} distinct recipients, name, vehicle, price and link all stayed put`;
 });
 
+check('a dry run cannot advance anybody', () => {
+  // WHY: DRY_RUN redirects every recipient to one inbox so a full run can be
+  // read before anyone outside sees it. If the state writes were still reached,
+  // that convenience would mark forty five real customers as having received
+  // email 1 they never got, and they would silently resume at email 2. The
+  // damage would be invisible until someone asked why nobody got the first one.
+  //
+  // So this asserts the shape rather than trusting a comment: the send node
+  // must reach the log through the gate, never directly.
+  const wf = load('02-scheduler.json');
+  const conns = wf.connections;
+
+  const send = conns['Send via Resend'];
+  assert(send, 'Send via Resend has no outgoing connections');
+  const success = send.main[0].map((c) => c.node);
+  assert(!success.includes('Log Send'),
+    'Send via Resend reaches Log Send directly, so a dry run would advance real customers');
+  assert(success.includes('Dry Run?'),
+    `Send via Resend should reach the dry run gate first, goes to ${success.join(', ')}`);
+
+  const gate = conns['Dry Run?'];
+  assert(gate, 'the Dry Run? gate has no outgoing connections');
+  const [whenDry, whenLive] = gate.main.map((b) => b.map((c) => c.node));
+  assert(!whenDry.includes('Log Send') && !whenDry.includes('Advance State'),
+    `the dry run branch writes state: ${whenDry.join(', ')}`);
+  assert(whenLive.includes('Log Send'),
+    `the live branch must log the send, goes to ${whenLive.join(', ')}`);
+
+  // And the send body has to actually honour the variable, or the gate is
+  // guarding a redirect that never happens.
+  const body = nodeNamed(wf, 'Send via Resend').parameters.jsonBody;
+  assert(/\$vars\.DRY_RUN\s*\|\|/.test(body),
+    'the recipient is not redirected when DRY_RUN is set');
+  assert(body.includes('DRY RUN ->'),
+    'the subject does not name the intended recipient, so a dry run is unreadable');
+  return 'send -> gate -> log, dry branch writes nothing';
+});
+
 /* --------------------------------------------------------- code node hygiene */
 
 check('every Code node parses', () => {

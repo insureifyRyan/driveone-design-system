@@ -120,6 +120,7 @@ Set these in n8n under **Settings, Variables**:
 | `UNSUBSCRIBE_URL_BASE` | `https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe` | Already deployed. |
 | `PREFERENCES_URL_BASE` | same as above | Points at the same function today. |
 | `CAMPAIGN_EVENT_URL` | `https://ryan-3522-williams.app.n8n.cloud/webhook/vsc/events/bob-johnson` | The internal event endpoint, for DriveOne checkout and CRM exits. Header authenticated. |
+| `DRY_RUN` | *(an email address, or unset)* | Set it and every send in the run is redirected there with the intended recipient in the subject, and no state is written. Unset for live. A forgotten value sends the whole campaign to one inbox with nothing looking wrong. |
 | `RESEND_WEBHOOK_SECRET` | *(the `whsec_...` signing secret from the Resend webhook)* | Workflow 03 verifies every Resend delivery against it and refuses the request if it is unset. |
 | `RATING_API_KEY` | *(the captured API key)* | Sent as the `x-captured-api-key` header. Workflow 05. |
 | `SLACK_ALERT_WEBHOOK` | *(the Slack incoming webhook)* | Workflow 04. Without it, failures are silent. |

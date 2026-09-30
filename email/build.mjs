@@ -164,7 +164,7 @@ const hero = (e) => `
     <tr><td style="height:4px;line-height:4px;font-size:4px;background-color:${A.accent};">&nbsp;</td></tr>
     <tr><td style="padding:${GUT}px ${GUT}px 30px ${GUT}px;">
       <p style="margin:0 0 14px 0;${font(F.body, 10, 700, A.accent, '1.5')}letter-spacing:2px;">${esc(e.eyebrow)}</p>
-      <h1 style="margin:0 0 14px 0;${font(F.display, 32, 800, '#FFFFFF', '1.14')}letter-spacing:-0.9px;">${accent(e.headline)}</h1>
+      <h1 style="margin:0 0 14px 0;${font(F.display, 30, 800, '#FFFFFF', '1.16')}letter-spacing:-0.8px;">${accent(e.headline)}</h1>
       <p style="margin:0;${font(F.body, 16, 400, 'rgba(255,255,255,0.74)', '1.55')}">${esc(e.subhead)}</p>
     </td></tr>
   </table>
@@ -210,7 +210,7 @@ const vehicleCard = () => `
     <tr><td style="padding:18px 20px 14px 20px;background-color:${A.soft};border-radius:${T.layout.radius}px ${T.layout.radius}px 0 0;">
       <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">DRIVEONE VSC &middot; PLATINUM COVERAGE</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
-      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles on the clock</p>
+      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles</p>
     </td></tr>
 
     <tr><td style="padding:16px 20px 0 20px;">
@@ -229,9 +229,9 @@ const vehicleCard = () => `
           </tr></table>
         </td></tr>
         <tr>
-          <td align="left" valign="bottom" style="padding:12px 0 0 0;${font(F.display, 15, 800, C.ink, '1.4')}letter-spacing:-0.2px;">Then monthly</td>
-          <td align="right" valign="bottom" style="padding:12px 0 0 0;white-space:nowrap;">
-            <span style="${font(F.display, 32, 800, C.ink, '1')}letter-spacing:-1.3px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
+          <td align="left" valign="bottom" style="padding:14px 0 0 0;${font(F.body, 14, 600, C.mutedText, '1.4')}">Then monthly</td>
+          <td align="right" valign="bottom" style="padding:14px 0 0 0;white-space:nowrap;">
+            <span style="${font(F.display, 34, 800, C.ink, '1')}letter-spacing:-1.4px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
             <p style="margin:3px 0 0 0;${font(F.body, 12, 400, C.mutedText, '1.4')}">{{payment_term}} payments &middot; {{contract_price}} total</p>
           </td>
         </tr>

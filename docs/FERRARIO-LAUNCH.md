@@ -28,6 +28,11 @@ Run `npm run check:launch -- ferrario-ford` at any point for the machine-checkab
 `docs/ferrario-dns-request.txt` is the request, written to be forwarded as-is. The domain
 must be verified in Resend before `SEND_FROM` will work.
 
+**`docs/DELIVERABILITY.md` is the runbook for this phase** and covers what the DNS request
+does not: reading their existing DMARC before sending rather than after, whether the From
+belongs on the root domain or a subdomain, the enrolment ramp, and the received-header proof
+that has to pass before any volume.
+
 Assume the mailbox has MFA and that SMTP is therefore impossible. That is the Microsoft
 default now, not an unusual restriction. Do not spend a day discovering it: sign in to
 office.com as the sending address, and an Authenticator prompt means SMTP is closed whatever

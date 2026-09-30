@@ -304,6 +304,34 @@ check('every Postgres node batches independently', () => {
   return `${pgNodes().length} nodes`;
 });
 
+check('the cohort caps total enrolment, not one run', () => {
+  // WHY: intake runs hourly, is idempotent, and took `limit $6` straight from
+  // initial_cohort. That caps a single RUN. With 1,244 eligible and a cohort of
+  // 350 the sweep enrolled 350 in the first hour, 350 in the second, and the
+  // whole eligible population before lunch - 12,440 sends at ~366/day against a
+  // 200 cap, which is the exact outcome the cohort is documented as preventing.
+  // Nothing errors: every row is genuinely eligible and the conflict clause
+  // makes re-runs free. The only symptom is a send volume pinned at the ceiling
+  // for weeks, discovered long after the enrolment that caused it.
+  //
+  // Assert the subtraction is present rather than that the SQL merely has a
+  // limit, because the broken version had a limit too.
+  const intake = WORKFLOWS.find(({ file }) => file === '01-intake.json');
+  assert(intake, '01-intake.json not found');
+  const node = nodesOf(intake.wf).find((n) =>
+    n.type === 'n8n-nodes-base.postgres' && /insert into vsc_enrollment/i.test(n.parameters.query || ''));
+  assert(node, 'no enrolment insert found in 01-intake.json');
+
+  const sql = node.parameters.query.replace(/^\s*--.*$/gm, '');
+  assert(/limit\s+greatest\s*\(/i.test(sql),
+    'intake limit is not clamped with greatest(); a bare limit caps one run, not the campaign');
+  assert(/select\s+count\(\*\)\s+from\s+vsc_enrollment/i.test(sql),
+    'intake limit does not subtract rows already enrolled, so the hourly sweep will enrol the entire eligible population');
+  assert(/where\s+dealer_id\s*=\s*\$1\s+and\s+campaign_id\s*=\s*\$2/i.test(sql),
+    'the already-enrolled count is not scoped to this dealer and campaign');
+  return 'limit subtracts already-enrolled, scoped to dealer and campaign';
+});
+
 check('SQL placeholders match the replacement count', () => {
   // WHY: an undefined key is DROPPED from queryReplacement rather than sent as
   // null, which shortens the positional array and shifts every parameter after

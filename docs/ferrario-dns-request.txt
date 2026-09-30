@@ -107,3 +107,19 @@ Two things that commonly go wrong:
 Reply once they're in and we'll run verification, which takes a few minutes
 after DNS propagates. If any of these conflict with a record you already have,
 tell us rather than overwriting it and we'll sort out the right merge.
+
+
+ONE THING TO CHECK RATHER THAN ADD
+----------------------------------
+
+If ferrario.com already publishes a DMARC record at _dmarc.ferrario.com, please
+send us what it says. We are NOT asking you to add or change one.
+
+Two reasons it matters. If the policy is p=quarantine or p=reject, we want to
+confirm alignment before the first send rather than discover it from a
+rejection. And a domain can only have one DMARC record, exactly like SPF, so if
+one already exists then adding a second would invalidate both. Same trap as
+record 3 above, different record.
+
+Reading it is a one line lookup from our side if you would rather we just
+checked it ourselves.

@@ -45,7 +45,7 @@ n8n/
 
 preview/                      Review galleries plus sample-data previews. Generated.
 scripts/check.mjs             Pre-send guard. Run it before every launch.
-docs/                         Setup, data contract, per-dealer launch state.
+docs/                         Setup, data contract, deliverability, per-dealer launch state.
 .claude/skills/               The campaign operations manual.
 ```
 

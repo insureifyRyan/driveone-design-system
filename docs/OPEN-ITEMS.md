@@ -1,22 +1,25 @@
-# Open items before this campaign can send
+# Open items: Bob Johnson Auto Group
+
+Bob Johnson's remaining launch state. Ferrario's is in `docs/FERRARIO-LAUNCH.md`.
 
 Most of the original list is now closed against the executed contract form
-(`Elevate_Platinum_VSC_Contract_1.pdf`, AAS VSC 1 11-2022, 16 pages). What is left is
-short and mostly operational.
+(AAS VSC 1 11-2022, 16 pages). What is left is short and mostly operational.
+Run `npm run check:launch -- bob-johnson` for the machine-checkable subset.
 
 ---
 
 ## Still open
 
-### 1. The `$49` starting price needs substantiation
+### 1. ~~The `$49` starting price needs substantiation~~ — CLOSED 30 Sep 2026
 
-Used in emails 1 and 5. A "starting at" claim needs at least one genuinely available
-Platinum contract at that figure, for a vehicle that actually exists in this audience,
-documented on file. Everything else in the campaign is now quoted from the form; this is
-the one number that is not.
+Closed by the copy rewrite rather than by substantiation. The deck no longer makes a
+"starting at" claim anywhere: `{{price_from}}` appears zero times in
+`email/copy/campaign.json`, and emails 1 and 5 now show `{{monthly_payment}}`, the
+customer's own quoted figure from the rating API, instead of a floor price.
 
-If it cannot be substantiated, change `price_from` in `brand/offer.json` and rebuild, or
-tell me and I will pull the price line out of both emails.
+`price_from` is still in `brand/offer.json` carrying its `STILL NEEDS SUBSTANTIATION`
+note. It is unused, and it should not be reintroduced into copy without the documented
+evidence that note asks for.
 
 ### 2. Assets and contact details
 
@@ -25,7 +28,7 @@ tell me and I will pull the price line out of both emails.
 | Logo file | `REPLACE-ME` placeholder. Needs a hosted absolute `https` URL. |
 | Service phone | `PLACEHOLDER` |
 | Reply-to mailbox | `PLACEHOLDER` |
-| Postal address | Set to 3855 W Henrietta Rd, Rochester NY 14623. **Confirm.** That is the Imports address, and the group runs multiple rooftops. CAN-SPAM wants the address of the entity actually sending. |
+| Postal address | Set to 3855 W Henrietta Rd, Rochester NY 14623. **Confirm.** That is the Imports address, and the group runs multiple rooftops. CAN-SPAM wants the address of the entity actually sending. This is the same rooftop-versus-group question the supplied artwork settled for Ferrario, and it is still open here: the MetricBridge record is group level (`Bob Johnson Auto`) while `dealer.displayName` is the Rochester store and `metricbridge.rooftopNote` says the campaign targets Watertown CDJR. Three different answers in one file. |
 | Quote URL base | `REPLACE-ME` |
 
 Colors are now real, read off the screenshot you sent: black `#000000`, gold `#F2B229`,
@@ -42,9 +45,10 @@ worth a look either way.
 - `SEND_FROM` should be a Bob Johnson domain, not a DriveOne one, or the co-branding is
   undercut and deliverability suffers.
 - Confirm the service customer records carry a marketing email consent basis, and that
-  the DMS feed excludes anyone who already opted out at the dealership level. The
-  campaign's own suppression list cannot see unsubscribes that happened in the dealer's
-  other systems.
+  intake excludes anyone who already opted out at the dealership level. The campaign's own
+  suppression list cannot see unsubscribes that happened in the dealer's other systems.
+  `customers.opted_out` in the source project is a real opt-out signal from the dealer's
+  system and intake should respect it.
 - SPF, DKIM and a DMARC policy on the sending domain before any volume. One click
   `List-Unsubscribe` and `List-Unsubscribe-Post` headers are already implemented in the
   scheduler.
@@ -132,3 +136,16 @@ the campaign and recorded in `brand/offer.json` under `not_included`.
 | Towing up to $100 per occurrence | Email 8 | Roadside section, Quest Towing Services. |
 | Seals and gaskets excluded past 125,000 miles | Email 9 | Platinum exclusions. This is a genuine, honest reason the window matters, which is better than manufacturing urgency. |
 | Rental needs proof of rental with an authorized claim | Email 8 P.S. | Rental benefits section. |
+
+### 5. `has_existing_warranty` is inconsistent between two documents — UNRESOLVED
+
+`docs/SUPABASE.md` records the column as null for all 474 of Bob Johnson's rows, measured
+28 Sep. `brand/dealers/ferrario-ford.json` records it as fully populated at both stores
+with zero nulls, 37 true and 410 false for Bob Johnson, checked 30 Sep. Both cannot be
+true.
+
+The likely reading is a backfill between those dates, which would make the older doc stale
+rather than wrong, but that has not been verified against the live database. It matters
+because intake filters `has_existing_warranty = false`, which excludes nulls as well as
+trues: if the column really is null for his rows, his intake returns nobody and nothing
+errors. Re-query before enrolling him again.

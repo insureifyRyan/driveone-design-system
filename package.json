@@ -5,12 +5,19 @@
   "type": "module",
   "description": "DriveOne VSC co-branded dealer email design system and campaign automation",
   "scripts": {
-    "build": "node email/build.mjs && node n8n/build-workflows.mjs",
-    "build:dealer": "node email/build.mjs",
-    "build:n8n": "node n8n/build-workflows.mjs",
+    "build": "npm run build:bob-johnson && npm run build:ferrario-ford",
+    "build:bob-johnson": "node email/build.mjs bob-johnson && node n8n/build-workflows.mjs bob-johnson && node n8n/verify.mjs bob-johnson && node scripts/check.mjs bob-johnson",
+    "build:ferrario-ford": "node email/build.mjs ferrario-ford && node n8n/build-workflows.mjs ferrario-ford && node n8n/verify.mjs ferrario-ford && node scripts/check.mjs ferrario-ford",
+    "check": "node scripts/check.mjs",
+    "check:launch": "node scripts/check.mjs --launch",
+    "verify": "node n8n/verify.mjs",
+    "publish:templates": "node scripts/publish-templates.mjs",
     "publish:static": "node scripts/publish-static.mjs",
     "vercel-build": "npm run build && npm run publish:static",
-    "check": "node scripts/check.mjs"
+    "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
+    "simulate": "node scripts/simulate-volume.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

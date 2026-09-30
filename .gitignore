@@ -2,3 +2,14 @@ node_modules/
 public/
 .vercel
 .DS_Store
+*.local
+.env
+
+# Build output. Generated from brand/ + email/copy/campaign.json by `npm run build`,
+# and rebuilt by Vercel on every deploy, so committing it only creates a second
+# source of truth that goes stale. It used to be committed, which is how a stale
+# dist could disagree with the copy deck without anything erroring.
+email/dist/
+preview/filled/
+preview/*.html
+n8n/workflows/

@@ -3,10 +3,10 @@
  * DriveOne co-branded email builder.
  *
  * Reads brand tokens + dealer tokens + offer facts + copy deck, emits:
- *   email/dist/<slug>.html          merge tags intact, ready for n8n / any ESP
- *   preview/filled/<slug>.html      sample data filled in, for client review
- *   preview/index.html              gallery
- *   email/dist/manifest.json        machine readable index for n8n
+ *   email/dist/<dealer>/<slug>.html merge tags intact, ready for n8n / any ESP
+ *   preview/filled/<dealer>/<slug>.html  sample data filled in, for client review
+ *   preview/<dealer>.html           gallery, one per dealership
+ *   email/dist/<dealer>/manifest.json    machine readable index for n8n
  *
  * No dependencies. Node 18+.
  */
@@ -27,7 +27,35 @@ const DECK = read('email/copy/campaign.json');
 // from the dealer's state so the footer is correct per dealership, not per brand.
 const OBLIGOR = (OFFER.obligor_by_state && OFFER.obligor_by_state[D.dealer.state]) || OFFER.administrator_default;
 
+// The campaign id comes from the DEALER file, falling back to the deck only for
+// a dealer file predating the field. The deck is shared across every rooftop and
+// its `campaign.id` is Bob Johnson's, so reading it here stamped every
+// dealership with bj_postro_vsc_2026.
+//
+// That is not cosmetic. n8n/build-workflows.mjs already resolves it this way, so
+// Ferrario's scheduler queries vsc_email_template for
+// (ferrario-ford, ff_postro_vsc_2026) while the publisher inserted
+// (ferrario-ford, bj_postro_vsc_2026). The rows exist, the ids do not match, and
+// the lookup returns nothing. Nothing errors at build, nothing errors at publish,
+// and the md5 checksum in docs/ADDING-A-DEALERSHIP.md still passes because it
+// compares html bytes and never looks at campaign_id.
+const CAMPAIGN_ID = (D.campaign && D.campaign.id) || DECK.campaign.id;
+
+
 const C = { ...T.color, ...D.color };
+
+// Co-brand balance. On a dealership send the dealer's colour should carry the
+// layout and DriveOne should read as the provider, not the sender. When
+// brandLead.mode is "dealer" every structural accent resolves to their gold and
+// DriveOne cyan is kept for the provider lockup alone.
+const DEALER_LED = (D.brandLead && D.brandLead.mode) === 'dealer';
+const A = {
+  accent:     DEALER_LED ? C.accent      : C.cyan,
+  accentDark: DEALER_LED ? C.accentDark  : C.cyanDark,
+  onAccent:   DEALER_LED ? C.onAccent    : C.ink,
+  soft:       DEALER_LED ? C.primarySoft : C.cyanSoft,
+  ground:     DEALER_LED ? C.primary     : C.ink,
+};
 const F = T.font;
 const W = T.layout.emailWidth;
 const GUT = T.layout.gutter;
@@ -38,7 +66,7 @@ const esc = (s) => String(s).replace(/&(?![a-z#0-9]+;)/gi, '&amp;').replace(/</g
 
 /** Turn [[phrase]] into a cyan accent span. */
 const accent = (s) =>
-  esc(s).replace(/\[\[(.+?)\]\]/g, `<span style="color:${C.cyan};">$1</span>`);
+  esc(s).replace(/\[\[(.+?)\]\]/g, `<span style="color:${A.accent};">$1</span>`);
 
 /** Defaults injected for every {{tag}} that the ESP does not own. */
 const OFFER_TAGS = {
@@ -60,8 +88,12 @@ const SAMPLE = {
   vehicle_make: 'Chevrolet',
   vehicle_model: 'Equinox',
   vehicle_mileage: '61,400',
+  monthly_payment: '$66.47',
+  coverage_label: '60 more months, 75,000 more miles',
+  down_payment: '$110.35',
+  payment_term: '30',
+  contract_price: '$2,099.00',
   last_ro_date: 'September 19',
-  last_ro_services: 'Oil and filter, tire rotation, multi point inspection',
   advisor_name: 'Marcus',
   quote_url: `${D.campaign.quoteUrlBase}?${D.campaign.utm}`,
   unsubscribe_url: '#unsubscribe',
@@ -89,39 +121,39 @@ ${esc(text)}${'&#847;&zwnj;&nbsp;'.repeat(60)}
 
 /** DriveOne lockup. Uses a hosted image when one is configured, otherwise a type lockup that survives images-off. */
 function driveOneLockup(onDark) {
-  const nameColor = onDark ? '#FFFFFF' : C.ink;
-  if (T.logo && T.logo.url && !/REPLACE-ME/.test(T.logo.url)) {
-    return `<img src="${T.logo.url}" width="${T.logo.widthPx || 120}" alt="DriveOne" style="display:block;border:0;outline:none;text-decoration:none;" />`;
-  }
+  const wm = (T.brand.wordmark) || { part1: 'drive', part2: 'one', trademark: true };
+  const darkTone = onDark ? '#FFFFFF' : (C.logoInk || C.ink);
+  const sub = onDark ? 'rgba(255,255,255,0.62)' : C.mutedText;
+  // The D mark is a drawn shape and cannot be reproduced reliably in email HTML,
+  // so the header carries the wordmark alone. That is a legitimate reduced
+  // lockup, and unlike a hosted image it renders with images switched off.
+  const geometric = "'Inter Tight','Inter','Century Gothic','Questrial',Helvetica,Arial,sans-serif";
   return `
-<span style="${font(F.display, 19, 800, nameColor, '1')}letter-spacing:-0.4px;">DriveOne</span>
-<span style="${font(F.display, 19, 500, C.cyan, '1')}letter-spacing:-0.4px;">&nbsp;VSC</span>
+<span style="font-family:${geometric};font-size:21px;font-weight:700;color:${darkTone};line-height:1;letter-spacing:-0.6px;">${esc(wm.part1)}</span><span style="font-family:${geometric};font-size:21px;font-weight:700;color:${C.cyan};line-height:1;letter-spacing:-0.6px;">${esc(wm.part2)}</span>${wm.trademark ? `<span style="font-family:${geometric};font-size:9px;font-weight:700;color:${sub};vertical-align:super;line-height:1;">&trade;</span>` : ''}
 <br />
-<span style="${font(F.body, 8, 600, onDark ? 'rgba(255,255,255,0.62)' : C.mutedText, '1.6')}letter-spacing:1.6px;">${esc(T.brand.productDescriptor)}</span>`;
+<span style="font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:700;color:${sub};line-height:1.7;letter-spacing:1.5px;white-space:nowrap;">${esc(T.brand.productDescriptor)}</span>`;
 }
 
-/** Dealer logo. Alt text is styled so images-off still reads as the dealership. */
 function dealerLogo() {
-  const placeholder = /REPLACE-ME/.test(D.logo.light);
-  if (!placeholder) {
-    // Styled alt text so an images-off client still reads as the dealership.
+  const wm = D.logo.wordmark || {};
+  // Only use a hosted image when it has been explicitly vouched for. An image we
+  // cannot inspect is a worse logo than type we control, and type also renders
+  // when the client blocks images.
+  if (D.logo.useImage && !/REPLACE-ME/.test(D.logo.light || '')) {
     return `<img src="${D.logo.light}" width="${D.logo.widthPx}" alt="${esc(D.logo.altText)}" style="display:block;border:0;outline:none;text-decoration:none;${font(F.display, 16, 800, C.primary, '1.2')}" />`;
   }
-  // Type lockup standing in for the wordmark: italic extrabold name, gold rule
-  // beneath it, letterspaced descriptor. Also what images-off recipients see.
-  const wm = D.logo.wordmark || { line1: D.dealer.displayName, line2: '', italic: false, ruleColor: C.accent };
+  const W1 = D.logo.widthPx || 190;
   return `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:0;">
-  <span style="${font(F.display, 21, 800, C.primary, '1.05')}letter-spacing:-0.6px;${wm.italic ? 'font-style:italic;' : ''}">${esc(wm.line1)}</span>
-</td></tr>
-<tr><td style="padding:3px 0 0 0;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-    <td style="height:3px;line-height:3px;font-size:3px;background-color:${wm.ruleColor || C.accent};">&nbsp;</td>
-  </tr></table>
-</td></tr>
-${wm.line2 ? `<tr><td align="right" style="padding:3px 0 0 0;">
-  <span style="${font(F.body, 9, 600, C.primary, '1.2')}letter-spacing:3px;">${esc(wm.line2)}</span>
-</td></tr>` : ''}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${W1}" style="width:${W1}px;">
+  <tr><td style="padding:0;font-family:'Arial Black','Arial Bold',Gadget,Arial,sans-serif;font-size:26px;font-weight:900;font-style:italic;color:${C.primary};line-height:1;letter-spacing:-0.8px;white-space:nowrap;">${esc(wm.line1 || D.dealer.displayName)}</td></tr>
+  <tr><td style="padding:3px 0 0 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="26%" style="width:26%;height:4px;line-height:4px;font-size:4px;background-color:${C.accent};">&nbsp;</td>
+      <td width="4%"  style="width:4%;height:4px;line-height:4px;font-size:4px;background-color:${C.white};">&nbsp;</td>
+      <td style="height:4px;line-height:4px;font-size:4px;background-color:${C.accent};">&nbsp;</td>
+    </tr></table>
+  </td></tr>
+  ${wm.line2 ? `<tr><td align="right" style="padding:5px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;font-style:italic;color:${C.primary};line-height:1.2;letter-spacing:4.5px;white-space:nowrap;">${esc(wm.line2)}</td></tr>` : ''}
 </table>`;
 }
 
@@ -131,9 +163,9 @@ const header = () => `
 <td style="padding:22px ${GUT}px 18px ${GUT}px;background-color:${C.white};border-bottom:1px solid ${C.rule};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
     <td align="left" valign="middle">${dealerLogo()}</td>
-    <td align="right" valign="middle" style="${font(F.body, 9, 600, C.mutedText, '1.5')}letter-spacing:1.1px;text-transform:uppercase;">
-      Coverage by<br />
-      <span style="${font(F.display, 13, 800, C.ink, '1.3')}letter-spacing:-0.2px;text-transform:none;">DriveOne<span style="color:${C.cyan};"> VSC</span></span>
+    <td align="right" valign="middle" style="${font(F.body, 8, 700, C.mutedText, '1.5')}letter-spacing:1.4px;">
+      COVERAGE BY<br />
+      ${driveOneLockup(false)}
     </td>
   </tr></table>
 </td>
@@ -142,12 +174,12 @@ const header = () => `
 /** Dark hero with a cyan rule standing in for the bloom. Gradients do not render in Outlook, a solid ground does. */
 const hero = (e) => `
 <tr>
-<td style="padding:0;background-color:${C.ink};">
+<td style="padding:0;background-color:${A.ground};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td style="height:4px;line-height:4px;font-size:4px;background-color:${C.cyan};">&nbsp;</td></tr>
+    <tr><td style="height:4px;line-height:4px;font-size:4px;background-color:${A.accent};">&nbsp;</td></tr>
     <tr><td style="padding:${GUT}px ${GUT}px 30px ${GUT}px;">
-      <p style="margin:0 0 14px 0;${font(F.body, 10, 700, C.cyan, '1.5')}letter-spacing:2px;">${esc(e.eyebrow)}</p>
-      <h1 style="margin:0 0 14px 0;${font(F.display, 32, 800, '#FFFFFF', '1.14')}letter-spacing:-0.9px;">${accent(e.headline)}</h1>
+      <p style="margin:0 0 14px 0;${font(F.body, 10, 700, A.accent, '1.5')}letter-spacing:2px;">${esc(e.eyebrow)}</p>
+      <h1 style="margin:0 0 14px 0;${font(F.display, 30, 800, '#FFFFFF', '1.16')}letter-spacing:-0.8px;">${accent(e.headline)}</h1>
       <p style="margin:0;${font(F.body, 16, 400, 'rgba(255,255,255,0.74)', '1.55')}">${esc(e.subhead)}</p>
     </td></tr>
   </table>
@@ -155,14 +187,75 @@ const hero = (e) => `
 </tr>`;
 
 /** The RO personalization card. This is the thing a generic VSC blast cannot do. */
+
+/** Bulletproof purchase button. VML for Outlook, padded anchor everywhere else. */
+function buyButton(label, widthPx) {
+  const href = '{{quote_url}}';
+  const safe = esc(label);
+  return `
+  <!--[if mso]>
+  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+    href="${href}" style="height:54px;v-text-anchor:middle;width:${widthPx}px;" arcsize="24%" stroke="f" fillcolor="${A.accent}">
+    <w:anchorlock/>
+    <center style="color:${A.onAccent};font-family:Arial,sans-serif;font-size:17px;font-weight:bold;">${safe}</center>
+  </v:roundrect>
+  <![endif]-->
+  <!--[if !mso]><!-- -->
+  <a href="${href}" style="display:block;background-color:${A.accent};border-radius:${T.layout.radius}px;padding:18px 22px;text-align:center;text-decoration:none;${font(F.display, 17, 800, A.onAccent, '1.2')}letter-spacing:-0.2px;">${safe}</a>
+  <!--<![endif]-->`;
+}
+
+/** Reassurance row under a purchase button. Every claim is contract backed:
+ *  the 30 day full refund is in the cancellation section, no credit check and the
+ *  0% plan are confirmed offer terms. It says payment plan rather than APR on
+ *  purpose, because this is not a loan and must never be described as one. */
+const trustRow = () => `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+  <td align="center" style="padding:10px 0 0 0;${font(F.body, 11, 500, C.mutedText, '1.6')}">
+    Secure checkout &nbsp;&middot;&nbsp; 0% payment plan &nbsp;&middot;&nbsp; No credit check &nbsp;&middot;&nbsp; 30 day money back
+  </td>
+</tr></table>`;
+
+/** Product card: what they own, what it costs, and the way to buy it. */
 const vehicleCard = () => `
 <tr>
 <td style="padding:26px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.cyanSoft};border-radius:${T.layout.radius}px;">
-    <tr><td style="padding:18px 20px;">
-      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, C.cyanDark, '1.5')}letter-spacing:1.6px;">YOUR LAST VISIT WITH US</p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.white};border:1px solid ${C.rule};border-radius:${T.layout.radius}px;">
+
+    <tr><td style="padding:18px 20px 14px 20px;background-color:${A.soft};border-radius:${T.layout.radius}px ${T.layout.radius}px 0 0;">
+      <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">DRIVEONE VSC &middot; PLATINUM COVERAGE</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
-      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">{{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles &nbsp;&middot;&nbsp; {{last_ro_services}}</p>
+      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles</p>
+    </td></tr>
+
+    <tr><td style="padding:16px 20px 0 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="left" style="padding:0 0 8px 0;${font(F.body, 14, 400, C.bodyText, '1.5')}">Coverage added</td>
+          <td align="right" style="padding:0 0 8px 0;${font(F.display, 14, 700, C.ink, '1.5')}">{{coverage_label}}</td>
+        </tr>
+        <tr>
+          <td align="left" style="padding:0 0 8px 0;${font(F.body, 14, 400, C.bodyText, '1.5')}">Due today</td>
+          <td align="right" style="padding:0 0 8px 0;${font(F.display, 14, 700, C.ink, '1.5')}">{{down_payment}}</td>
+        </tr>
+        <tr><td colspan="2" style="padding:6px 0 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="height:1px;line-height:1px;font-size:1px;background-color:${C.rule};">&nbsp;</td>
+          </tr></table>
+        </td></tr>
+        <tr>
+          <td align="left" valign="bottom" style="padding:14px 0 0 0;${font(F.body, 14, 600, C.mutedText, '1.4')}">Then monthly</td>
+          <td align="right" valign="bottom" style="padding:14px 0 0 0;white-space:nowrap;">
+            <span style="${font(F.display, 34, 800, C.ink, '1')}letter-spacing:-1.4px;">{{monthly_payment}}</span><span style="${font(F.body, 14, 600, C.mutedText, '1')}">&nbsp;/mo</span>
+            <p style="margin:3px 0 0 0;${font(F.body, 12, 400, C.mutedText, '1.4')}">{{payment_term}} payments &middot; {{contract_price}} total</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <tr><td style="padding:18px 20px 20px 20px;">
+      ${buyButton('Buy now', W - GUT * 2 - 42)}
+      ${trustRow()}
     </td></tr>
   </table>
 </td>
@@ -184,8 +277,8 @@ const featureRows = (e) => `
     <tr><td style="padding:16px 0 16px 0;${i ? `border-top:1px solid ${C.rule};` : ''}">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
         <td width="44" valign="top" style="width:44px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="34" style="width:34px;border:2px solid ${C.cyan};border-radius:17px;">
-            <tr><td align="center" valign="middle" height="30" style="height:30px;${font(F.display, 14, 800, C.cyanDark, '30px')}">${esc(r.icon)}</td></tr>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="34" style="width:34px;border:2px solid ${A.accent};border-radius:17px;">
+            <tr><td align="center" valign="middle" height="30" style="height:30px;${font(F.display, 14, 800, A.accentDark, '30px')}">${esc(r.icon)}</td></tr>
           </table>
         </td>
         <td valign="top">
@@ -200,21 +293,11 @@ const featureRows = (e) => `
 
 /** Bulletproof CTA. VML for Outlook, padded anchor everywhere else. */
 function cta(e) {
-  const href = '{{quote_url}}';
-  const label = esc(resolve(e.cta.label, false));
   return `
 <tr>
 <td align="center" style="padding:22px ${GUT}px 6px ${GUT}px;background-color:${C.white};">
-  <!--[if mso]>
-  <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-    href="${href}" style="height:52px;v-text-anchor:middle;width:${W - GUT * 2}px;" arcsize="26%" stroke="f" fillcolor="${C.cyan}">
-    <w:anchorlock/>
-    <center style="color:${C.ink};font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">${label}</center>
-  </v:roundrect>
-  <![endif]-->
-  <!--[if !mso]><!-- -->
-  <a href="${href}" style="display:block;background-color:${C.cyan};border-radius:${T.layout.radius}px;padding:17px 22px;text-align:center;text-decoration:none;${font(F.display, 16, 800, C.ink, '1.2')}letter-spacing:-0.2px;">${label}</a>
-  <!--<![endif]-->
+  ${buyButton(resolve(e.cta.label, false), W - GUT * 2)}
+  ${trustRow()}
 </td>
 </tr>`;
 }
@@ -222,7 +305,7 @@ function cta(e) {
 const benefitStrip = (e) => `
 <tr>
 <td style="padding:16px ${GUT}px 0 ${GUT}px;background-color:${C.white};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid ${C.cyan};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid ${A.accent};">
     <tr><td style="padding:2px 0 2px 14px;${font(F.body, 14, 500, C.bodyText, '1.55')}">${esc(e.benefitStrip)}</td></tr>
   </table>
 </td>
@@ -249,19 +332,27 @@ const dealerBar = () => `
 </td>
 </tr>`;
 
+/* The unsubscribe link is set deliberately larger and bolder than the rest of
+ * the legal block. Sending over SMTP means no one-click List-Unsubscribe header,
+ * so a reader who wants out has only this link to find. If they cannot find it
+ * they press Report spam instead, which costs the domain far more than the
+ * unsubscribe ever would. */
 const footer = () => `
 <tr>
 <td style="padding:24px ${GUT}px 34px ${GUT}px;background-color:${C.paper};">
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
+    <strong style="color:${C.mutedText};">Advertisement.</strong> You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
   </p>
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage, coverage tier and term. Payment plan is not a loan and involves no credit check.
+    Your quote is based on the vehicle and the odometer reading recorded at your last service visit. If your mileage has changed since then, the price at checkout may differ. The figure shown is the lowest monthly option available for your vehicle; other terms, including an unlimited mileage plan, are priced separately.
+  </p>
+  <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
+    A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage and term. Payment plan is not a loan and involves no credit check.
   </p>
   <p style="margin:0;${font(F.body, 11, 400, C.legalText, '1.65')}">
     ${esc(D.dealer.displayName)}, ${esc(D.contact.addressLine1)}, ${esc(D.contact.addressLine2)}<br />
-    <a href="{{unsubscribe_url}}" style="color:${C.legalText};text-decoration:underline;">Unsubscribe from this series</a> &nbsp;&middot;&nbsp;
-    <a href="{{preferences_url}}" style="color:${C.legalText};text-decoration:underline;">Email preferences</a>
+    <a href="{{unsubscribe_url}}" style="color:${C.mutedText};text-decoration:underline;font-weight:700;font-size:12px;">Unsubscribe from this series</a> &nbsp;&middot;&nbsp;
+    <a href="{{preferences_url}}" style="color:${C.mutedText};text-decoration:underline;font-size:12px;">Email preferences</a>
   </p>
 </td>
 </tr>`;
@@ -321,22 +412,57 @@ ${preheader(resolve(e.preheader, false))}
 </html>`;
 }
 
+/**
+ * Conservative minifier. Smaller emails clip less often in Gmail and cost less
+ * to store and move. It only collapses whitespace that sits between tags and
+ * strips plain comments; MSO conditional comments are load bearing and are left
+ * exactly alone, as is anything inside the hidden preheader, where the padding
+ * characters are doing real work.
+ */
+function minify(html) {
+  const keep = [];
+  // Park conditionals and the preheader before touching anything.
+  let out = html
+    .replace(/<!--\[if[\s\S]*?<!\[endif\]-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<!--\[if[\s\S]*?\]><!-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<!--<!\[endif\]-->/g, (m) => `\u0000${keep.push(m) - 1}\u0000`)
+    .replace(/<div style="display:none[\s\S]*?<\/div>/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);
+
+  out = out
+    .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')   // plain comments only
+    .replace(/\n\s*\n/g, '\n')
+    .replace(/>\s+</g, '><')
+    .replace(/\s{2,}/g, ' ');
+
+  return out.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[Number(i)]);
+}
+
 /* ------------------------------------------------------------------ main */
 
-rmSync(join(ROOT, 'email/dist'), { recursive: true, force: true });
-rmSync(join(ROOT, 'preview/filled'), { recursive: true, force: true });
-mkdirSync(join(ROOT, 'email/dist'), { recursive: true });
-mkdirSync(join(ROOT, 'preview/filled'), { recursive: true });
+// Output is namespaced by dealer, and that is a correctness requirement rather
+// than tidiness. The build takes a dealer id but used to wipe and rewrite one
+// shared email/dist, while publish-templates.mjs takes its OWN dealer id and
+// read from that same folder. So building Ferrario and then publishing Bob
+// Johnson wrote Ferrario's HTML into Bob Johnson's template rows, and every one
+// of his customers would have received an email branded for another dealership.
+// Nothing errored, and the only clue was a byte count.
+const DIST = `email/dist/${DEALER_ID}`;
+const FILLED = `preview/filled/${DEALER_ID}`;
+
+rmSync(join(ROOT, DIST), { recursive: true, force: true });
+rmSync(join(ROOT, FILLED), { recursive: true, force: true });
+mkdirSync(join(ROOT, DIST), { recursive: true });
+mkdirSync(join(ROOT, FILLED), { recursive: true });
 
 const manifest = [];
 
 for (const e of DECK.emails) {
   const raw = render(e);
-  const dist = resolve(raw, false);          // offer tags baked, recipient tags intact
-  const filled = resolve(raw, true);         // everything filled, for review
+  const dist = minify(resolve(raw, false));  // offer tags baked, recipient tags intact
+  const filled = minify(resolve(raw, true)); // everything filled, for review
 
-  writeFileSync(join(ROOT, `email/dist/${e.slug}.html`), dist);
-  writeFileSync(join(ROOT, `preview/filled/${e.slug}.html`), filled);
+  writeFileSync(join(ROOT, `${DIST}/${e.slug}.html`), dist);
+  writeFileSync(join(ROOT, `${FILLED}/${e.slug}.html`), filled);
 
   manifest.push({
     step: e.step,
@@ -348,19 +474,41 @@ for (const e of DECK.emails) {
     preheader: resolve(e.preheader, false),
     cta: resolve(e.cta.label, false),
     ctaPath: e.cta.path,
-    file: `email/dist/${e.slug}.html`,
+    file: `${DIST}/${e.slug}.html`,
   });
 }
 
 writeFileSync(
-  join(ROOT, 'email/dist/manifest.json'),
-  JSON.stringify({ dealer: D.id, campaign: DECK.campaign.id, generated: new Date().toISOString().slice(0, 10), emails: manifest }, null, 2)
+  join(ROOT, `${DIST}/manifest.json`),
+  JSON.stringify({ dealer: D.id, campaign: CAMPAIGN_ID, generated: new Date().toISOString().slice(0, 10), emails: manifest }, null, 2)
 );
 
 /* ------------------------------------------------------------- gallery */
 
+// Read the outstanding items off the dealer file so the banner cannot claim
+// assets are placeholders after someone has replaced them, or stay silent after
+// someone has added a new unknown. Mirrors the walk in scripts/check.mjs.
+const UNCONFIRMED = [];
+(function walk(node, path) {
+  if (typeof node === 'string') {
+    if (/NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME/i.test(node)) UNCONFIRMED.push(path);
+    return;
+  }
+  if (node && typeof node === 'object') {
+    for (const [k, v] of Object.entries(node)) {
+      if (k.startsWith('$') || /Note$/.test(k)) continue;
+      walk(v, path ? `${path}.${k}` : k);
+    }
+  }
+})(D, '');
+
+// href carries the dealer segment because preview/filled went per-dealer when
+// dist did, and this gallery did not follow. Every card linked to
+// filled/<slug>.html while the file sat at filled/<dealer>/<slug>.html, so the
+// whole review gallery 404'd, which is exactly the kind of silent breakage the
+// per-dealer split was introduced to prevent.
 const card = (m) => `
-  <a class="card" href="filled/${m.slug}.html" target="_blank" rel="noopener">
+  <a class="card" href="filled/${DEALER_ID}/${m.slug}.html" target="_blank" rel="noopener">
     <div class="step">Email ${m.step}<span>Day ${m.sendDay}</span></div>
     <h3>${esc(m.subject)}</h3>
     <p class="pre">${esc(m.preheader)}</p>
@@ -368,7 +516,7 @@ const card = (m) => `
     <div class="cta">${esc(m.cta)}</div>
   </a>`;
 
-writeFileSync(join(ROOT, 'preview/index.html'), `<!doctype html>
+writeFileSync(join(ROOT, `preview/${DEALER_ID}.html`), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>${esc(D.dealer.displayName)} VSC Campaign</title>
 <style>
@@ -397,7 +545,7 @@ writeFileSync(join(ROOT, 'preview/index.html'), `<!doctype html>
 <header><div class="inner">
   <h1>${esc(D.dealer.displayName)} <span>&times;</span> DriveOne VSC</h1>
   <p>Post service "why buy now" campaign. Ten emails over 60 days to service customers with a recent closed repair order and no vehicle service contract on file.</p>
-  <div class="flag"><b>Brand assets are placeholders.</b> The dealership site is blocked by this environment's network egress proxy, so no colors or logos were sampled from it. Drop the real values into <code>brand/dealers/bob-johnson.json</code> and rebuild. Nothing else needs to change.</div>
+  ${UNCONFIRMED.length ? `<div class="flag"><b>Not ready to send.</b> ${UNCONFIRMED.length} field${UNCONFIRMED.length === 1 ? ' is' : 's are'} still unconfirmed in <code>brand/dealers/${esc(DEALER_ID)}.json</code>: <code>${UNCONFIRMED.map(esc).join('</code>, <code>')}</code>. Fill them in and rebuild.</div>` : ''}
 </div></header>
 <main><div class="inner"><div class="grid">${manifest.map(card).join('')}</div></div></main>
 </body></html>`);
@@ -405,4 +553,4 @@ writeFileSync(join(ROOT, 'preview/index.html'), `<!doctype html>
 console.log(`Built ${manifest.length} emails for "${D.dealer.displayName}"`);
 console.log(`  email/dist/*.html      merge tags intact`);
 console.log(`  preview/filled/*.html  sample data filled`);
-console.log(`  preview/index.html     gallery`);
+console.log(`  preview/${DEALER_ID}.html  gallery`);

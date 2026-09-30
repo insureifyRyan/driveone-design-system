@@ -35,6 +35,22 @@ create table if not exists vsc_enrollment (
 
   quote_url         text,
 
+  -- When the token inside quote_url stops working. The quote API mints links
+  -- that live seven days and this campaign runs sixty, so a link stored once
+  -- at pricing time is dead from email 3 onward. Pricing refreshes a row two
+  -- days before this, and the scheduler refuses to claim a row past it: a
+  -- missed send is recoverable, a Buy now button that goes nowhere is not.
+  quote_expires_at  timestamptz,
+
+  -- Send failures. Pricing already recorded its errors and capped its retries;
+  -- sending recorded nothing, so a run that delivered zero emails finished
+  -- green and looked exactly like a quiet one. send_attempts is the ceiling the
+  -- scheduler checks, so one undeliverable address stops occupying a slot in
+  -- every run for sixty days.
+  send_attempts      integer not null default 0,
+  send_error         text,
+  last_send_error_at timestamptz,
+
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now(),
 
@@ -73,3 +89,16 @@ create table if not exists vsc_send_log (
   sent_at             timestamptz not null default now(),
   constraint vsc_send_log_once unique (enrollment_id, step)
 );
+
+-- ---------------------------------------------------------------------------
+-- These tables live in the SAME Supabase project as quotes, customers and
+-- customer_vehicles (bbvkqwcapqsytrdrubci), which is what lets intake be a
+-- single insert-select rather than a DMS feed plus a normalizer.
+--
+-- RLS is enabled to match every other table in this project. No policies are
+-- defined, so only the service role reaches these tables. n8n connects as the
+-- service role, and RLS-enabled-with-no-policy denies everyone else by default.
+-- ---------------------------------------------------------------------------
+alter table vsc_enrollment  enable row level security;
+alter table vsc_suppression enable row level security;
+alter table vsc_send_log    enable row level security;

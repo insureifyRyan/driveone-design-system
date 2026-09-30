@@ -1,0 +1,120 @@
+{
+  "$comment": "DEALER BRAND FILE. The only file you edit to rebrand the whole campaign. Run `npm run build` after editing.",
+  "$status": "NOT READY TO SEND, but closer. Brand artwork was supplied by the client on 30 Sep 2026 (the Ferrario Ford rooftop lockup and the Ferrario Auto Team group lockup), which settles the palette family and the rooftop-versus-group question. What remains genuinely unknown is the street address, the customer-facing service number, the reply-to mailbox and the legal name. Those are marked NEEDS CONFIRMATION and `npm run check -- --launch` fails on them.",
+  "id": "ferrario-ford",
+  "dealer": {
+    "name": "Ferrario Ford",
+    "legalName": "NEEDS CONFIRMATION",
+    "displayName": "Ferrario Ford",
+    "shortName": "Ferrario",
+    "state": "NY",
+    "stateNote": "CONFIRMED enough to rely on: the program contact's number is a 607 area code, which is NY, and NY is the modal state across their 1,244 service customers. dealer.state drives the ORIAS obligor in the footer, so it has to be the DEALERSHIP's state and not the customer's.",
+    "website": "NEEDS CONFIRMATION",
+    "tagline": "",
+    "serviceArea": "NEEDS CONFIRMATION",
+    "storeNote": "RESOLVED 30 Sep 2026 from the supplied artwork. There are two marks and they are different businesses: 'Ferrario Ford' is this rooftop, and 'Ferrario Auto Team / Truck Country USA' is the group, whose badge carries Chevrolet and Jeep marks alongside Ford. This campaign is the Ford rooftop's own service drive, so customer-facing material reads Ferrario Ford. If the audience is ever widened to the Chevy or Jeep rooftops, that is a new dealer file with the group lockup, not an edit to this one.",
+    "city": "Elmira",
+    "cityNote": "STRONGLY INDICATED, not yet confirmed as the Ford rooftop's own address. The group's anniversary badge reads FERRARIO / ELMIRA / ESTABLISHED 2008, and Geoff Crossley's 607 number is the Elmira NY exchange. Confirm the Ford store's own street address before sending, since the group badge names the group rather than this rooftop."
+  },
+  "color": {
+    "$note": "Read by eye off the supplied Ferrario Ford artwork on 30 Sep 2026, not sampled from a brand sheet and not pulled from a stylesheet, so treat these as close rather than exact and confirm the hex values before the first send. The same caveat is on Bob Johnson's palette for the same reason. What matters more than the exact hex is that the previous values were wrong in kind, not just in degree: they were a guessed Ford corporate blue, and this brand is a deep navy ground with a RED wordmark. Accent drives every button and rule in the email, so a blue accent would have shipped a red brand's campaign in the wrong colour entirely.",
+    "primary": "#0B1B3F",
+    "primaryDark": "#060F26",
+    "accent": "#D81E24",
+    "primarySoft": "#FDECEE",
+    "onPrimary": "#FFFFFF",
+    "accentDark": "#9E1318",
+    "accentDarkNote": "Exists only because the mid-tone red at 9px on white does not have the contrast to read. Used for small legal and eyebrow type, never for a button ground.",
+    "onAccent": "#FFFFFF"
+  },
+  "logo": {
+    "$note": "Two lockups were supplied and they are not interchangeable. See dealer.storeNote for which business each one is. This file uses the Ferrario Ford rooftop mark.\n\nuseImage stays false, and the artwork does not change that. A hosted image does not render when the client blocks images, which is a large share of opens, so the header carries a type lockup we control. That is the same call as Bob Johnson and the same call build.mjs already makes for DriveOne's own D mark.\n\nTwo parts of the rooftop mark are deliberately not reproduced. The white cowboy hat resting on the final O is a drawn element with no type equivalent, the same problem as the D mark. The Ford oval is omitted for a different and more important reason: this email sells a DriveOne VSC administered by Ascent and, in New York, obligated by ORIAS. Ford is not the administrator, the obligor or the seller, and setting their oval beside the offer implies a manufacturer endorsement that does not exist. brand/offer.json is strict about not making claims the contract does not support; this is that same rule applied to artwork. If someone wants the oval in the header, that is a question for Ford's trademark guidelines and the client's Ford rep, not a build setting.",
+    "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "lightNote": "The partner record's logo, still unopened from this environment. Now that the client has supplied artwork directly, check whether this stored file is the rooftop mark or the group mark before any future switch to useImage true.",
+    "widthPx": 190,
+    "altText": "Ferrario Ford",
+    "wordmark": {
+      "line1": "FERRARIO",
+      "line2": "FORD",
+      "italic": true,
+      "$note": "CONFIRMED against the supplied rooftop artwork: FERRARIO is set in a heavy italic, which is what italic true reproduces. line2 is FORD because this is the Ford rooftop; the group lockup would read AUTO TEAM instead. The rule under the wordmark is always color.accent, never set here, so the two cannot drift apart."
+    },
+    "useImage": false
+  },
+  "contact": {
+    "storeName": "Ferrario Ford",
+    "addressLine1": "NEEDS CONFIRMATION",
+    "addressLine2": "NEEDS CONFIRMATION",
+    "addressNote": "REQUIRED before sending. A physical postal address in the footer is a CAN-SPAM requirement, not a nicety.",
+    "servicePhone": "NEEDS CONFIRMATION",
+    "phoneNote": "607-526-7748 is Geoff Crossley's number on the partner record, which is the PROGRAM contact, not a customer-facing service line. Bob Johnson made the same distinction: the footer prints the public service number instead. Get the service department's number.",
+    "replyTo": "NEEDS CONFIRMATION",
+    "replyToNote": "Needs a monitored mailbox on ferrario.com. Replies must reach a human at the dealership, because the emails are written as though the service drive sent them. Expect the same authentication conversation as Bob Johnson: see Sending in the skill."
+  },
+  "campaign": {
+    "quoteUrlBase": "SET VIA SHORT_LINK_BASE_URL IN n8n",
+    "utm": "utm_source=email&utm_medium=crm&utm_campaign=ff_postro_vsc_2026",
+    "linkMode": "short",
+    "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
+    "unsubscribeNote": "Same deployed Supabase Edge Function as Bob Johnson. It is keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
+    "id": "ff_postro_vsc_2026",
+    "idNote": "Distinct from Bob Johnson on purpose. vsc_enrollment and vsc_email_template are keyed on (dealer_id, campaign_id, ...), so a shared id would put two dealerships in one campaign namespace."
+  },
+  "metricbridge": {
+    "$comment": "CONFIRMED from the MetricBridge dealer record, 30 Sep 2026.",
+    "source": "elevate_service_drive",
+    "dealer_id": "f97b1597-e7ef-46e0-981a-ac83cdda34d7",
+    "source_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "slug": "ferrario-ford",
+    "business_name": "Ferrario Ford",
+    "program_contact": "Geoff Crossley, Gcrossley@ferrario.com, 607-526-7748",
+    "down_payment_percentage": 0.05,
+    "down_payment_note": "CONFIRMED 0.050 on the partner record, the same 5% Bob Johnson uses, so emails 1 and 5 need no change."
+  },
+  "supabase": {
+    "$comment": "CONFIRMED. partners.id here equals dealers.source_id in MetricBridge, which is the join between the two systems.",
+    "project_id": "bbvkqwcapqsytrdrubci",
+    "partner_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "partner_type": "service-drive-ferrario",
+    "partner_type_note": "Note this is NOT 'service-drive' as on Bob Johnson. Do not copy that value across.",
+    "initial_cohort": 350,
+    "initial_cohort_note": "Ferrario is 1,244 distinct service customers, every one with a usable email, against Bob Johnson's 447. Enrolling all of them is 12,440 sends, and over a 60 day campaign at four send days a week that is roughly 34 send days, so about 366 a day against a 200 ceiling. The cap cannot absorb that: it would simply pin the domain at its ceiling for weeks. Cohort is the only lever that lowers total volume, since total sends are cohort x 10 however slowly you feed people in. 350 lands near 103 a day, which leaves real headroom under the cap and is a sane opening rate for a domain that has never sent. Raise it after the first cohort's bounce and complaint numbers come back clean.",
+    "intake_window_days": 90,
+    "intake_window_note": "Their quotes run 30 Apr to 14 Sep 2026, and 1,222 of the 1,244 fall inside 90 days, so a 90 day window captures effectively the whole list. Only 33 are inside 30 days, so a 30 day window would strand 97% of it.",
+    "max_mileage": 999999,
+    "max_mileage_note": "Effectively off, same as Bob Johnson. The rating API is keyed on VIN and decides what it can rate; a local ceiling only second guesses it, and a vehicle it cannot price records a pricing_error, never sends, and stops being retried after five attempts.",
+    "slug": "ferrario-ford",
+    "data_quality_flag": "RESOLVED 30 Sep 2026, decision by Ryan: market to the has_existing_warranty = false group. Checked before accepting it. The column is fully populated at both stores, zero nulls, so it IS being written for Ferrario rather than missing: 1 true and 1,243 false, against Bob Johnson's 37 and 410. Payment status could not corroborate either way because every quote at both rooftops is still 'pending', so nobody has bought yet anywhere. The rate difference between the two stores is a dealership-reality question rather than a data one.",
+    "data_quality_residual_risk": "Worth holding in mind rather than acting on: this flag is the ONLY guard against pitching coverage to someone who already owns it. The rating API will happily quote an existing owner because it has no idea they have a contract, and intake filters on nothing else. So if Ferrario under-reports the flag, those customers receive the campaign. At Bob Johnson's 8.3% rate that would be roughly 100 people of 1,244. The filter itself is written as `= false`, which excludes nulls as well as trues, so an unknown is treated as ineligible. That is the safe direction."
+  },
+  "brandLead": {
+    "$comment": "dealer means the dealership colour leads the layout and DriveOne is reduced to the provider mark in the header. Correct for a send made on their behalf.",
+    "mode": "dealer"
+  },
+  "sending": {
+    "$comment": "Copied from Bob Johnson deliberately. These are starting heuristics rather than measured truths, and the two stores are close enough in audience that starting from the same numbers is more honest than inventing different ones.",
+    "timezone": "America/New_York",
+    "dailyCap": 200,
+    "dailyCapNote": "Hard ceiling per calendar day in dealer local time, enforced inside the atomic claim so two scheduler runs cannot jointly exceed it.",
+    "days": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "daysNote": "Tuesday through Friday. Monday is excluded because Monday inboxes are cleared in bulk. Friday is INCLUDED for an arithmetic reason rather than a preference: two days drawn from Tue/Wed/Thu alone can only ever be 1, 2, 5, 6 or 7 days apart, so the 3 and 4 day gaps the deck opens with are impossible to express and every gap silently collapses to 7. Do not narrow this without re-running n8n/verify.mjs.",
+    "hours": [
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16
+    ],
+    "hoursNote": "Local. Mid morning and early afternoon, skipping the lunch hour.",
+    "maxPerRun": 45,
+    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike."
+  }
+}

@@ -32,43 +32,43 @@
         },
         {
           "icon": "E",
-          "title": "Exclusionary Platinum coverage",
-          "subtitle": "The only plan in this program. Nothing stripped down."
+          "title": "Platinum, our best coverage",
+          "subtitle": "The top plan we offer, and the only one in this program. Exclusionary, not a stripped entry tier."
         },
         {
           "icon": "$",
           "title": "{{deductible_home}} deductible at our store",
-          "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears."
+          "subtitle": "Bring it back to {{dealer_short}} and your {{deductible_away}} deductible disappears. Roadside is included anywhere in the US."
         }
       ],
-      "benefitStrip": "Plans start at {{price_from}} a month depending on your vehicle.",
+      "benefitStrip": "Coverage is additive. The term and the miles are added on from the day you buy, on top of wherever the car is now. That is the lowest monthly we can do; longer terms and an unlimited mileage plan are on the quote page.",
       "cta": {
-        "label": "See your free quote",
+        "label": "Check out now",
         "path": "welcome"
       },
-      "ps": "You do not need to call us. You can if you want to. The whole thing works online, on your schedule, with nobody on the other end of it."
+      "ps": "You do not need to call us, and you did not need to click anything to see your price. It is at the top of this email. The rest works online, on your schedule, with nobody on the other end of it."
     },
     {
       "step": 2,
       "sendDay": 3,
       "slug": "02-todays-visit-was-the-cheap-one",
       "goal": "Reframe the repair math without fear-mongering",
-      "subject": "That visit was the cheap one",
+      "subject": "That bill had a number on it. The next one might not.",
       "subjectAlt": "{{vehicle_model}} math, briefly",
-      "preheader": "Modern cars are wonderful. Their parts are priced accordingly.",
+      "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
       "eyebrow": "THE ARITHMETIC",
-      "headline": "Today was the [[cheap]] one.",
-      "subhead": "Routine service is the small number. The large numbers live somewhere in the next few years.",
+      "headline": "Your last bill had a number on it. [[The next one might not.]]",
+      "subhead": "Covered repair, brought back to us, deductible zero. That is the whole idea.",
       "body": [
-        "Nothing about your {{vehicle_year}} {{vehicle_model}} is unusual. It is a normal car having a normal life.",
-        "Normal cars have alternators, and transmissions, and infotainment units that cost more than the first car you owned. Those parts do not fail on a schedule you get to see in advance.",
-        "A vehicle service contract is simply the decision to price that now, while the car is healthy, instead of later, when it is not."
+        "You paid something on {{last_ro_date}}. Routine maintenance is not covered by any vehicle service contract, ours included, so we are not going to pretend that particular ticket would have been free.",
+        "But your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
+        "That is the bill this is for. A covered repair, brought back to {{dealer_name}}, costs you nothing at all. The only decision is whether to price that now, while the car is healthy, or later, when it is not."
       ],
       "featureRows": [
         {
-          "icon": "R",
-          "title": "Covered repairs, covered parts and labor",
-          "subtitle": "You pay your deductible. We handle the rest of the conversation."
+          "icon": "0",
+          "title": "A covered repair here costs you zero",
+          "subtitle": "Your $100 deductible disappears at our store. At another authorized shop it is $100."
         },
         {
           "icon": "S",
@@ -81,9 +81,9 @@
           "subtitle": "Match the coverage to how long you actually plan to keep the car."
         }
       ],
-      "benefitStrip": "Repair cost examples are verified and dated on request. We do not quote scary numbers we cannot source.",
+      "benefitStrip": "Maintenance stays yours. Covered breakdowns become ours. That line is in the contract, not just in this email.",
       "cta": {
-        "label": "Price my coverage",
+        "label": "Check out now",
         "path": "math"
       },
       "ps": "The quote is free and it does not put you on a list. There is no list."
@@ -123,7 +123,7 @@
       ],
       "benefitStrip": "Open the quote. Close the tab. Come back in a week. It will still be there.",
       "cta": {
-        "label": "Open my quote",
+        "label": "Buy now, online",
         "path": "online"
       },
       "ps": "We are aware that an email telling you nobody will call you is itself a form of contact. We accept the irony."
@@ -163,7 +163,7 @@
       ],
       "benefitStrip": "Same building. Same advisors. Smaller invoice.",
       "cta": {
-        "label": "See my plan options",
+        "label": "Buy now",
         "path": "deductible"
       },
       "ps": "Deductible terms are set by your contract. The quote page shows exactly which one applies to your vehicle before you buy."
@@ -173,8 +173,8 @@
       "sendDay": 18,
       "slug": "05-zero-percent-thirty-six-months",
       "goal": "Payment plan mechanics, remove the affordability objection",
-      "subject": "0% for 36 months, no credit check",
-      "subjectAlt": "Coverage, divided by 36",
+      "subject": "0% for {{payment_term}} months, no credit check",
+      "subjectAlt": "Coverage, divided by {{payment_term}}",
       "preheader": "5% down. The rest spread out at zero percent. No credit pull.",
       "eyebrow": "THE PAYMENT PART",
       "headline": "Zero percent. [[Thirty six months.]] No credit check.",
@@ -182,13 +182,13 @@
       "body": [
         "So we removed the number on the day. Coverage starts with 5% down. Whatever is left splits across up to 36 months at zero percent.",
         "There is no credit check and there is no interest. It is a payment plan, not a loan, and it does not touch your credit file.",
-        "Plans start at {{price_from}} a month depending on your vehicle and the term you choose. Your actual number is on the quote page, in plain type, before you agree to anything."
+        "Your {{vehicle_model}} comes out at {{monthly_payment}} a month. That figure is at the top of this email, it is specific to your vehicle and mileage, and it is the same number you will see at checkout."
       ],
       "featureRows": [
         {
           "icon": "5",
           "title": "5% down to activate",
-          "subtitle": "Coverage begins per your contract effective date."
+          "subtitle": "{{down_payment}} down on your plan, then the monthly figure above."
         },
         {
           "icon": "0",
@@ -203,10 +203,10 @@
       ],
       "benefitStrip": "Payment plan. Not a loan. Not financing. The distinction matters and we keep it straight.",
       "cta": {
-        "label": "See my monthly number",
+        "label": "Check out now",
         "path": "payments"
       },
-      "ps": "Pricing varies by vehicle, mileage and term. Your quote shows your figure, not an average."
+      "ps": "Pricing is set by vehicle, mileage and term. {{monthly_payment}} is your figure, not a range and not an average."
     },
     {
       "step": 6,
@@ -217,23 +217,23 @@
       "subjectAlt": "Exclusionary. Terrible word, excellent thing.",
       "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
       "eyebrow": "ONE WORD, EXPLAINED",
-      "headline": "Exclusionary. [[Ugly word.]] Best coverage.",
-      "subhead": "Every contract in this program is exclusionary. We are not holding a better one back for a different customer.",
+      "headline": "Platinum. [[Our best.]] Also the only one here.",
+      "subhead": "We sell one plan in this program and it is the top one. Exclusionary coverage, which is the good kind and has the worst name in the business.",
       "body": [
         "A listed component plan names the parts it covers. If your part is not on the list, it is not covered, and the list is always shorter than the car.",
         "An exclusionary plan flips it. It names the short list of things it does not cover, and everything else is in. You are reading a page instead of a phone book, and the burden sits with us rather than with you.",
-        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell."
+        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell, because Platinum is the only plan in this program."
       ],
       "featureRows": [
         {
           "icon": "E",
           "title": "Platinum is the only plan here",
-          "subtitle": "We sell one coverage level in this program. It is the exclusionary one."
+          "subtitle": "Our highest tier. Not held back for a different customer, not upsold later."
         },
         {
           "icon": "L",
           "title": "A short list of exclusions",
-          "subtitle": "Printed in the contract, readable before you buy."
+          "subtitle": "Printed in the contract, readable before you buy. Term and mileage options, including unlimited mileage, are yours to pick."
         },
         {
           "icon": "P",
@@ -243,7 +243,7 @@
       ],
       "benefitStrip": "If you only remember one word from this campaign, it is this one.",
       "cta": {
-        "label": "Read what is covered",
+        "label": "Buy now",
         "path": "exclusionary"
       },
       "ps": "The full terms and conditions are linked from the quote page. Read them. We wrote them to survive being read."
@@ -255,16 +255,21 @@
       "goal": "Differentiate from direct-response VSC telemarketers without naming anyone",
       "subject": "We are not the people from the commercial",
       "subjectAlt": "Your car's extended warranty, and other famous phone calls",
-      "preheader": "You have had that call. This is not that. We are the store that fixed your car.",
+      "preheader": "Not a robocall. Not a monthly subscription. The store that already fixes your car.",
       "eyebrow": "A NECESSARY CLARIFICATION",
       "headline": "We are not [[the people from the commercial.]]",
-      "subhead": "You have received the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice.",
+      "subhead": "You have had the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice. You have also seen the ads offering coverage by monthly subscription.",
       "body": [
         "Here is the difference, and it is not subtle. Those callers do not know your car. We have it in our system, with its service history, its mileage and the ticket we closed on {{last_ro_date}}.",
-        "We are not a call center that bought your number. We are the service department you drove to.",
-        "Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize. It is a real contract with a real obligor, sold by a store with a physical address you have parked at."
+        "The subscription pitch is its own thing. A subscription covers you for as long as you keep paying it, at whatever the price becomes. What we sell is a contract: a term, a mileage allowance and a price, all fixed on the day you buy, transferable if you sell the car, refundable in full for 30 days.",
+        "So we are not a call center that bought your number, and we are not an app with a monthly charge. We are the service department you drove to. Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize, which makes it a real contract with a real obligor, sold by a store with a physical address you have parked at."
       ],
       "featureRows": [
+        {
+          "icon": "F",
+          "title": "Fixed at purchase, not month to month",
+          "subtitle": "Your term, your mileage and your price are set the day you buy."
+        },
         {
           "icon": "A",
           "title": "A real administrator",
@@ -274,16 +279,11 @@
           "icon": "B",
           "title": "A real building",
           "subtitle": "{{dealer_name}}, serving {{service_area}}."
-        },
-        {
-          "icon": "R",
-          "title": "24/7 roadside assistance included",
-          "subtitle": "Up to three events per year."
         }
       ],
       "benefitStrip": "No robocall has ever known your mileage. We do.",
       "cta": {
-        "label": "Get my quote from {{dealer_short}}",
+        "label": "Check out now",
         "path": "real"
       },
       "ps": "If you would like to verify any of this in person, the service drive is open and we are exactly where you left us."
@@ -300,7 +300,7 @@
       "headline": "The big repair is [[not the only thing]] in here.",
       "subhead": "Most of what you will actually use is the unglamorous middle of the contract.",
       "body": [
-        "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones.",
+        "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones, and they work anywhere in the country rather than only in our zip code.",
         "A tow on a Sunday night. A rental car while yours sits on a lift for three days. A sensor you had never heard of, which turns out to be essential.",
         "None of that makes for dramatic advertising. All of it makes for a better Tuesday."
       ],
@@ -308,7 +308,7 @@
         {
           "icon": "R",
           "title": "24/7 roadside assistance",
-          "subtitle": "Up to three events per year, towing included."
+          "subtitle": "Anywhere in the US, up to three events per year, towing included."
         },
         {
           "icon": "K",
@@ -323,7 +323,7 @@
       ],
       "benefitStrip": "Roadside covers three events a year. Most people use one and are glad it was there.",
       "cta": {
-        "label": "See everything included",
+        "label": "Buy now",
         "path": "included"
       },
       "ps": "Rental reimbursement needs proof of rental submitted with an authorized claim, so keep the receipt. Benefit limits are set by your contract."
@@ -341,19 +341,19 @@
       "subhead": "We have avoided fake deadlines for eight emails. Here is the real one.",
       "body": [
         "Vehicle service contracts are underwritten against mileage and model year. Every plan has a ceiling, and your {{vehicle_year}} {{vehicle_model}} showed {{vehicle_mileage}} miles at its last visit.",
-        "Nothing expires this Friday. No countdown clock is running. But the set of plans available to your car today is larger than the set available to it next year, and considerably larger than the set available after something breaks.",
+        "Nothing expires this Friday. No countdown clock is running. But coverage is additive: the term and the miles start the day you buy and get added to wherever the car is then. Every month you wait is a month of protection you are not holding, on a car that is quietly getting older.",
         "Coverage cannot be bought retroactively. That is the entire reason this campaign exists."
       ],
       "featureRows": [
         {
           "icon": "M",
           "title": "Priced on today's mileage",
-          "subtitle": "Your quote reflects {{vehicle_mileage}} miles, not next year's."
+          "subtitle": "Your quote reflects {{vehicle_mileage}} miles today, and coverage is added from there."
         },
         {
           "icon": "T",
-          "title": "Some exclusions arrive with mileage",
-          "subtitle": "Seals and gaskets stop being covered once the car is past 125,000 miles at claim time."
+          "title": "Some coverage narrows with mileage",
+          "subtitle": "Seals and gaskets are covered only while the vehicle is under 125,000 miles at the time of a claim."
         },
         {
           "icon": "X",
@@ -363,7 +363,7 @@
       ],
       "benefitStrip": "No countdown timer in this email. We checked.",
       "cta": {
-        "label": "Check what I qualify for",
+        "label": "Check out now",
         "path": "window"
       },
       "ps": "If you have already sold or traded the {{vehicle_model}}, ignore all of this and enjoy the new one."
@@ -403,7 +403,7 @@
       ],
       "benefitStrip": "No hard sell on the way out. That would undercut the previous nine emails.",
       "cta": {
-        "label": "Open my quote one last time",
+        "label": "Buy now",
         "path": "last"
       },
       "ps": "If you would rather hear nothing from us at all, the unsubscribe link below works instantly and we will not make you explain yourself."

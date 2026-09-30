@@ -1,0 +1,109 @@
+Subject: Small favor - four DNS records so we can start the customer emails
+
+
+Hi Geoff,
+
+We're close to launching the service drive follow-up emails for the store, and
+there's one small thing I need from your side before we can switch them on.
+
+We're sending these on the dealership's behalf, from
+<SENDING ADDRESS TBC>@ferrario.com. For them to land in customers' inboxes
+instead of spam, your domain has to say "yes, this system is allowed to send for
+us." That's four DNS records - the same kind of entry that already points your
+email at Microsoft.
+
+I want to be upfront about what this isn't, because I know we asked for
+something before and the answer was no. This is not the SMTP request. We
+actually went and tested that one, and your multi-factor authentication blocks
+it, which is your security doing exactly what it's supposed to do. I'm not
+asking you to change that or to look at it again.
+
+What I'm asking for is a much smaller thing. No mailbox access, no logins, no
+app approvals, nothing installed anywhere. Nobody on our side gets the ability
+to read or send from any account. These records only tell receiving mail servers
+that one specific system is allowed to sign mail for the domain, and you can
+take them back out whenever you want.
+
+One thing worth flagging so it doesn't catch anyone out: please don't change the
+SPF record you already have. A domain can only have one of those, and adding a
+second one breaks your normal business email. Nothing I'm asking for touches it.
+The new entries go on a separate "send" subdomain specifically so yours is left
+alone.
+
+If DNS isn't yours to change, just point me at whoever handles it and I'll work
+with them directly.
+
+Honestly it's about a ten minute job, and I'm happy to jump on a quick call and
+walk through it with you if that's faster than going back and forth on email.
+
+Thanks Geoff, appreciate it.
+
+Ryan
+
+
+================================================================
+FOR WHOEVER ADDS THE RECORDS
+================================================================
+
+Four records on ferrario.com. The "Name" column is the short form most DNS
+panels expect; if yours wants the full name instead, use the FQDN line. Please
+don't enter both, or it doubles up the domain and won't verify.
+
+
+1. DKIM signing key
+
+   Type:  TXT
+   Name:  resend._domainkey
+   FQDN:  resend._domainkey.ferrario.com
+   TTL:   Auto / default
+
+   Value - must be one unbroken line, no spaces or line breaks:
+
+<<< PASTE THE DKIM VALUE FROM RESEND AFTER ADDING ferrario.com >>>
+
+
+2. Return-Path mail exchanger
+
+   Type:      MX
+   Name:      send
+   FQDN:      send.ferrario.com
+   Value:     feedback-smtp.us-east-1.amazonses.com
+   Priority:  10
+   TTL:       Auto / default
+
+   This is on the "send" subdomain and does not affect the MX records that
+   deliver your normal mail.
+
+
+3. SPF for the Return-Path subdomain
+
+   Type:  TXT
+   Name:  send
+   FQDN:  send.ferrario.com
+   Value: v=spf1 include:amazonses.com ~all
+   TTL:   Auto / default
+
+   IMPORTANT: this belongs on "send", not on the root domain. Adding a second
+   SPF record to ferrario.com itself would break existing mail flow.
+
+
+4. Sending endpoint
+
+   Type:  CNAME
+   Name:  rsend
+   FQDN:  rsend.ferrario.com
+   Value: send.forge.rmta.net
+   TTL:   Auto / default
+
+
+Two things that commonly go wrong:
+
+  - Some panels append the domain automatically. Entering the FQDN in a panel
+    that already appends it produces
+    resend._domainkey.ferrario.com.ferrario.com, which won't verify.
+  - The DKIM value in record 1 must stay on one line. Copying it out of a
+    formatted document can introduce spaces or line breaks.
+
+Reply once they're in and we'll run verification, which takes a few minutes
+after DNS propagates. If any of these conflict with a record you already have,
+tell us rather than overwriting it and we'll sort out the right merge.

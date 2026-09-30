@@ -159,6 +159,75 @@ check('a stale backlog cannot unspool as a burst', () => {
   return `min gap ${min.toFixed(1)}d across ${sends.length} sends`;
 });
 
+check('one batch, one recipient per email', () => {
+  // WHY: this is the worst thing this system can do, and it has happened twice.
+  // A Code node runs once for ALL items, so $itemIndex does not advance with
+  // the loop; itemMatching($itemIndex) returns item zero on every pass. A run
+  // of forty five sends then renders forty five copies of the first
+  // recipient's name, price and checkout link and mails them to strangers.
+  // Found once in the pricing sweep, where a Camry at 113,000 miles and a
+  // Durango at 73,000 came back with identical prices to the cent.
+  //
+  // Nothing about that fails loudly, which is exactly why it needs a test:
+  // every email renders, every send succeeds, and the damage is only visible
+  // to the people who received someone else's quote.
+  const wf = load('02-scheduler.json');
+  const prepCode = nodeNamed(wf, 'Prepare Send').parameters.jsCode;
+  const renderCode = nodeNamed(wf, 'Render Merge Tags').parameters.jsCode;
+
+  const people = [
+    { first_name: 'KEVIN',  make: 'RAM',    model: '1500',  miles: 149999, pay: '177.54' },
+    { first_name: 'maria',  make: 'Toyota', model: 'Camry', miles: 41200,  pay: '62.10' },
+    { first_name: 'OBRIEN', make: 'GMC',    model: '2500',  miles: 98000,  pay: '210.00' },
+  ];
+  const rows = people.map((p, i) => ({
+    id: 'row' + i, dealer_id: 'd', campaign_id: 'c',
+    customer_key: createHash('sha256').update('k' + i).digest('hex'),
+    created_at: new Date().toISOString(), current_step: 0,
+    first_name: p.first_name, vehicle_year: '2019', vehicle_make: p.make,
+    vehicle_model: p.model, vehicle_mileage: p.miles, monthly_payment: p.pay,
+    down_payment: '100', contract_price: '3000', payment_term: 18,
+    contract_months: 36, coverage_miles: 45000, ro_closed_date: '2026-09-14',
+    quote_url: 'https://example.test/q' + i,
+  }));
+
+  const prepared = new Function('$input', '$vars', 'require', prepCode)(
+    { all: () => rows.map((r) => ({ json: r })) },
+    { UNSUBSCRIBE_URL_BASE: 'https://u', PREFERENCES_URL_BASE: 'https://p' },
+    nodeRequire);
+  assert(prepared.length === rows.length,
+    `Prepare Send turned ${rows.length} rows into ${prepared.length}`);
+
+  // A marker makes extraction exact. Reading fields by their position among
+  // HTML tags is how the first two attempts at this test reported a crossover
+  // that was not there.
+  const tpl = '<html>' + 'x'.repeat(600) +
+    '[F]{{first_name}}|{{vehicle_model}}|{{monthly_payment}}|{{quote_url}}[/F]</html>';
+  const out = new Function('$input', '$', renderCode)(
+    { all: () => prepared.map(() => ({ json: { html: tpl } })) },
+    () => ({ all: () => prepared, itemMatching: (i) => prepared[i] }));
+
+  assert(out.length === rows.length,
+    `${rows.length} recipients in, ${out.length} emails out`);
+
+  const crossed = [];
+  out.forEach((o, i) => {
+    const [name, model, pay, url] = o.json.html.match(/\[F\](.*?)\[\/F\]/)[1].split('|');
+    const want = people[i];
+    const nameOk = name.toLowerCase().replace(/[^a-z]/g, '') ===
+                   want.first_name.toLowerCase().replace(/[^a-z]/g, '');
+    // The link carries tracking params, so match the path rather than the tail.
+    const linkOk = url.includes('/q' + i + '?') || url.endsWith('/q' + i);
+    if (!nameOk || pay !== '$' + want.pay || !linkOk || !model.includes(want.model)) {
+      crossed.push(`item ${i}: wanted ${want.first_name}/${want.model}/$${want.pay}/q${i}, ` +
+                   `got ${name}/${model}/${pay}/${url.split('/').pop().split('?')[0]}`);
+    }
+  });
+  assert(crossed.length === 0,
+    `a recipient received another person's data. ${crossed.join('; ')}`);
+  return `${rows.length} distinct recipients, name, vehicle, price and link all stayed put`;
+});
+
 /* --------------------------------------------------------- code node hygiene */
 
 check('every Code node parses', () => {

@@ -145,7 +145,15 @@ emails to one person). So the cadence check runs the generated Prepare Send code
 send, advancing a fake clock to each send time, and compares where emails actually land
 against `campaign.json`. Every other check in the file is a bug that shipped: `$json` in a
 run-once-for-all-items node, the `queryBatching` default that discards items, the
-replacement count that shifted every positional parameter.
+replacement count that shifted every positional parameter, and the item pairing that sent
+one recipient's name, price and checkout link to forty four strangers.
+
+**The isolation check is the one to never delete.** It renders a batch of three genuinely
+different people and asserts each email keeps its own name, vehicle, price and link. That
+bug shipped twice, and it is silent in a way the others are not: every email renders, every
+send succeeds, the run is green, and the only people who find out are the ones who received
+someone else's quote. Prove it still bites by pairing on `prep[0]` instead of `prep[i]` and
+watching it go red.
 
 Both are wired into `npm run build`, so they gate rather than wait to be remembered. When
 you add a check, prove it fails: revert the fix and watch it go red. A check that has only

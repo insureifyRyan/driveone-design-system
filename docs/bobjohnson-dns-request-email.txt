@@ -1,169 +1,109 @@
-Subject: bobjohnsonauto.com sending authorisation - two options, neither is SMTP
+Subject: Small favor - four DNS records so we can start the customer emails
 
 
 Hi Mike,
 
-We need to authorise one sending platform to send the customer follow-up series on
-the dealership's behalf, from Northcountryrecalls@bobjohnsonauto.com.
+We're close to launching the service drive follow-up emails for the store, and
+there's one small thing I need from your side before we can switch them on.
 
-There are two ways to do that. Both are below. Neither is SMTP, and neither asks
-you to weaken anything.
+We're sending these on the dealership's behalf, from
+Northcountryrecalls@bobjohnsonauto.com. For them to land in customers' inboxes
+instead of spam, your domain has to say "yes, this system is allowed to send for
+us." That's four DNS records - the same kind of entry that already points your
+email at Microsoft.
 
+I want to be upfront about what this isn't, because I know we asked for
+something before and the answer was no. This is not the SMTP request. We
+actually went and tested that one, and your multi-factor authentication blocks
+it, which is your security doing exactly what it's supposed to do. I'm not
+asking you to change that or to look at it again.
 
-FIRST, TO CLOSE OUT THE SMTP QUESTION
---------------------------------------------------------------------
-We tested it rather than assume. The mailbox has MFA enforced, and an SMTP
-session has nowhere to carry a second factor - the password authenticates fine
-and is then met with an Authenticator prompt that SMTP cannot answer.
+What I'm asking for is a much smaller thing. No mailbox access, no logins, no
+app approvals, nothing installed anywhere. Nobody on our side gets the ability
+to read or send from any account. These records only tell receiving mail servers
+that one specific system is allowed to sign mail for the domain, and you can
+take them back out whenever you want.
 
-So SMTP is not a policy we are asking you to revisit. It is closed by the MFA
-you have correctly turned on, and we are not proposing app passwords or any
-other way around it. That route is done.
+One thing worth flagging so it doesn't catch anyone out: please don't change the
+SPF record you already have. A domain can only have one of those, and adding a
+second one breaks your normal business email. Nothing I'm asking for touches it.
+The new entries go on a separate "send" subdomain specifically so yours is left
+alone.
 
+If DNS isn't yours to change, just point me at whoever handles it and I'll work
+with them directly.
 
-OPTION A - FOUR DNS RECORDS  (our recommendation)
---------------------------------------------------------------------
-What it asks for: four DNS entries. Nothing else.
+Honestly it's about a ten minute job, and I'm happy to jump on a quick call and
+walk through it with you if that's faster than going back and forth on email.
 
-  - No mailbox access. Nobody gains the ability to read, send from, or
-    sign in to any Microsoft 365 account.
-  - No app registration, no OAuth consent, no admin approval in Microsoft.
-  - No change to how your mail flows. Inbound and outbound through
-    Microsoft 365 is untouched.
-  - No credential of any kind is issued to us.
+Thanks Mike, appreciate it.
 
-DNS records grant permission to nothing. They are public entries, in the same
-category as the record that already points your mail at Microsoft, and all they
-say is that one named platform may sign messages for this domain.
-
-We recommend this one because it is the smaller grant of the two. If DNS for
-bobjohnsonauto.com sits with your registrar or whoever maintains the website
-rather than with you, this may be a forward rather than a task.
-
-The records are listed at the end of this email.
-
-
-OPTION B - APP REGISTRATION  (if you would rather keep it inside Microsoft)
---------------------------------------------------------------------
-If you would prefer the mail go through your own tenant rather than an outside
-platform, we can send through Microsoft Graph instead. This is the same
-mechanism your existing system already uses.
-
-What it needs:
-
-  - An Entra ID app registration in your tenant with the Mail.Send
-    application permission.
-  - An application access policy scoping that permission to
-    Northcountryrecalls@bobjohnsonauto.com only, so the registration cannot
-    touch any other mailbox in the organisation.
-  - The Tenant ID, Client ID and a client secret passed to us.
-
-This grants more than Option A does - it is a credential, where DNS records are
-not - but it is properly scoped, revocable by you at any time, and it keeps
-everything inside Microsoft. It also leaves a copy of every message in the
-mailbox's Sent Items, which Option A does not.
-
-If you prefer this route, say so and we will send the exact steps.
+Ryan
 
 
 ================================================================
-THE RECORDS FOR OPTION A
+FOR WHOEVER ADDS THE RECORDS
 ================================================================
 
-
-PLEASE DO NOT CHANGE YOUR EXISTING SPF RECORD
---------------------------------------------------------------------
-This is the only part of the request that could affect your current mail, and it
-is avoidable entirely.
-
-Your root domain almost certainly has an SPF record today, something like:
-
-  v=spf1 include:spf.protection.outlook.com -all
-
-Please leave it exactly as it is.
-
-A domain may only have ONE SPF record. If a second one is added to the root, SPF
-fails for the whole domain and your normal business email starts going to spam.
-
-None of the records below touch it. The SPF entries here go on a "send"
-subdomain that does not exist yet, which is specifically why the request is
-built this way.
+Four records on bobjohnsonauto.com. The "Name" column is the short form most DNS
+panels expect; if yours wants the full name instead, use the FQDN line. Please
+don't enter both, or it doubles up the domain and won't verify.
 
 
-THE FOUR RECORDS
---------------------------------------------------------------------
-The "Name" values are the short form most DNS panels expect. If your panel wants
-a fully qualified name instead, use the FQDN line. Please do not enter both, or
-you will end up with bobjohnsonauto.com.bobjohnsonauto.com.
+1. DKIM signing key
 
+   Type:  TXT
+   Name:  resend._domainkey
+   FQDN:  resend._domainkey.bobjohnsonauto.com
+   TTL:   Auto / default
 
---- RECORD 1 of 4 --- DKIM signing key
-
-  Type:  TXT
-  Name:  resend._domainkey
-  FQDN:  resend._domainkey.bobjohnsonauto.com
-  TTL:   Auto (or default)
-
-  Value (must be ONE unbroken line, no spaces or line breaks):
+   Value - must be one unbroken line, no spaces or line breaks:
 
 p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDEBOW3hHfo5XeYmMw3V8VGc6Mk/6+M7+WGZ/fo0h37ArcEGh4xW/dgId8sM9rBiWZCiptWyM4UBxPwwe41yNlkBi5t6SJSWc0NG+J0oU31/KOIMMpl6aURTplF10ryABdEA/aE9zvWauBAbU4rgx/tZ9Y+bf0L67nqvQVSw3QMmwIDAQAB
 
 
---- RECORD 2 of 4 --- Return-Path mail exchanger
+2. Return-Path mail exchanger
 
-  Type:      MX
-  Name:      send
-  FQDN:      send.bobjohnsonauto.com
-  Value:     feedback-smtp.us-east-1.amazonses.com
-  Priority:  10
-  TTL:       Auto (or default)
+   Type:      MX
+   Name:      send
+   FQDN:      send.bobjohnsonauto.com
+   Value:     feedback-smtp.us-east-1.amazonses.com
+   Priority:  10
+   TTL:       Auto / default
 
-  This sits on the "send" subdomain. It does not affect the MX records that
-  deliver your normal mail.
-
-
---- RECORD 3 of 4 --- SPF for the Return-Path subdomain
-
-  Type:  TXT
-  Name:  send
-  FQDN:  send.bobjohnsonauto.com
-  Value: v=spf1 include:amazonses.com ~all
-  TTL:   Auto (or default)
-
-  This is the one people sometimes add to the root domain by mistake. It
-  belongs on "send", not on bobjohnsonauto.com.
+   This is on the "send" subdomain and does not affect the MX records that
+   deliver your normal mail.
 
 
---- RECORD 4 of 4 --- Sending endpoint
+3. SPF for the Return-Path subdomain
 
-  Type:  CNAME
-  Name:  rsend
-  FQDN:  rsend.bobjohnsonauto.com
-  Value: send.forge.rmta.net
-  TTL:   Auto (or default)
+   Type:  TXT
+   Name:  send
+   FQDN:  send.bobjohnsonauto.com
+   Value: v=spf1 include:amazonses.com ~all
+   TTL:   Auto / default
+
+   IMPORTANT: this belongs on "send", not on the root domain. Adding a second
+   SPF record to bobjohnsonauto.com itself would break existing mail flow.
 
 
-COMMON MISTAKES
---------------------------------------------------------------------
-  - Doubling the domain. Some panels append the domain automatically, so
-    entering the FQDN in a panel that already appends it produces
-    resend._domainkey.bobjohnsonauto.com.bobjohnsonauto.com, which will
-    not verify.
-  - The DKIM value wrapping. It must be one unbroken string. Copying from a
+4. Sending endpoint
+
+   Type:  CNAME
+   Name:  rsend
+   FQDN:  rsend.bobjohnsonauto.com
+   Value: send.forge.rmta.net
+   TTL:   Auto / default
+
+
+Two things that commonly go wrong:
+
+  - Some panels append the domain automatically. Entering the FQDN in a panel
+    that already appends it produces
+    resend._domainkey.bobjohnsonauto.com.bobjohnsonauto.com, which won't verify.
+  - The DKIM value in record 1 must stay on one line. Copying it out of a
     formatted document can introduce spaces or line breaks.
-  - Adding a second root SPF record. See the warning above. This is the only
-    change here that could affect your existing mail, and none of these
-    records require it.
 
-
-WHEN YOU ARE DONE
---------------------------------------------------------------------
-Reply to confirm and we will run verification, which takes a few minutes once
-DNS has propagated. Nothing further is needed from you after that.
-
-If any of the above conflicts with a record you already have, please tell us
-rather than overwriting it and we will work out the right merge together.
-
-Happy to get on a call for ten minutes if that is easier than email.
-
-Thanks,
+Reply once they're in and we'll run verification, which takes a few minutes
+after DNS propagates. If any of these conflict with a record you already have,
+tell us rather than overwriting it and we'll sort out the right merge.

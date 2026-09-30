@@ -5,7 +5,7 @@
   "type": "module",
   "description": "DriveOne VSC co-branded dealer email design system and campaign automation",
   "scripts": {
-    "build": "node email/build.mjs && node n8n/build-workflows.mjs && node n8n/verify.mjs",
+    "build": "node email/build.mjs && node n8n/build-workflows.mjs && node n8n/verify.mjs && node scripts/check.mjs",
     "build:dealer": "node email/build.mjs",
     "build:n8n": "node n8n/build-workflows.mjs && node n8n/verify.mjs",
     "publish:static": "node scripts/publish-static.mjs",
@@ -15,7 +15,8 @@
     "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
     "verify": "node n8n/verify.mjs",
     "build:workflows": "node n8n/build-workflows.mjs && node n8n/verify.mjs",
-    "build:ferrario": "node email/build.mjs ferrario-ford && node n8n/build-workflows.mjs ferrario-ford && node n8n/verify.mjs ferrario-ford"
+    "build:ferrario": "node email/build.mjs ferrario-ford && node n8n/build-workflows.mjs ferrario-ford && node n8n/verify.mjs ferrario-ford && node scripts/check.mjs ferrario-ford",
+    "check:ferrario": "node scripts/check.mjs ferrario-ford"
   },
   "engines": {
     "node": ">=18"

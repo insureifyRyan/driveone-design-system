@@ -8,9 +8,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DIST = join(ROOT, 'email/dist');
+// Dealer comes from argv, like every other command in this repo. It was
+// hardcoded to bob-johnson while the dist path was shared, so running the
+// pre-send guard on a second dealership checked the wrong build against the
+// wrong brand file, and passed.
+const DEALER_ID = process.argv[2] || 'bob-johnson';
+const DIST = join(ROOT, 'email/dist', DEALER_ID);
 const deck = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
-const dealer = JSON.parse(readFileSync(join(ROOT, 'brand/dealers/bob-johnson.json'), 'utf8'));
+const dealer = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
 
 const fail = [];
 const warn = [];

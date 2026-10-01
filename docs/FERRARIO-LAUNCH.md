@@ -45,6 +45,49 @@ anyone says about the password.
 **Verify the domain before enrolling anybody.** Bob Johnson enrolled 150 people and then sat
 blocked on DNS for days; every send date that passed became due-now.
 
+### 2b. Reply-to — THE LAST BLOCKER
+
+Recommendation: **a Google Group on `driveoneprogram.com`**, e.g.
+`ferrario-service@driveoneprogram.com`, with the dealership's service mailbox AND a DriveOne
+person both as members.
+
+**Why a Group rather than a mailbox.** It costs no Workspace licence, it is a distribution
+list by nature so it answers "do we need the dealership mailbox as well" with "yes, as a
+member rather than as an alternative", and every reply lands in front of both parties at
+once. The dealership can answer the sales questions; DriveOne can action the opt-outs.
+
+**Why not Resend inbound.** Checked 1 Oct 2026: Resend Inboxes is in beta and this account
+has not joined it, so the route that would have auto-suppressed opt-out replies is not
+available today. Worth revisiting if the account joins the beta, because it is the only
+option that removes the human step entirely.
+
+**Why not a plain `@ferrario.com` address.** It was the better answer while the campaign
+was sending as the dealership. It is not any more: the From is
+`service@ferrario.driveoneprogram.com`, so a DriveOne reply-to is consistent with what the
+customer already sees rather than a step down from it. More importantly, a reply-to nobody
+at DriveOne can see puts a legal obligation on a mailbox nobody here owns. See below.
+
+**The compliance reason this matters.** Nothing in the system reads replies. Workflow 03
+handles Resend webhooks: bounces, complaints, and the one-click unsubscribe button. A
+customer who types "take me off this list" into a reply is invisible to the campaign and
+will receive all ten emails. CAN-SPAM requires an opt-out to be honoured within 10 business
+days **however it is expressed**, and a reply is a valid expression of it. On 3,500 sends a
+handful of replies will say exactly that. Whoever reads the Group needs a standing
+instruction to suppress those customers.
+
+**The Workspace trap, which has bitten this build before.** A new Google Group defaults
+**Who can post → External: UNCHECKED**. Customer replies arrive from external senders, so
+without ticking it every single reply bounces and nobody finds out until someone asks why
+the campaign gets no replies. Ticking External flips the listed Access type from "Public" to
+"Custom", which is expected and not an error. Set it at creation:
+
+- Who can post → **External: CHECKED**
+- Who can join → Only invited users
+- Allow external members → checked, if the dealership mailbox is on `ferrario.com`
+
+Set `contact.replyTo` in the dealer file once the Group exists, and `npm run check:launch`
+stops failing.
+
 ### 3. Brand palette — confirm, not blocking the build
 
 The client supplied artwork on 30 Sep 2026 and the palette in `brand/dealers/ferrario-ford.json`

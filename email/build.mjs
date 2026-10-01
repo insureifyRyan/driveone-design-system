@@ -68,6 +68,30 @@ const esc = (s) => String(s).replace(/&(?![a-z#0-9]+;)/gi, '&amp;').replace(/</g
 const accent = (s) =>
   esc(s).replace(/\[\[(.+?)\]\]/g, `<span style="color:${A.accent};">$1</span>`);
 
+// A dealer file marks an unknown three ways: NEEDS CONFIRMATION, PLACEHOLDER and
+// REPLACE-ME. Those are notes to us, and they were being rendered straight into
+// customer copy. Ferrario's email 7 read "Ferrario Ford, serving NEEDS
+// CONFIRMATION." and Bob Johnson's footer read "Service: PLACEHOLDER: service
+// department phone". Both passed every check, because the guard inspected the
+// dealer FILE and nothing inspected the rendered OUTPUT.
+//
+// So nothing marked is ever printed. Where a sensible fallback exists it is used,
+// and where none does the line is omitted entirely. A missing service line is a
+// gap; a line reading PLACEHOLDER is a credibility failure in front of a customer.
+const MARKER = /NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME/i;
+const known = (v) => (typeof v === 'string' && v.trim() && !MARKER.test(v)) ? v : null;
+
+/** Dealer value, or a fallback, or null. Never the marker itself. */
+const safe = (v, fallback = null) => known(v) ?? fallback;
+
+// Service area falls back to the dealership's own city and state, which are
+// confirmed facts rather than invented marketing. "serving Elmira, NY" is true
+// and reads naturally; the clause is dropped entirely if even that is unknown.
+const SERVICE_AREA = safe(
+  D.dealer.serviceArea,
+  known(D.dealer.city) && known(D.dealer.state) ? `${D.dealer.city}, ${D.dealer.state}` : null
+);
+
 /** Defaults injected for every {{tag}} that the ESP does not own. */
 const OFFER_TAGS = {
   administrator: OBLIGOR,
@@ -78,7 +102,7 @@ const OFFER_TAGS = {
   rental_max: OFFER.rental_max,
   dealer_name: D.dealer.displayName,
   dealer_short: D.dealer.shortName,
-  service_area: D.dealer.serviceArea,
+  service_area: SERVICE_AREA || '',
 };
 
 /** Recipient level tags. These stay as {{tags}} in dist and get sample values in preview. */
@@ -326,7 +350,7 @@ const dealerBar = () => `
     <tr><td style="height:3px;line-height:3px;font-size:3px;background-color:${C.accent};">&nbsp;</td></tr>
     <tr><td align="center" style="padding:18px ${GUT}px;">
       <p style="margin:0 0 4px 0;${font(F.display, 15, 800, C.onPrimary, '1.4')}letter-spacing:-0.2px;">${esc(D.dealer.displayName)}</p>
-      <p style="margin:0;${font(F.body, 13, 400, 'rgba(255,255,255,0.78)', '1.6')}">${esc(D.contact.addressLine1)} &nbsp;&middot;&nbsp; ${esc(D.contact.addressLine2)}<br />Service: ${esc(D.contact.servicePhone)}</p>
+      <p style="margin:0;${font(F.body, 13, 400, 'rgba(255,255,255,0.78)', '1.6')}">${esc(D.contact.addressLine1)} &nbsp;&middot;&nbsp; ${esc(D.contact.addressLine2)}${safe(D.contact.servicePhone) ? `<br />Service: ${esc(safe(D.contact.servicePhone))}` : ''}</p>
     </td></tr>
   </table>
 </td>

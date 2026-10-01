@@ -74,6 +74,22 @@ for (const f of files) {
   }
 }
 
+/* ---- rendered output must never carry a marker ----------------------- */
+// The guard used to read the dealer file only, so "NEEDS CONFIRMATION" and
+// "PLACEHOLDER" rendered into customer-facing HTML while every check passed.
+// This is a FAIL rather than a warning, and unconditional rather than
+// --launch only: an unconfirmed field is unfinished setup, but a marker in the
+// built template is simply wrong bytes in the deliverable.
+for (const f of files) {
+  const html = readFileSync(join(DIST, f), 'utf8');
+  const hit = html.match(/NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME/i);
+  if (hit) {
+    const at = html.indexOf(hit[0]);
+    const context = html.slice(Math.max(0, at - 70), at + hit[0].length + 30).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    fail.push(`${f} renders the literal text "${hit[0]}" to the customer: ...${context}...`);
+  }
+}
+
 /* ---- launch blockers -------------------------------------------------- */
 // Dealer files mark unknowns three ways: Bob Johnson's predate Ferrario's and
 // say PLACEHOLDER or REPLACE-ME where Ferrario says NEEDS CONFIRMATION. The

@@ -15,7 +15,8 @@
     "publish:static": "node scripts/publish-static.mjs",
     "vercel-build": "npm run build && npm run publish:static",
     "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
-    "simulate": "node scripts/simulate-volume.mjs"
+    "simulate": "node scripts/simulate-volume.mjs",
+    "apply:templates": "bash scripts/apply-templates.sh"
   },
   "engines": {
     "node": ">=18"

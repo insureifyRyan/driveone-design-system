@@ -82,12 +82,28 @@ the send window silently flattened every gap to 7 days once, and nothing errored
 ## 4. Publish templates
 
 ```bash
-node scripts/publish-templates.mjs <dealer> > /tmp/t.sql
+DATABASE_URL='postgresql://...' npm run apply:templates -- <dealer>
 ```
 
-Apply it in the project holding that dealership's tables. Then checksum: `md5(html)` from
-the database must equal `md5sum email/dist/<dealer>/*.html` for all ten. Ten matching hashes
-is proof. "The query returned ten rows" is not.
+One command: generates the SQL, pipes it into Postgres, then reads `md5(html)` back out and
+compares it against `md5sum email/dist/<dealer>/*.html`. It exits non-zero on any mismatch,
+so a drifted template fails the command instead of reaching a customer. Ten matching hashes
+is proof; "the query returned ten rows" is not.
+
+`DATABASE_URL` is the **session pooler** URI on port 5432 from Supabase's Database settings,
+not the direct `db.<ref>.supabase.co` host, which is IPv6 only and unreachable from most
+runners. The same constraint already applies to the n8n Postgres credential.
+
+The manual path still exists and is what the first two dealerships used:
+`node scripts/publish-templates.mjs <dealer> > /tmp/t.sql`, then paste into the Supabase SQL
+editor. It works, and it stops being reasonable around the third dealership: a 200KB
+clipboard round trip per rooftop, with no check that what arrived is what left.
+
+**Do not reintroduce fetching templates over HTTP.** It was tried and removed. It needed
+public hosting, a deployment protection carve out and a base URL in config, and it could
+fail at send time; see the header of `scripts/publish-templates.mjs` and commit 0598c80.
+Hosting the files so the database can pull them solves a transport problem by adding a
+deployment, when a connection string solves it with neither.
 
 The publisher refuses to run if `email/dist/<dealer>/manifest.json` was built for a different
 dealership, because it once wrote one rooftop's HTML into another's template rows and the

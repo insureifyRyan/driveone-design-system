@@ -1,0 +1,104 @@
+DNS RECORDS TO ADD — driveoneprogram.com (Vercel DNS)
+Generated 1 Oct 2026. Both subdomains already exist in Resend; these records are
+all that is outstanding.
+
+Add them in the Vercel dashboard:
+  Vercel -> Domains -> driveoneprogram.com -> DNS Records -> Add
+
+The DKIM values below are PUBLIC KEYS. They are published in DNS by design and
+are not secrets.
+
+IMPORTANT, and the reason this file exists rather than the records being added
+automatically: every record below is on a SUBDOMAIN. Do not touch, edit or
+remove any record on driveoneprogram.com itself. The root carries Google
+Workspace MX, the root SPF, the root DMARC and Google's own DKIM selector, and
+DriveOne's corporate mail depends on all four. Nothing here replaces any of them.
+
+If a panel asks for the full name instead of the short name, append
+".driveoneprogram.com" to the Name column. Do not enter both.
+
+
+================================================================
+FERRARIO FORD   ->  service@ferrario.driveoneprogram.com
+Resend domain id: d5f51b3c-020b-4b6e-9e0a-e9707f9f402f
+================================================================
+
+1. DKIM
+   Type:  TXT
+   Name:  resend._domainkey.ferrario
+   TTL:   Auto / 60
+   Value (ONE unbroken line, no spaces or line breaks):
+
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCcsyVSBB1M4tw6NpqRQ/mpFyrQsit5pYIB7dD/I1H6ggg46MtYrn15jLEDOU0gQKG1DjaadL9QqD1wK88+vRcadSpss8Bl9MdzagjRhS3/fSq9JCpW3/l8EBarX3IUUi85d8mbNVTY7k7RvRQ3eDeEbQ1WQRPmmIp3kStP10isQIDAQAB
+
+2. Return-Path MX
+   Type:      MX
+   Name:      send.ferrario
+   Value:     feedback-smtp.us-east-1.amazonses.com
+   Priority:  10
+   TTL:       60
+
+3. Return-Path SPF
+   Type:  TXT
+   Name:  send.ferrario
+   Value: v=spf1 include:amazonses.com ~all
+   TTL:   60
+
+4. Sending endpoint
+   Type:  CNAME
+   Name:  rsend.ferrario
+   Value: send.forge.rmta.net
+   TTL:   60
+
+
+================================================================
+BOB JOHNSON   ->  service@bobjohnson.driveoneprogram.com
+Resend domain id: 2a49f196-c342-4122-8b14-5c8984c1b008
+================================================================
+
+1. DKIM
+   Type:  TXT
+   Name:  resend._domainkey.bobjohnson
+   TTL:   Auto / 60
+   Value (ONE unbroken line):
+
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD34MJ/u500ZVtUN98K/UsaTILlBnyMStWUfnbMtSvIIqQj+a7f0pJgDHY1b3heIiEObsgD/CjkbzRbVVArjhM4i32OXtdH9ktav9rUM+scClstIhkjT/GoQAvNP04ofU4lDbR8286+sKfK+adMRYLFS4G92juMnHKuV4ARvXAQmwIDAQAB
+
+2. Return-Path MX
+   Type:      MX
+   Name:      send.bobjohnson
+   Value:     feedback-smtp.us-east-1.amazonses.com
+   Priority:  10
+   TTL:       60
+
+3. Return-Path SPF
+   Type:  TXT
+   Name:  send.bobjohnson
+   Value: v=spf1 include:amazonses.com ~all
+   TTL:   60
+
+4. Sending endpoint
+   Type:  CNAME
+   Name:  rsend.bobjohnson
+   Value: send.forge.rmta.net
+   TTL:   60
+
+
+================================================================
+AFTER THE RECORDS ARE IN
+================================================================
+
+Tell me and I will trigger verification in Resend and confirm it against the
+authoritative nameservers rather than against Resend's dashboard. Verification
+usually completes within a few minutes of propagation.
+
+Then, before any volume, the header proof in docs/DELIVERABILITY.md: send from
+the subdomain to a mailbox on a DIFFERENT provider, open the RECEIVED copy, and
+confirm dkim=pass with d=ferrario.driveoneprogram.com, spf=pass, dmarc=pass and
+delivery to Inbox. The sender's own copy does not carry those headers and is not
+the proof.
+
+Common mistakes, both of which have cost time before:
+  - A panel that auto-appends the domain, turning resend._domainkey.ferrario
+    into resend._domainkey.ferrario.driveoneprogram.com.driveoneprogram.com.
+  - A DKIM value broken across lines by copy and paste. It must be one line.

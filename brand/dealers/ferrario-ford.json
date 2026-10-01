@@ -12,9 +12,9 @@
     "website": "NEEDS CONFIRMATION",
     "tagline": "",
     "serviceArea": "NEEDS CONFIRMATION",
-    "storeNote": "RESOLVED 30 Sep 2026 from the supplied artwork. There are two marks and they are different businesses: 'Ferrario Ford' is this rooftop, and 'Ferrario Auto Team / Truck Country USA' is the group, whose badge carries Chevrolet and Jeep marks alongside Ford. This campaign is the Ford rooftop's own service drive, so customer-facing material reads Ferrario Ford. If the audience is ever widened to the Chevy or Jeep rooftops, that is a new dealer file with the group lockup, not an edit to this one.",
+    "storeNote": "RESOLVED 30 Sep 2026 from the supplied artwork, extended 1 Oct. There are two marks and they are different businesses: 'Ferrario Ford' is this rooftop and 'Ferrario Auto Team / Truck Country USA' is the group, whose badge carries Chevrolet and Jeep marks alongside Ford. They share one physical address, 2472 Corning Rd, so the rooftop-versus-group distinction is about NAMING rather than location. Customer facing material reads Ferrario Ford because this campaign is the Ford rooftop's own service drive. Widening the audience to the Chevy or Jeep rooftops means a new dealer file with the group lockup, not an edit to this one.",
     "city": "Elmira",
-    "cityNote": "STRONGLY INDICATED, not yet confirmed as the Ford rooftop's own address. The group's anniversary badge reads FERRARIO / ELMIRA / ESTABLISHED 2008, and Geoff Crossley's 607 number is the Elmira NY exchange. Confirm the Ford store's own street address before sending, since the group badge names the group rather than this rooftop."
+    "cityNote": "CONFIRMED 1 Oct 2026 from Ferrario Ford's own website Find Us panel, which names Ferrario Ford at 2472 Corning Rd, Elmira NY 14903-1044, and corroborated by the Google Business Profile for Ferrario Auto Team at the same street address. Consistent with Geoff Crossley's 607 Elmira exchange."
   },
   "color": {
     "$note": "Read by eye off the supplied Ferrario Ford artwork on 30 Sep 2026, not sampled from a brand sheet and not pulled from a stylesheet, so treat these as close rather than exact and confirm the hex values before the first send. The same caveat is on Bob Johnson's palette for the same reason. What matters more than the exact hex is that the previous values were wrong in kind, not just in degree: they were a guessed Ford corporate blue, and this brand is a deep navy ground with a RED wordmark. Accent drives every button and rule in the email, so a blue accent would have shipped a red brand's campaign in the wrong colour entirely.",
@@ -44,11 +44,11 @@
   },
   "contact": {
     "storeName": "Ferrario Ford",
-    "addressLine1": "NEEDS CONFIRMATION",
-    "addressLine2": "NEEDS CONFIRMATION",
-    "addressNote": "REQUIRED before sending. A physical postal address in the footer is a CAN-SPAM requirement, not a nicety.",
-    "servicePhone": "NEEDS CONFIRMATION",
-    "phoneNote": "607-526-7748 is Geoff Crossley's number on the partner record, which is the PROGRAM contact, not a customer-facing service line. Bob Johnson made the same distinction: the footer prints the public service number instead. Get the service department's number.",
+    "addressLine1": "2472 Corning Rd",
+    "addressLine2": "Elmira, NY 14903",
+    "addressNote": "CONFIRMED 1 Oct 2026 by two independent sources that agree: Ferrario Ford's own website Find Us panel, and the Google Business Profile for Ferrario Auto Team. The site gives ZIP+4 as 14903-1044; the footer prints the five digit form, which is what CAN-SPAM needs and what a reader expects. A physical postal address in the footer is a legal requirement, not a nicety, and this one is now satisfied.",
+    "servicePhone": "(607) 734-1681",
+    "phoneNote": "USABLE BUT NOT IDEAL, and deliberately not left blocking. This is the main dealership number from the Ferrario Auto Team Google Business Profile, so it is genuinely customer facing and a caller reaches the dealership and gets routed. It is NOT confirmed to be the service department's direct line, and Ryan said the dealership would say which number they want printed. Swap it when they do.\n\nWhat it is definitely better than: 607-526-7748, which is Geoff Crossley's number on the partner record and is the PROGRAM contact rather than a customer service line. Bob Johnson made the same distinction. Never print the program contact's number in a customer footer.",
     "replyTo": "NEEDS CONFIRMATION",
     "replyToNote": "Needs a monitored mailbox on ferrario.com. Replies must reach a human at the dealership, because the emails are written as though the service drive sent them. Expect the same authentication conversation as Bob Johnson: see Sending in the skill."
   },

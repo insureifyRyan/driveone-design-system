@@ -232,6 +232,54 @@ at roughly 100 sends a day it would never properly warm and would stay fragile i
 Resend's shared pools already carry established reputation, which is what a sender this size
 wants.
 
+### Record-by-record: what Resend actually needs
+
+Settled 1 Oct 2026 by comparing against `mail.driveonedirect.com`, a domain in the same
+account that has been verified and sending since 20 Aug.
+
+**The verified domain carries only THREE records: DKIM, the Return-Path MX, and the
+Return-Path SPF.** It has no `rsend` CNAME at all. That CNAME is a newer addition to
+Resend's setup, issued to domains created recently, and a domain verified without it is
+sending happily today. On a freshly created domain it also sits at `not_started` while the
+other three move to `pending`, which is consistent with it being checked differently.
+
+So the answer to "do I have to add all four" is: **the three are the ones that carry
+verification.** Add the CNAME anyway, because it is one command and Resend issued it for a
+reason, but do not treat it as the blocker if the other three are in.
+
+DKIM is the one that is categorically non-negotiable. The MX and SPF are a pair that
+together make the Return-Path yours; dropping both still sends and still passes DMARC on
+DKIM alignment alone, but gives up SPF alignment and bounce handling on your own domain.
+
+### Verifying the records, and what proof looks like
+
+`ferrario.driveoneprogram.com` went in on 1 Oct. Worth recording how it was confirmed,
+because the dashboard was not the thing that confirmed it.
+
+1. **Authoritative, both nodes.** Queried `ns1` and `ns2.vercel-dns.com` directly. The two
+   disagreed for several minutes mid-write, with a different pair of records present on
+   each probe. That is anycast convergence and is indistinguishable from a failed write if
+   only one node is checked, which is exactly why the rule is to re-query rather than
+   conclude. It settled to all four matching on both.
+2. **Public resolvers.** Google, Cloudflare and Quad9 all serve all four, so there is no
+   negative-cache or propagation story left to tell.
+3. **Byte comparison against a known-good domain.** The decisive check. Ferrario's DKIM is
+   one TXT chunk of 218 characters starting `p=MIGf`, its SPF is 33 characters, its MX is
+   priority 10 to `feedback-smtp.us-east-1.amazonses.com` — identical in structure to the
+   verified `mail.driveonedirect.com`. A record that matches a working domain field for
+   field is correct, whatever any dashboard says about it.
+
+Two mistakes were made and caught on the way in, both worth knowing because both are silent:
+
+- The DKIM TXT first went in named `ferrario` rather than `resend._domainkey.ferrario`. The
+  value was byte-perfect. DKIM is only ever looked up at `<selector>._domainkey.`, so the
+  record did nothing at all where it sat, and nothing anywhere reported an error. The
+  `resend._domainkey` prefix looks like boilerplate and is in fact the record's address.
+- Resend's status lagged well behind correct DNS. It read `pending` on all three core
+  records for more than ten minutes after every public resolver was serving them, across
+  two verification triggers. Pending is not a diagnosis; check the records themselves
+  before changing anything in response to it.
+
 ### What this means for ferrario.com
 
 The DNS lookup settled two things worth knowing even though the plan has moved:

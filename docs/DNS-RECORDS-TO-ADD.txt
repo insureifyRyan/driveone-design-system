@@ -85,6 +85,41 @@ p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQD34MJ/u500ZVtUN98K/UsaTILlBnyMStWUfnbMtS
 
 
 ================================================================
+VERCEL SPECIFICS
+================================================================
+
+FASTEST PATH — the CLI. See docs/vercel-dns-add.sh for copy-paste commands.
+`vercel dns add` appends ONE record and never rewrites the zone, which is what
+makes it safe here.
+
+    npx vercel login
+    npx vercel switch          # pick the team owning driveoneprogram.com
+    npx vercel dns add driveoneprogram.com <name> <type> <value> [mxPriority]
+
+DASHBOARD — Vercel -> Domains -> driveoneprogram.com -> DNS Records -> Add.
+Field by field:
+
+  Name       The SHORT form exactly as listed (e.g. send.ferrario).
+             Vercel appends driveoneprogram.com itself. Never type the FQDN
+             here, and leave it blank or @ only for the root, which none of
+             these are.
+  Type       From the dropdown.
+  Value      Paste raw. Vercel does NOT want surrounding quotes on a TXT
+             record; quotes typed in become part of the value and the record
+             fails to verify.
+  Priority   Appears only after Type is set to MX. 10.
+  TTL        60 is fine. Vercel's default is already 60.
+
+Two Vercel-specific things worth knowing:
+
+  - Records 2 and 3 for each dealer share the same Name (e.g. send.ferrario),
+    one MX and one TXT. Vercel accepts both; it is not a duplicate and the
+    second does not overwrite the first.
+  - The DKIM value is longer than 255 characters. Vercel splits long TXT
+    records into chunks automatically at serve time. Paste it as one unbroken
+    line and do not split it by hand.
+
+================================================================
 AFTER THE RECORDS ARE IN
 ================================================================
 

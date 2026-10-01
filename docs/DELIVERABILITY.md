@@ -101,6 +101,85 @@ class of mistake as two SPF records: it does not merge, it invalidates.
 
 ---
 
+## Which domain sends, now that Captured's server is out
+
+**Update 1 Oct 2026.** The sending mailbox turned out to live on Captured's server, which
+is not accessible. That rules out sending *through* Captured. It does **not**, on its own,
+rule out sending *as* ferrario.com.
+
+### Check this before giving up ferrario.com
+
+Resend authorises a sender by **DNS records, not by mail server access**. That is the whole
+content of `docs/ferrario-dns-request.txt`, which already says it in as many words: no
+mailbox access, no logins, no app approvals, nothing installed anywhere. So:
+
+| What is needed | Who provides it | Blocked by losing Captured? |
+|---|---|---|
+| DKIM, MX, SPF, CNAME on ferrario.com | Whoever controls ferrario.com **DNS** | **No** |
+| A From address at ferrario.com | Nobody. Resend sends from any address on a verified domain | **No** |
+| A reply-to that reaches a human | Any monitored mailbox, anywhere | **No** |
+| Sending through Captured's SMTP | Captured | Yes, and we are not doing that |
+
+So the question to put back to the client is narrow: **do they control DNS for
+ferrario.com?** If yes, the original plan stands. If DNS is also held by a vendor nobody
+can reach, that is a genuine blocker and the options below apply.
+
+One real caveat if ferrario.com proceeds: pick a From address that **actually accepts mail**,
+or arrange a catch-all. Reply-To steers most replies, but some clients and most
+auto-responders reply to From regardless, and those would hard bounce.
+
+### If ferrario.com is genuinely unavailable
+
+**Do not use the Kovara domains.** `getkovara.com`, `meetkovara.com`, `trykovara.com` and
+`gokovara.com` are the dealer-acquisition cold outbound stack: 12 mailboxes, 44 days old,
+nine on Google and three on Microsoft, carrying named human personas. Four reasons, in
+order of how much they cost:
+
+1. **The copy does not survive the From line.** These emails say "bring it back to
+   Ferrario", "the service department you drove to", "we fixed your car". From
+   `sophie@getkovara.com` that is incoherent to a recipient who has never heard of Kovara,
+   and CAN-SPAM prohibits materially misleading header information. The From line is header
+   information.
+2. **It cross-contaminates the motion the business runs on.** Kovara prospecting and
+   Ferrario customers would share a reputation. A complaint spike on 3,500 consumer sends
+   lands on the domains used to reach dealership owners, and a bad prospecting week lands on
+   Ferrario's customers. These should fail separately; that is the entire reason the
+   prospecting stack has four domains rather than one.
+3. **The warmup does not transfer the way it sounds.** Those domains are warmed through
+   Google Workspace and M365, at roughly 25 a day per mailbox. Resend sends over Amazon SES.
+   Domain reputation carries over partially; **IP and sending-path reputation does not carry
+   at all.** You would be starting the hard part from zero anyway, while spending the good
+   name of the prospecting stack to do it.
+4. **The volume does not fit.** Twelve mailboxes at ~25/day is ~300/day total, and that is
+   the working capacity of the Kovara motion. Ferrario alone peaks near 200/day.
+
+To be fair to the idea: the SPF objection people usually raise does **not** apply, because
+the Return-Path goes on a `send.` subdomain and never touches the root record. The problem
+is not mechanical. It is that these are the wrong domains wearing the wrong name.
+
+**Better fallback: a DriveOne-owned domain used only for dealer co-branded sends.** Not a
+cold prospecting domain and not a money site. The From then reads honestly, something like
+`Ferrario Ford Service <service@…>` on a DriveOne sending domain, with the body identifying
+both parties and carrying the dealership's postal address, which is what CAN-SPAM actually
+asks for. Costs two to three weeks of warmup before the first real send, and that is the
+honest price of losing ferrario.com.
+
+### On "these are all opt-in people"
+
+Worth stating precisely, because the precise version is the stronger one.
+
+These are **existing customers of the dealership** who paid an invoice days earlier. That is
+an existing business relationship, it is a solid basis under CAN-SPAM's opt-out regime, and
+it satisfies Resend's acceptable use policy. It is **not** express marketing opt-in, and
+nobody ticked a box. If complaints ever spike and Resend asks for the consent basis, "these
+are service customers of the dealership that sent the email, with suppression and one-click
+unsubscribe honoured" is defensible and true; "they opted in" is neither, and would be the
+worse answer at exactly the wrong moment.
+
+The practical point: **the list question and the domain question are independent.** Resend
+accepts this list from ferrario.com just as readily as from anywhere else. Using a Kovara
+domain unlocks nothing with Resend, because the list was never what blocked it.
+
 ## Blast radius: root domain or subdomain
 
 The campaign sends from `<TBC>@ferrario.com` — the dealership's primary business domain,

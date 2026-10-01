@@ -116,9 +116,22 @@ if (LAUNCH) {
     ['contact.servicePhone', 'The footer prints a customer-facing service number.'],
     ['contact.replyTo', 'Replies have to reach a human at the dealership.'],
     ['campaign.quoteUrlBase', 'Every CTA in all ten emails points at this.'],
+    ['sending.fromAddress', 'Nothing can send without a verified From address.'],
   ];
   for (const [f, why] of REQUIRED_TO_SEND) {
     if (unconfirmed.includes(f)) fail.push(`${f} is unconfirmed. ${why}`);
+  }
+}
+
+// The From address has to live on the domain the dealer file nominates. These
+// are two fields and they drifted apart the moment they existed: the address is
+// what Resend authenticates and the domain is what gets the DNS records, so a
+// mismatch is a verified domain that never sends.
+if (dealer.sending && dealer.sending.fromAddress && dealer.sending.fromDomain) {
+  const at = String(dealer.sending.fromAddress).split('@')[1];
+  if (at && at !== dealer.sending.fromDomain) {
+    fail.push(`sending.fromAddress is on "${at}" but sending.fromDomain is "${dealer.sending.fromDomain}". ` +
+      `The DNS records go on fromDomain, so these have to agree.`);
   }
 }
 

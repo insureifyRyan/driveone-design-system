@@ -115,6 +115,10 @@
     ],
     "hoursNote": "Local. Mid morning and early afternoon, skipping the lunch hour.",
     "maxPerRun": 45,
-    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike."
+    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike.",
+    "fromDomain": "ferrario.driveoneprogram.com",
+    "fromAddress": "service@ferrario.driveoneprogram.com",
+    "fromName": "Ferrario Ford Service",
+    "fromNote": "DECIDED 1 Oct 2026: send on a per-dealer subdomain of a DriveOne root, not on the dealership's own domain and not on a Kovara domain.\n\nWhy a DriveOne root. Ferrario's sending mailbox turned out to live on Captured's server, which nobody can reach. The Kovara domains were offered as warm alternatives and rejected: they are the dealer-acquisition cold prospecting stack, and copy that says 'the service department you drove to' cannot ship from getkovara.com.\n\nWhy a SUBDOMAIN and not the root. driveoneprogram.com is a live Google Workspace domain carrying real people's mailboxes. Putting 3,500 consumer sends on the root would do to DriveOne's own corporate mail exactly what sending from ferrario.com risked doing to the dealership's. The subdomain also leaves the root SPF untouched, which matters because a domain gets exactly one.\n\nWhy PER DEALER. Reputation then fails per rooftop, the same way dist, workflows and campaign ids already separate per rooftop. A complaint spike at one dealership does not reach another's customers. It also puts the dealership's name in the visible From domain, which is the next best thing to sending from their own.\n\nThe root is one field to change if the client prefers driveonepartners.com or driveonedealers.com; all three are on Vercel DNS with the same Google MX, the same `~all` SPF and the same `p=none` DMARC, so the setup is identical. Do NOT use driveonedirect.com, which is the DTC money site, or driveonenow.com, which has no MX at all.\n\nn8n's SEND_FROM must read `fromName <fromAddress>` and is checked at launch."
   }
 }

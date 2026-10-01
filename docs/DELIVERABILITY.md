@@ -128,6 +128,78 @@ One real caveat if ferrario.com proceeds: pick a From address that **actually ac
 or arrange a catch-all. Reply-To steers most replies, but some clients and most
 auto-responders reply to From regardless, and those would hard bounce.
 
+### DECIDED 1 Oct 2026: a per-dealer subdomain on a DriveOne root
+
+The client does not want a Kovara domain and prefers a DriveOne one. Confirmed viable
+against live DNS the same day:
+
+| Domain | Nameservers | MX | SPF | DMARC | Verdict |
+|---|---|---|---|---|---|
+| `driveoneprogram.com` | Vercel | Google | `~all` | `p=none`, same-domain rua | **Use a subdomain** |
+| `driveonepartners.com` | Vercel | Google | `~all` | `p=none`, same-domain rua | Equivalent alternative |
+| `driveonedealers.com` | Vercel | Google | `~all` | `p=none`, same-domain rua | Equivalent alternative |
+| `driveonedirect.com` | Vercel | Google | — | none | **No.** DTC money site |
+| `driveonenow.com` | Vercel | none | — | none | **No.** No mail at all |
+
+All three candidates are on **Vercel DNS**, so DriveOne controls the records directly and
+`verify_dns.py` works with its default nameservers. All three already carry the playbook's
+recommended DMARC shape, which is unsurprising: they were built by it.
+
+**The root is not the sending surface.** Those three are live Google Workspace domains
+holding real people's mailboxes (`marc@driveonepartners.com`, `stephen@driveoneprogram.com`,
+`hannah@driveonedealers.com`). Putting 3,500 consumer sends on a root would do to DriveOne's
+corporate mail exactly what sending from ferrario.com risked doing to the dealership's.
+
+**Per dealer, not per campaign.** Reputation then fails per rooftop, matching how dist,
+workflows and campaign ids already separate. One dealership's complaints cannot reach
+another's customers, and the dealership's name sits in the visible From domain, which is the
+next best thing to sending as them:
+
+```
+Ferrario Ford Service <service@ferrario.driveoneprogram.com>
+Bob Johnson Auto Group Service <service@bobjohnson.driveoneprogram.com>
+```
+
+Both are recorded in `sending.fromDomain` / `fromAddress` / `fromName` in the dealer files.
+`npm run check:launch` fails if the address is unset or sits on a different domain than the
+one nominated for the DNS records.
+
+### Records to create, per dealer subdomain
+
+On `driveoneprogram.com` in Vercel, taking `ferrario` as the example. Resend supplies the
+actual DKIM value when the subdomain is added as a domain in Resend.
+
+| Type | Name | Value |
+|---|---|---|
+| TXT | `resend._domainkey.ferrario` | *(from Resend)* |
+| MX | `send.ferrario` | `feedback-smtp.us-east-1.amazonses.com` priority 10 |
+| TXT | `send.ferrario` | `v=spf1 include:amazonses.com ~all` |
+| CNAME | `rsend.ferrario` | *(from Resend)* |
+
+Three things this does **not** touch, each of which would be an outage if it did: the root
+MX, so Google keeps delivering DriveOne's mail; the root SPF, which a domain may only have
+one of; and the root DMARC, which the subdomain inherits at `p=none` and which therefore
+blocks nothing while reputation is built.
+
+Warmup still applies. The subdomain is new even though the parent is not, so ramp it with
+the cohort schedule above rather than opening at full volume.
+
+### What this means for ferrario.com
+
+The DNS lookup settled two things worth knowing even though the plan has moved:
+
+- **ferrario.com's DNS is at GoDaddy** (`ns39/ns40.domaincontrol.com`), not at a mail
+  vendor. So DNS control almost certainly sits with the dealership or their web person
+  rather than with Captured, which supports the earlier point that losing Captured's server
+  did not have to be fatal. If sending as the dealership ever becomes preferable again, the
+  original four-record request still works.
+- **They already publish DMARC**, `v=DMARC1; p=none;`, bare with no rua. `p=none` means it
+  would not have blocked anything. It also confirms the warning now in the DNS request is
+  the right one: they have a record, so a second would have invalidated both.
+
+Their root SPF ends in `-all` rather than `~all`, which is a hard fail. That is theirs to
+keep and the `send.` subdomain approach never touched it.
+
 ### If ferrario.com is genuinely unavailable
 
 **Do not use the Kovara domains.** `getkovara.com`, `meetkovara.com`, `trykovara.com` and

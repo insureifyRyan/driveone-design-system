@@ -23,10 +23,14 @@ Run `npm run check:launch -- ferrario-ford` at any point for the machine-checkab
 - **Reply-to.** A monitored mailbox on ferrario.com. The emails are written as though the
   service drive sent them, so replies have to reach a human at the dealership.
 
-### 2. The sending domain — BLOCKING
+### 2. The sending domain — CLEARED 1 Oct 2026
 
-`docs/ferrario-dns-request.txt` is the request, written to be forwarded as-is. The domain
-must be verified in Resend before `SEND_FROM` will work.
+**Resolved without the dealership.** Ferrario sends from `ferrario.driveoneprogram.com`,
+a DriveOne-owned subdomain, verified in Resend on 1 Oct 2026 with all four records green.
+`docs/ferrario-dns-request.txt` is no longer needed and is kept only as the template for a
+dealership that does want to publish its own records.
+
+    SEND_FROM = Ferrario Ford Service <service@ferrario.driveoneprogram.com>
 
 **`docs/DELIVERABILITY.md` is the runbook for this phase** and covers what the DNS request
 does not: reading their existing DMARC before sending rather than after, whether the From

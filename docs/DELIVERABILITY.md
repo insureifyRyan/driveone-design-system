@@ -234,22 +234,20 @@ wants.
 
 ### Record-by-record: what Resend actually needs
 
-Settled 1 Oct 2026 by comparing against `mail.driveonedirect.com`, a domain in the same
-account that has been verified and sending since 20 Aug.
+**Add all four.** Settled 1 Oct 2026 by watching `ferrario.driveoneprogram.com` go green:
+DKIM, Return-Path MX, Return-Path SPF **and the `rsend` CNAME all reached `verified`**.
 
-**The verified domain carries only THREE records: DKIM, the Return-Path MX, and the
-Return-Path SPF.** It has no `rsend` CNAME at all. That CNAME is a newer addition to
-Resend's setup, issued to domains created recently, and a domain verified without it is
-sending happily today. On a freshly created domain it also sits at `not_started` while the
-other three move to `pending`, which is consistent with it being checked differently.
+An earlier reading of this, now corrected: `mail.driveonedirect.com` has been verified and
+sending since 20 Aug on **three** records with no CNAME at all, and on a freshly created
+domain the CNAME sits at `not_started` while the other three move to `pending`. Both facts
+are real, and together they suggested the CNAME was optional. It is not. The older domain
+simply predates it, and `not_started` was ordering rather than exemption. A domain created
+today gets four records and verifies on four.
 
-So the answer to "do I have to add all four" is: **the three are the ones that carry
-verification.** Add the CNAME anyway, because it is one command and Resend issued it for a
-reason, but do not treat it as the blocker if the other three are in.
-
-DKIM is the one that is categorically non-negotiable. The MX and SPF are a pair that
-together make the Return-Path yours; dropping both still sends and still passes DMARC on
-DKIM alignment alone, but gives up SPF alignment and bounce handling on your own domain.
+The rank order still holds for triage. DKIM is categorically non-negotiable. The MX and SPF
+are a pair that together make the Return-Path yours; dropping both still sends and still
+passes DMARC on DKIM alignment alone, but gives up SPF alignment and bounce handling on
+your own domain. The CNAME is Resend's sending endpoint. Add all four and skip the triage.
 
 ### Verifying the records, and what proof looks like
 
@@ -275,10 +273,11 @@ Two mistakes were made and caught on the way in, both worth knowing because both
   value was byte-perfect. DKIM is only ever looked up at `<selector>._domainkey.`, so the
   record did nothing at all where it sat, and nothing anywhere reported an error. The
   `resend._domainkey` prefix looks like boilerplate and is in fact the record's address.
-- Resend's status lagged well behind correct DNS. It read `pending` on all three core
-  records for more than ten minutes after every public resolver was serving them, across
-  two verification triggers. Pending is not a diagnosis; check the records themselves
-  before changing anything in response to it.
+- Resend's status lagged well behind correct DNS. It read `pending` for roughly twenty
+  minutes after every public resolver was serving all four records, across two verification
+  triggers, then flipped to `verified` on its own with nothing changed. Pending is not a
+  diagnosis. Had anyone edited DNS in response to it, they would have broken a correct
+  configuration and then had a real problem to debug.
 
 ### What this means for ferrario.com
 

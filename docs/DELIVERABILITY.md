@@ -184,6 +184,54 @@ blocks nothing while reputation is built.
 Warmup still applies. The subdomain is new even though the parent is not, so ramp it with
 the cohort schedule above rather than opening at full volume.
 
+### "So we have to warm it up again?"
+
+Yes, and the word to drop is *again*. Nothing anyone owns is warm on this path, and that was
+true of every option on the table.
+
+**What is actually new, and what carries over**
+
+| | Status on the new subdomain |
+|---|---|
+| Sending IPs (Amazon SES, via Resend) | **New.** Never sent from, whatever domain is on the From line |
+| The DKIM key `resend._domainkey.ferrario` | **New.** No receiver has seen it |
+| The subdomain's own sending history | **New.** Zero |
+| Parent domain reputation, SPF and DMARC posture | **Carries.** `driveoneprogram.com` is established, clean, `p=none` with a same-domain rua |
+| Recipient engagement | **Far better than cold.** These people were in the service drive days ago |
+
+The first row is the one that matters and it is the one nobody could have avoided.
+ferrario.com would have been equally new on SES. The Kovara domains would have been equally
+new on SES, and their lemwarm scores of 98 and 99 are reputation earned over Google and M365
+SMTP, which is not the path Resend uses. **Warmup here is the price of sending through
+Resend at all, not the price of picking a DriveOne domain.**
+
+**Lemwarm cannot help with this.** It warms a mailbox by exchanging mail with a peer network
+over SMTP, which needs a real mailbox and IMAP or OAuth credentials. A Resend sending
+subdomain has no mailbox to connect. The warmup tool already being paid for does not apply.
+
+**It is shorter than the cold playbook's 21 days**, for two reasons that are both real:
+
+1. A subdomain of an established, clean organizational domain does not start where a freshly
+   registered domain starts. Receivers weigh the organizational domain when a subdomain has
+   no history of its own.
+2. **Engagement is what builds reputation, and this list is nothing like a cold list.** The
+   21-day cold ramp is calibrated for recipients who did not ask to hear from anyone. These
+   are customers who paid an invoice at this dealership a few days earlier. If the campaign
+   works at all, the early engagement signal is strong, and reputation follows engagement
+   faster than it follows volume.
+
+**And the ramp is not dead time.** On a cold build you spend three weeks warming before the
+first real send, and those weeks produce nothing. Here the ramp *is* the campaign: the cohort
+steps in the table above (30, 90, 200, 350) start the first dealership at single digits a day
+and reach full volume in about two weeks, and every one of those sends is a real customer
+getting a real quote. Nothing is thrown away.
+
+**Do not ask for a dedicated IP.** It sounds like the premium option and it is the wrong one
+at this volume. A dedicated IP has to be fed consistent high volume to hold its reputation;
+at roughly 100 sends a day it would never properly warm and would stay fragile indefinitely.
+Resend's shared pools already carry established reputation, which is what a sender this size
+wants.
+
 ### What this means for ferrario.com
 
 The DNS lookup settled two things worth knowing even though the plan has moved:

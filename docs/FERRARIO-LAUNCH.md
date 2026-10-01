@@ -88,6 +88,51 @@ the campaign gets no replies. Ticking External flips the listed Access type from
 Set `contact.replyTo` in the dealer file once the Group exists, and `npm run check:launch`
 stops failing.
 
+### 2c. Reply routing setup — the steps
+
+Chosen 1 Oct 2026: a forwarding service on `ferrario.driveoneprogram.com`, so the Reply-To
+is the SAME address as the From. Picked over a Google Group and over reusing a personal
+mailbox for one reason that is a real defect rather than a preference: the From address
+`service@ferrario.driveoneprogram.com` currently has no MX, no A and no CNAME, so it cannot
+receive mail at all. Auto-responders and clients that ignore Reply-To send to From, and
+every one of those hard bounces today. This fixes that as a side effect.
+
+**1. Create the forwarder.** Sign up with an email forwarding service (ImprovMX, Forward
+Email or similar; check the current free-tier limits before committing). Add
+`ferrario.driveoneprogram.com` as the domain.
+
+**2. Add the MX records it gives you, in Vercel.** Use the exact hostnames the service
+shows rather than any remembered from elsewhere. Typically two:
+
+    npx vercel dns add driveoneprogram.com ferrario MX <their-mx-1> 10
+    npx vercel dns add driveoneprogram.com ferrario MX <their-mx-2> 20
+
+> **The Name is `ferrario`. Not blank, not `@`.**
+>
+> Blank or `@` puts an MX on `driveoneprogram.com` itself, which already carries Google
+> Workspace MX for real people's mailboxes. A second MX at the root, at a lower priority
+> than Google's `1`, silently steals inbound mail for Marc, Stephen and Hannah. There is no
+> error; mail just stops arriving. This is the one genuinely destructive mistake available
+> in this whole setup, and it is one character away from the correct entry.
+>
+> Related and harmless: `send.ferrario` ALREADY has an MX, the Resend Return-Path. It is a
+> different record at a different name. Leave it alone; both coexist.
+
+**3. Do NOT add the forwarder's SPF record** unless you intend to SEND through them. This
+is forwarding only. Resend's sending SPF lives at `send.ferrario` and is already verified;
+an unnecessary SPF at `ferrario` is one more thing to get wrong later.
+
+**4. Create the alias:** `service@ferrario.driveoneprogram.com`, forwarding to BOTH the
+DriveOne watcher and Ferrario's service mailbox.
+
+**5. Verify before trusting it.** Check the MX authoritatively on both Vercel nameservers,
+then actually send a message to `service@ferrario.driveoneprogram.com` from an outside
+address and confirm it lands in both destinations. A forwarder that silently drops mail
+looks exactly like a campaign nobody replies to, and you would not find out for weeks.
+
+**6. Set `contact.replyTo`** to `service@ferrario.driveoneprogram.com` and rebuild. That
+clears the last `check:launch` failure.
+
 ### 3. Brand palette — confirm, not blocking the build
 
 The client supplied artwork on 30 Sep 2026 and the palette in `brand/dealers/ferrario-ford.json`

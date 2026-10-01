@@ -1,99 +1,85 @@
-# Unblocking video scheduling: Postiz and Notion
+# Video scheduling: the upload was never needed
 
-Context: a run of the `driveone-ugc-video` workflow stalled with two reported blockers,
-both diagnosed as needing admin action. Only one of them is real, and the real one has a
-same-day workaround that needs no admin at all. This note records what was verified so the
-dead ends are not walked again.
+A run of the `driveone-ugc-video` workflow stalled trying to upload video, and escalated two
+blockers as needing admin action. Checked all of it. **The headline is that the upload step was
+redundant: the media is already on the Postiz CDN and the posts are already queued.** Attempting
+it manually would have made things worse, not better.
 
-## Short version
+## What is actually live right now
 
-| Reported blocker | Verdict | What actually unblocks it |
-|---|---|---|
-| `api.notion.com` must be allowlisted before videos can be uploaded to Notion | **Not needed.** Videos never go to Notion in this workflow. | Nothing. Notion already works for everything this job needs. |
-| Postiz `file_upload` MCP tool is broken / client version mismatch | **Misdiagnosis.** There is no Postiz MCP tool. | `postiz` npm CLI + `POSTIZ_API_KEY` + egress to `*.postiz.com`. |
+From **UGC Video Library — Billo 01 (DriveOne Direct)**, status 31 Aug / 2 Sep 2026:
 
-## Notion: no change required
+- **All 12 cuts are already uploaded to the Postiz CDN.** Both geometry sets: the TikTok/Reels
+  renders and the separate YouTube-safe renders. Every URL is recorded on that page.
+- **143 posts are queued, not draft:** 18 Instagram Reels (Mon/Wed/Fri, 2 Sep to 12 Oct),
+  84 TikToks (2x/day, 2 Sep to 13 Oct), 42 YouTube Shorts (daily, 2 Sep to 13 Oct).
+- **The compliance block is applied to all of them.** Verified 143 of 143.
+- These run unattended on Postiz's servers. No session needs to be open.
 
-The workflow's Notion usage is read plus page edits, never a media upload:
+Confirmed independently: the watcher routine `trig_01Jk6JDN5SPdHSKtrSDguia3`
+("DriveOne Direct social post failure watcher", daily 12:00 UTC) **ran successfully on
+1 Oct 2026**, 12:22 to 12:28 UTC. It authenticates against Postiz on every run, so the API key
+is valid and the queue is being checked daily for ERROR posts.
 
-- Compliance language comes from **Vista — Approved Compliance Language (Old Republic / Ascent)**.
-- The playbook and segment map live on the **DriveOne Direct — UGC Video Playbook** and
-  **UGC Video Library — Billo 01** pages.
+## Why uploading again would have hurt
 
-All of that runs through the Notion connector server-side. It does not touch the sandbox
-network, so the egress allowlist is irrelevant to it. Verified: connector search returns those
-pages, and `create_attachment` / `create_pages` / `update_page` are all available.
+Two documented traps, both of which a manual re-upload walks straight into:
 
-`api.notion.com` *is* blocked at the egress proxy (`403 CONNECT tunnel failed`), so the one
-narrow thing that fails is POSTing raw bytes from the sandbox to a Notion upload URL. That
-matters only for `create_file_upload`, which this workflow does not use. If a file ever does
-need to land in Notion, `create_attachment` takes a `source_url` and Notion fetches it from its
-own servers, which sidesteps the sandbox entirely.
+1. **Re-uploading a file mints a new CDN URL.** The page is explicit: reuse the existing URLs for
+   the whole rotation rather than uploading per post. A fresh upload produces orphan URLs that no
+   scheduled post references.
+2. **Postiz has no content-update endpoint.** Re-creating posts on top of an already-queued
+   schedule produces duplicates, and cleaning them up is a create-then-delete pass that leaves
+   orphans if it dies partway.
 
-Separately, pushing the video masters into Notion would not have helped even if it had worked:
-the UGC skill records that **Notion attachment URLs expire and cannot serve media**, and that
-Instagram, TikTok and YouTube all reject external URLs. Media has to be uploaded to Postiz.
+So the blocked capability was not standing between anyone and a working schedule. It was standing
+between someone and a duplicate schedule.
 
-## Postiz: a CLI, not an MCP
+## On the two reported blockers
 
-From the `driveone-direct-retargeting` skill, verbatim: **"Postiz is a CLI, not an MCP."**
+**Notion did not need allowlisting.** `api.notion.com` *is* blocked at the egress proxy
+(`403 CONNECT tunnel failed`, reproduced), but this workflow never uploads media to Notion. It
+reads compliance language and edits the control doc, all server-side through the connector, which
+never touches the sandbox network. Verified working. Even on success it would have achieved
+nothing: the page states Notion attachment URLs are signed, expire, and are **not postable**;
+they are the archive copy.
 
-So no MCP file-upload tool, and no in-chat file-picker widget, is part of this path. Whatever
-`file_upload` tool was called belongs to some other connector; its refusal says nothing about
-Postiz, and no client update changes that. The documented mechanism is:
+**Postiz was misdiagnosed as a broken MCP tool.** There is no Postiz MCP. Per
+`driveone-direct-retargeting`: *"Postiz is a CLI, not an MCP."* No client update or file-picker
+widget is part of this path. The CLI needs the npm package (npmjs already bypasses the proxy),
+`POSTIZ_API_KEY`, and egress to `api.postiz.com` / `uploads.postiz.com` — the latter currently
+blocked (verified 403). Running the CLI from a local terminal has unrestricted internet and needs
+no admin change; allowlisting those two hosts per environment is the fix for doing it in a cloud
+session.
 
-```bash
-npm install -g postiz
-export POSTIZ_API_KEY=...          # not stored in this repo, in memory, or in any project doc
-postiz upload <file.mp4>           # returns an uploads.postiz.com URL
-postiz posts:create -c "<caption>" -m "<url>" -s "<ISO8601>" -t draft -i "<integration-id>"
-postiz posts:status <id> --status schedule
-```
+## The real upcoming work
 
-Three things that CLI needs:
+**The queue runs dry 12 to 13 Oct**, about eleven days out. The watcher warns when the queue is
+inside 7 days, so expect that alarm around 5 to 6 Oct. Two cases:
 
-1. **The package.** `registry.npmjs.org` bypasses the proxy, so `npm install -g postiz` works
-   in a cloud session already.
-2. **`POSTIZ_API_KEY`.** Deliberately not committed anywhere. Ryan holds it. For repeat use in
-   cloud sessions, add it as an environment secret rather than pasting it into chat.
-3. **Network egress to `*.postiz.com`.** Currently blocked. Verified: `api.postiz.com`,
-   `app.postiz.com` and `postiz.com` all return `403 CONNECT tunnel failed` from the egress
-   proxy. `uploads.postiz.com` is needed too, since that is where `postiz upload` puts media.
+- **Extending the existing rotation** needs *no upload at all*. Reuse the 12 CDN URLs already on
+  the page and call `posts:create` only. Captions rotate independently of the video.
+- **A new creator master** (Billo #2) is net-new: render, then upload, then schedule.
 
-### Fastest path today: run the CLI locally
+Either way, scheduling still needs the key plus egress, so it runs locally or after the allowlist
+change.
 
-The allowlist is a property of the cloud sandbox, not of Postiz or of the account. Running the
-same CLI from a local terminal has unrestricted internet and needs no admin change:
+## Open items that need no tooling at all
 
-```bash
-npm install -g postiz
-export POSTIZ_API_KEY=<key from Ryan>
-cd <folder holding the rendered variants>
-postiz upload DOD-variant-01.mp4
-```
+Both are outstanding compliance work, doable by hand today:
 
-The rendered variants are already local to whoever rendered them, so nothing has to move first.
+1. **The noon TikTok on 2 Sep published before the disclaimer pass** and carries none of the
+   compliance block. Postiz cannot edit a published post, so the caption has to be fixed in the
+   TikTok app.
+2. **The YouTube paid-promotion checkbox** is manual per Short, and Postiz's schema has no field
+   for it. Studio > Content > the Short > More options > Content declaration. Works after
+   publishing. That is up to 42 Shorts.
 
-### Durable fix: allowlist Postiz for cloud sessions
+## Credential note
 
-To do the whole workflow inside a cloud session, the environment needs
-`api.postiz.com` and `uploads.postiz.com` on its allowed network destinations. That is edited
-per environment, not per conversation: open the cloud environment menu in the session title
-bar, choose **Edit**, and change **Network access** (either a broader access level or those
-hosts added to the allowed domains). Access levels are described at
-https://code.claude.com/docs/en/claude-code-on-the-web. Add `POSTIZ_API_KEY` as a secret on the
-same environment while there.
+The Postiz key is flagged in the Notion control doc as overdue for rotation. That page also
+records where it is stored and how wide its posting rights are; both are deliberately left out of
+this repo. Read it there.
 
-Do **not** add `api.notion.com` for this job. It is not what is blocking anything here.
-
-## Guardrails that still apply
-
-Carried over from the UGC skill, because an unblocked pipeline makes these easier to trip:
-
-- Pace Postiz writes to **one call per 15 to 20 seconds**. Bursting trips
-  `429 ThrottlerException` with a cooldown near an hour.
-- There is **no content-update endpoint**. Fixing a caption means create-new-then-delete-old, so
-  captions and the compliance block must be final before scheduling.
-- Build with `-t draft` and let Ryan approve before flipping to scheduled.
-- Check the **integration ID**, never the account name. The DriveOne dealer accounts have nearly
-  identical names and are a different business.
+This write-up does not read or reproduce the value. If it is rotated, the daily failure watcher
+has to be updated in the same pass or the check goes blind, since it authenticates on every run.

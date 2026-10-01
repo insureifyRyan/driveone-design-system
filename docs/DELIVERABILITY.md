@@ -164,6 +164,24 @@ both parties and carrying the dealership's postal address, which is what CAN-SPA
 asks for. Costs two to three weeks of warmup before the first real send, and that is the
 honest price of losing ferrario.com.
 
+**`driveonepartners.com` is the strongest named candidate.** A lemlist audit on 1 Oct 2026
+shows it already carries the team's custom tracking domain at `link.driveonepartners.com`,
+which is proof that DriveOne controls its DNS — the one thing ferrario.com may turn out to
+lack. It is DriveOne-branded rather than Kovara-branded, and it is not one of the four
+domains the cold prospecting stack sends from, so a consumer complaint on this campaign
+would not land on the dealer-acquisition motion. `driveoneprogram.com` and
+`driveonedealers.com` also exist, carrying team members' addresses.
+
+Use a dedicated subdomain on it rather than the root, for the same blast-radius reason as
+above, and because the root is already doing a job.
+
+> Worth knowing before anyone proposes reusing the warm Kovara mailboxes anyway: their
+> lemwarm deliverability scores are genuinely high (98, 99 and 88 on the three readable
+> ones, warming since 18 Aug 2026). The instinct that they are "warmed up" is correct. That
+> warmth is reputation earned through Google Workspace and M365 SMTP, and it is the domain
+> half of a two-part score. Pointing those domains at Resend puts them on Amazon SES IPs
+> they have never sent from, so the path half restarts at zero regardless.
+
 ### On "these are all opt-in people"
 
 Worth stating precisely, because the precise version is the stronger one.

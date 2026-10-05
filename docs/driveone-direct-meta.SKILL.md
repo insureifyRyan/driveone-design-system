@@ -58,6 +58,38 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 5 Oct 2026: delivery resumed, overspending, Lead event confirmed dead.**
+
+**Dark 17 to 30 Sep (14 days), resumed 1 Oct** on the old campaign. The cause of the stop was
+never explained; a billing hold is the likely answer. Nothing about the campaign setup changed.
+
+**The campaign overspends its stated budget.** It reads $100/day and spent $161.91, $171.48,
+$171.21 and $103.46 across 1 to 4 Oct, averaging $152.02/day, about $208 over four days. None of
+the three ad sets carries its own budget. Meta's normal flexibility is ~25% over on a day; this is
+~70% on three of four. Unexplained from API access; flagged to Ryan.
+
+**The `Lead` event is dead, and the likely cause is a relabel.** Two straight weekly samples with
+exactly zero Leads: 27 Sep (205 PageViews) and 4 Oct (434 PageViews), 639 between them. Leads had
+fired in every sample for a month at 0.38% to 3.8%. Meanwhile InitiateCheckout, which never fired
+before 20 Sep, now does: 5 on 434 PageViews is **1.15%, squarely in the band Leads used to
+occupy**. Working conclusion: the quote-start event was **relabelled from `Lead` to
+`InitiateCheckout`** when tracking was touched around 20 Sep.
+
+**This is a hard blocker on the Leads campaign** `120248711195770575`, which optimizes for
+conversions on `Lead`. With no Lead signal it would not underperform, it would never work at all.
+This supersedes the earlier "not enough Lead volume" argument. Keep it paused until the event is
+confirmed firing.
+
+**The placement failure is settled behaviour, confirmed three times.** On 1 to 4 Oct, **80%** of
+$606.41 went to Facebook Reels ($321.63, 53%), Instream Video ($128.52, 21%), Reels Overlay
+($29.38) and Right Hand Column ($5.67). **Instagram Feed got $0 and did not appear in the
+placement list at all**, the third measurement running. Same shape on 14 to 17 Sep (73%) and in
+August. Report this as what lowest-cost CBO on automatic placements does, not as a new finding.
+
+**CTR trap:** that window posted 2.11% CTR, the highest ever recorded on this account, against
+zero conversions on $608. It is a Reels swipe number. Never present a high CTR from this setup as
+the campaign working.
+
 **State as of 28 Sep 2026: 11 days dark, and the pixel may be broken.**
 
 **Still no delivery.** Last impression was 16 Sep. Zero on 17 Sep and every day since, confirmed
@@ -145,7 +177,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), **5,000 (28 Sep)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), **6,500 (5 Oct)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

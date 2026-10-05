@@ -60,6 +60,10 @@ const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.js
 const SEND_FROM = `${DEALER.sending.fromName} <${DEALER.sending.fromAddress}>`;
 const SEND_REPLY_TO = DEALER.contact.replyTo;
 const UNSUB_BASE = DEALER.campaign.unsubscribeUrl;
+
+// n8n Variable names allow letters, digits and underscores only, so the
+// dealer id becomes upper snake case.
+const SECRET_VAR = 'RESEND_WEBHOOK_SECRET_' + DEALER.id.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
 const OFFER = JSON.parse(readFileSync(join(ROOT, 'brand/offer.json'), 'utf8'));
 
 // The deck describes the CREATIVE, which every dealership shares. The campaign
@@ -981,10 +985,23 @@ const CLASSIFY_CODE = [
 const VERIFY_RESEND_CODE = [
   "const crypto = require('crypto');",
   '',
-  'const secret = $vars.RESEND_WEBHOOK_SECRET;',
+  // Each Resend webhook endpoint has its OWN Svix signing secret, and every
+  // dealership needs its own endpoint because the paths are per-dealer. One
+  // instance-wide $vars.RESEND_WEBHOOK_SECRET therefore cannot verify both:
+  // whichever dealership it belongs to works, and the other rejects every
+  // delivery as a bad signature. Rejecting a bounce is not a quiet failure
+  // either, it is an address that keeps being mailed after the mailbox is
+  // gone, which is what burns a sending domain.
+  //
+  // So the dealer-specific name is tried first and the shared one is the
+  // fallback. Bob Johnson keeps working untouched on the shared variable;
+  // Ferrario takes RESEND_WEBHOOK_SECRET_FERRARIO_FORD. The secret itself
+  // stays in n8n Variables and never in this repo.
+  `const secret = $vars.${SECRET_VAR} || $vars.RESEND_WEBHOOK_SECRET;`,
   'if (!secret) {',
   '  throw new Error(',
-  '    "RESEND_WEBHOOK_SECRET is not set in n8n Variables, so this webhook cannot be " +',
+  `    "Neither ${SECRET_VAR} nor RESEND_WEBHOOK_SECRET is set in n8n " +`,
+  '    "Variables, so this webhook cannot be " +',
   '    "verified. Refusing the request rather than trusting it."',
   '  );',
   '}',

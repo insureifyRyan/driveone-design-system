@@ -6,7 +6,7 @@
  *   node scripts/check.mjs <dealer>            build-time: unfinished setup warns
  *   node scripts/check.mjs <dealer> --launch   pre-send: unfinished setup fails
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -124,6 +124,40 @@ if (unconfirmed.length) {
 // failures: the footer postal address is a CAN-SPAM requirement, not a polish
 // item, and a reply-to nobody reads is how a campaign written as though the
 // service drive sent it becomes a dead end for the customer who answers it.
+// The sending identity is baked into the generated workflow now rather than
+// read from an n8n Variable, which is right - an n8n Variable is instance-wide
+// and a From address is the most dealership-specific value there is - but it
+// moves where an unconfirmed value shows up. It used to be an unset variable
+// and a loud runtime error. Baked in, it is a workflow that looks finished and
+// posts the literal string "NEEDS CONFIRMATION: the local part on ..." to the
+// Resend API as a From header.
+//
+// Matched case sensitively, unlike the dealer-file walk above. That walk skips
+// $comment and *Note keys, so prose cannot reach it; a workflow is all one
+// blob and its SQL carries the comment "-- Placeholder addresses. These are
+// worse than bounces", which is a description of a filter and not an unresolved
+// field. The markers this repo actually writes for unresolved values are
+// uppercase, so case is what separates the two.
+const WORKFLOW_MARKER = /NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME/;
+const wfDir = join(ROOT, 'n8n/workflows', DEALER_ID);
+const workflowMarkers = [];
+if (existsSync(wfDir)) {
+  for (const f of readdirSync(wfDir).filter((n) => n.endsWith('.json'))) {
+    const wf = JSON.parse(readFileSync(join(wfDir, f), 'utf8'));
+    for (const node of wf.nodes || []) {
+      // Credential ids are placeholders by design in the committed JSON; n8n
+      // binds the real credential on import, so they are not a content defect.
+      const { credentials, ...rest } = node;
+      const hit = JSON.stringify(rest).match(WORKFLOW_MARKER);
+      if (hit) workflowMarkers.push(`${f} / ${node.name} (${hit[0]})`);
+    }
+  }
+}
+if (workflowMarkers.length) {
+  warn.push(`Generated workflow carries an unresolved marker: ${workflowMarkers.join(', ')}. ` +
+    `That value would be sent to a live API verbatim.`);
+}
+
 const LAUNCH = process.argv.includes('--launch');
 if (LAUNCH) {
   const REQUIRED_TO_SEND = [
@@ -136,6 +170,9 @@ if (LAUNCH) {
   ];
   for (const [f, why] of REQUIRED_TO_SEND) {
     if (unconfirmed.includes(f)) fail.push(`${f} is unconfirmed. ${why}`);
+  }
+  for (const m of workflowMarkers) {
+    fail.push(`${m} is an unresolved marker baked into a workflow. It would reach a live API as a literal string.`);
   }
 }
 

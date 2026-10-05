@@ -35,6 +35,31 @@ const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'ut
 // workflows and written them over the shared output path.
 const DEALER_ID = process.argv[2] || 'bob-johnson';
 const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
+
+// Per-dealership sending identity, baked in at build time rather than read
+// from an n8n Variable at run time.
+//
+// SEND_FROM and SEND_REPLY_TO used to be $vars, and an n8n Variable is
+// instance-wide while a From address is the single most dealership-specific
+// value in the whole engine. Two rooftops in one n8n cannot both be right:
+// Bob Johnson sends as bobjohnsonauto.com and Ferrario as
+// ferrario.driveoneprogram.com, so whichever was set last would win and the
+// other dealership would send from a domain its own DKIM key does not cover.
+// That is a spoofed From to every receiver that checks alignment, which is all
+// of them, on a domain that is still earning its reputation.
+//
+// The dealer file already holds all of it and `npm run check:launch` already
+// gates on it, so the value belongs in the workflow the build produces.
+// UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE come along for the ride: they
+// happen to be the same deployed Edge Function for every dealership, which is
+// precisely why leaving them as variables to be set by hand bought nothing.
+//
+// DRY_RUN stays a variable on purpose. It is an operator switch rather than a
+// property of a dealership, it is meant to be flipped without a rebuild, and
+// instance-wide is the right blast radius for "send nothing to customers".
+const SEND_FROM = `${DEALER.sending.fromName} <${DEALER.sending.fromAddress}>`;
+const SEND_REPLY_TO = DEALER.contact.replyTo;
+const UNSUB_BASE = DEALER.campaign.unsubscribeUrl;
 const OFFER = JSON.parse(readFileSync(join(ROOT, 'brand/offer.json'), 'utf8'));
 
 // The deck describes the CREATIVE, which every dealership shares. The campaign
@@ -622,8 +647,8 @@ const PREPARE_SEND_CODE = [
   '        advisor_name: r.advisor_name || "",',
   '        // The API owns this URL. Append tracking only, never rebuild it.',
   '        quote_url: r.quote_url + (r.quote_url.indexOf("?") === -1 ? "?" : "&") + "step=" + nextStep + "&" + ' + JSON.stringify(DEALER.campaign.utm) + ',',
-  '        unsubscribe_url: $vars.UNSUBSCRIBE_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
-  '        preferences_url: $vars.PREFERENCES_URL_BASE + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
+  '        unsubscribe_url: ' + JSON.stringify(UNSUB_BASE) + ' + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
+  '        preferences_url: ' + JSON.stringify(UNSUB_BASE) + ' + "?k=" + r.customer_key + "&d=" + r.dealer_id,',
   '      },',
   '    },',
   '  });',
@@ -748,9 +773,9 @@ const schedulerNodes = [
     // are evaluated in a sandbox and an IIFE is not worth the risk on the node
     // that talks to customers.
     jsonBody: '={{ JSON.stringify({'
-      + ' from: $vars.SEND_FROM,'
+      + ' from: ' + JSON.stringify(SEND_FROM) + ','
       + ' to: [ $vars.DRY_RUN || $("Claim Due Enrollments").itemMatching($itemIndex).json.email ],'
-      + ' reply_to: $vars.SEND_REPLY_TO,'
+      + ' reply_to: ' + JSON.stringify(SEND_REPLY_TO) + ','
       + ' subject: ($vars.DRY_RUN ? "[DRY RUN -> " + $("Claim Due Enrollments").itemMatching($itemIndex).json.email + "] " : "") + $json.subject,'
       + ' html: $json.html,'
       // One click unsubscribe, which Google and Yahoo expect from bulk senders

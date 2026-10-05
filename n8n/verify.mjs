@@ -21,7 +21,7 @@
  *
  * Exits non-zero on any failure, so it can gate a commit.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
@@ -349,6 +349,37 @@ check('SQL placeholders match the replacement count', () => {
   }
   assert(problems.length === 0, problems.join('; '));
   return `${pgNodes().length} nodes`;
+});
+
+check('no webhook path collides with another dealership', () => {
+  // WHY: n8n enforces a unique webhook path across ACTIVE workflows. The
+  // internal events path was the literal 'vsc/events/:dealer' for every
+  // dealership the engine built, so the first rooftop to go live claimed it and
+  // every later one could create 03 Events but never activate it. Activating 03
+  // is what makes bounces, complaints and unsubscribes reach vsc_suppression,
+  // so the failure mode is a second dealership that looks fully built and
+  // quietly honours no opt-outs.
+  //
+  // Nothing in a single-dealer build can see this, which is why it needs a
+  // cross-dealer check: read every dealer file, rebuild the path each one
+  // would claim, and refuse a duplicate.
+  const dealerDir = join(ROOT, 'brand/dealers');
+  const seen = new Map();
+  const clashes = [];
+  for (const f of readdirSync(dealerDir).filter((n) => n.endsWith('.json'))) {
+    const d = JSON.parse(readFileSync(join(dealerDir, f), 'utf8'));
+    const id = d.id || f.replace(/\.json$/, '');
+    const paths = [
+      (d.campaign && d.campaign.eventsWebhookPath) || ('vsc/events/' + id),
+      'vsc/resend/' + id,
+    ];
+    for (const path of paths) {
+      if (seen.has(path)) clashes.push(`${path} claimed by both ${seen.get(path)} and ${id}`);
+      else seen.set(path, id);
+    }
+  }
+  assert(clashes.length === 0, clashes.join('; '));
+  return `${seen.size} paths across ${new Set(seen.values()).size} dealerships`;
 });
 
 /* -------------------------------------------------------------------- report */

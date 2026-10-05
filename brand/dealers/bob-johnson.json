@@ -52,7 +52,9 @@
     "idNote": "Distinct from Ferrario on purpose. vsc_enrollment and vsc_email_template are keyed on (dealer_id, campaign_id, ...), so a shared id would put two dealerships in one campaign namespace.",
     "linkMode": "short",
     "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
-    "unsubscribeNote": "The deployed Supabase Edge Function. Keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this."
+    "unsubscribeNote": "The deployed Supabase Edge Function. Keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
+    "eventsWebhookPath": "vsc/events/:dealer",
+    "eventsWebhookPathNote": "PINNED 5 Oct 2026 to the value his 03 Events workflow is already live on. The engine now defaults this to a dealer-scoped literal (vsc/events/<dealer-id>), because n8n enforces unique webhook paths across active workflows and the old shared \":dealer\" path meant the second dealership could create 03 but never activate it. Bob Johnson keeps the parameterised path so the URL whatever posts his checkout events already holds keeps working; changing a live endpoint for tidiness is not worth a dropped purchase event. Ferrario, and every dealership after it, takes the default and needs no entry here."
   },
   "intake": {
     "internalNames": [

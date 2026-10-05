@@ -1053,10 +1053,29 @@ const VERIFY_RESEND_CODE = [
   'return out;',
 ].join('\n');
 
+// n8n enforces a unique webhook path across ACTIVE workflows, and this path
+// used to be the literal 'vsc/events/:dealer' for every dealership the engine
+// built. That was fine while one dealership existed and became unresolvable
+// the moment a second one needed to go live: Bob Johnson's 03 holds the path,
+// so Ferrario's 03 could be created but never activated, and activating 03 is
+// what makes bounces and unsubscribes reach vsc_suppression.
+//
+// The ':dealer' parameter was the original multi-dealer design, one 03 reading
+// the rooftop out of the URL. The fork replaced it with a workflow per
+// dealership whose dealer_id and campaign_id fallbacks are already baked in,
+// so a dealer-scoped literal path is the shape that actually matches, and
+// Classify Event needs no path parameter to know where an event came from.
+//
+// Bob Johnson keeps ':dealer' because his 03 is live on it and whatever posts
+// checkout events already has that URL. Changing a live endpoint to tidy it up
+// is not worth a dropped purchase event, so his dealer file pins it.
+const EVENTS_PATH = (DEALER.campaign && DEALER.campaign.eventsWebhookPath)
+  || ('vsc/events/' + DEALER.id);
+
 const eventsNodes = [
   node('Campaign Event Webhook', 'webhook', 2, [-620, 0], {
     httpMethod: 'POST',
-    path: 'vsc/events/:dealer',
+    path: EVENTS_PATH,
     authentication: 'headerAuth',
     responseMode: 'responseNode',
     options: {},

@@ -131,7 +131,7 @@ if (LAUNCH) {
     ['contact.addressLine2', 'CAN-SPAM requires a real postal address in the footer.'],
     ['contact.servicePhone', 'The footer prints a customer-facing service number.'],
     ['contact.replyTo', 'Replies have to reach a human at the dealership.'],
-    ['campaign.quoteUrlBase', 'Every CTA in all ten emails points at this.'],
+    ['campaign.quoteUrlBase', 'Preview renders only. A real send reads vsc_enrollment.quote_url, which pricing fills.'],
     ['sending.fromAddress', 'Nothing can send without a verified From address.'],
   ];
   for (const [f, why] of REQUIRED_TO_SEND) {

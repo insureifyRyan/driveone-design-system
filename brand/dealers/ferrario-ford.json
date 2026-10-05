@@ -62,6 +62,15 @@
     "id": "ff_postro_vsc_2026",
     "idNote": "Distinct from Bob Johnson on purpose. vsc_enrollment and vsc_email_template are keyed on (dealer_id, campaign_id, ...), so a shared id would put two dealerships in one campaign namespace."
   },
+  "intake": {
+    "internalNames": [
+      "ferrario"
+    ],
+    "staffEmailDomains": [
+      "NEEDS CONFIRMATION: the dealership mail domain, probably ferrarioford.com"
+    ],
+    "$comment": "NEW 5 Oct 2026, fixing a fork carryover. Ferrario inherited Bob Johnson's exclusion list: it filtered bob johnson, widrick and caprara, which are Rochester-area names that do not occur in Elmira service data, and it filtered @bobjohnsonauto.com while leaving Ferrario's own domain eligible. So the two filters that matter here were both pointed at the wrong dealership.\n\ninternalNames now catches Ferrario's own records, which is the common case: the Auto Team group's other rooftops and internal entries written under the store name.\n\nstaffEmailDomains is UNCONFIRMED and deliberately not blocking. While it carries a marker the engine emits no staff filter at all and says so in a SQL comment, which is the honest failure: a guessed domain would look like a working filter and exclude nobody. Fill it in and the predicate appears on the next build. The risk while it is empty is small and bounded - a staff member is only eligible if they personally had a service-drive quote created, and the opening cohort is 30 - but it is a real risk and worth one line from the dealership.\n\nLocal competitors who took a trade belong here too, as and when the store names them. That was two of the first thirteen bad rows at Bob Johnson."
+  },
   "metricbridge": {
     "$comment": "CONFIRMED from the MetricBridge dealer record, 30 Sep 2026.",
     "source": "elevate_service_drive",

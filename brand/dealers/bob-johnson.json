@@ -54,6 +54,17 @@
     "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
     "unsubscribeNote": "The deployed Supabase Edge Function. Keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this."
   },
+  "intake": {
+    "internalNames": [
+      "bob ?johnson",
+      "widrick",
+      "caprara"
+    ],
+    "staffEmailDomains": [
+      "bobjohnsonauto.com"
+    ],
+    "$comment": "Lifted verbatim out of n8n/build-workflows.mjs, where these were hardcoded and so applied to every dealership the fork produced. Behaviour for Bob Johnson is unchanged: the generated SQL still reads first_name !~* '(bob ?johnson|widrick|caprara|fleet|test|pdi|auto sales|motors)' and email !~ '@bobjohnsonauto\\.com$'. internalNames is matched against first_name, case insensitively, as a regex alternation, so Postgres regex syntax is allowed and \"bob ?johnson\" deliberately matches both spellings. The generic terms (fleet, test, pdi, auto sales, motors) live in the engine and are added to every dealership, so they do not belong here."
+  },
   "brandLead": {
     "$comment": "dealer means the dealership colour leads the layout and DriveOne is reduced to the provider mark in the header. Correct for a send made on their behalf, and the same mode Ferrario uses.",
     "$change": "BEHAVIOUR CHANGE, flagged rather than buried. The single-dealer engine had no brandLead and rendered every structural accent in DriveOne cyan regardless of the dealership. Under the multi-dealer engine an absent brandLead would have kept that cyan, so this is set explicitly to dealer: hero rules, buttons and icon strokes now resolve to Bob Johnson gold. Re-review a filled preview before his next send, because his emails will not look the way they did when they were last built.",

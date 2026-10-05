@@ -155,6 +155,38 @@ const cond = (left, operator, right, type = 'string') => ({
 // webhook plus a normalizer plus a rules engine: it is one atomic statement that
 // selects the eligible service customers and inserts enrollments, deduped by the
 // unique constraint. Nothing to parse, nothing to drift.
+// Who is not a customer. This used to be one hardcoded regex naming Bob
+// Johnson, his group's other rooftops and the dealers who took trades near
+// Rochester, and the fork carried it verbatim into every dealership built
+// afterwards. At Ferrario that was backwards in both directions: it filtered
+// Rochester names that never appear in Elmira data, and it did not filter
+// Ferrario, so the store's own staff and its own local rivals stayed eligible.
+// The comment below already described the exact phone call that produces.
+//
+// GENERIC holds the terms that are about the shape of a service-drive record
+// rather than about any one dealership, so every rooftop gets them. Anything
+// local belongs in the dealer file, which is also where somebody at the store
+// can add a competitor without touching the engine.
+const GENERIC_INTERNAL_NAMES = ['fleet', 'test', 'pdi', 'auto sales', 'motors'];
+const MARKER_RE = /NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME/i;
+const intake = DEALER.intake || {};
+const localNames = (intake.internalNames || []).filter((n) => !MARKER_RE.test(n));
+const INTAKE_NAME_PATTERN = [...localNames, ...GENERIC_INTERNAL_NAMES].join('|');
+
+// Emitted only when the dealership's own mail domains are actually known. A
+// guessed domain is worse than none: it reads as a working filter, excludes
+// nobody, and nothing ever errors to say so. An unconfirmed value warns in
+// `npm run check` instead.
+const staffDomains = (intake.staffEmailDomains || []).filter((d) => d && !MARKER_RE.test(d));
+const INTAKE_STAFF_DOMAIN_SQL = staffDomains.length
+  ? [
+      '  -- the dealership\'s own staff do not need the pitch',
+      ...staffDomains.map((d) =>
+        `  and lower(trim(c.email)) !~ '@${String(d).trim().toLowerCase().replace(/\./g, '\\.')}$'`),
+    ]
+  : ['  -- No staff email domain is recorded for this dealership, so no staff',
+     '  -- filter is emitted. See intake.staffEmailDomains in the dealer file.'];
+
 const INTAKE_SQL = [
   'insert into vsc_enrollment (',
   '  dealer_id, campaign_id, customer_key, email, first_name,',
@@ -202,14 +234,13 @@ const INTAKE_SQL = [
   '  -- rooftops, and rival dealers who took a trade. Thirteen of the first',
   '  -- 132 enrolled were one of these, two of them competing dealerships,',
   '  -- which is a phone call nobody at the store wants to take.',
-  "  and c.first_name !~* '(bob ?johnson|widrick|caprara|fleet|test|pdi|auto sales|motors)'",
+  `  and c.first_name !~* '(${INTAKE_NAME_PATTERN})'`,
   '  -- Placeholder addresses. These are worse than bounces: noemail@gmail.com',
   '  -- and ask@gmail.com are real accounts belonging to strangers, so a send',
   '  -- costs a complaint on a domain that is still earning its reputation.',
   "  and lower(trim(c.email)) !~ '^(noemail|no|ask|test|tomtest|none|na)@'",
   "  and lower(trim(c.email)) !~ '@(no|a|abc|noemail|none|test)\\.(com|net|org)$'",
-  '  -- the dealership\'s own staff do not need the pitch',
-  "  and lower(trim(c.email)) !~ '@bobjohnsonauto\\.com$'",
+  ...INTAKE_STAFF_DOMAIN_SQL,
 
   '  -- VSCs are not sold in California',
   "  and upper(coalesce(c.state, '')) <> 'CA'",

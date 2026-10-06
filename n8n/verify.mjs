@@ -332,6 +332,65 @@ check('the cohort caps total enrolment, not one run', () => {
   return 'limit subtracts already-enrolled, scoped to dealer and campaign';
 });
 
+check('a raised cohort actually fills', () => {
+  // WHY: the subtraction above is necessary and was not sufficient, and the two
+  // failures look identical from outside - a sweep that reports success and
+  // inserts nothing.
+  //
+  // `limit cohort - enrolled` was applied to the raw candidate rows, and nothing
+  // in the WHERE clause excluded people already enrolled. They were dropped at
+  // the very end by `on conflict do nothing`, which is far too late: the slot had
+  // already been spent. Worse, the ordering is freshest-visit-first and the
+  // previous cohort was taken freshest-first too, so the already-enrolled are
+  // exactly the rows at the top of the list. Every slot at the front of the queue
+  // went to someone already in the campaign.
+  //
+  // Measured against Ferrario's live data at the first ramp step, cohort 30 -> 90:
+  // the budget is 61, the 61 freshest candidates contain all 30 rows belonging to
+  // the 29 already enrolled, so 31 new people are enrolled and the total reaches
+  // 60 rather than 90. The next sweep computes a budget of 30, the 30 freshest
+  // candidates are all already enrolled, and it inserts zero. The ramp stalls at
+  // roughly double its first step and stays there for good.
+  //
+  // The second leak is duplicate quotes. A customer with two service visits in
+  // the window is two candidate rows, counts twice against the budget, and
+  // inserts once. initial_cohort is denominated in PEOPLE, so the candidate set
+  // has to be too.
+  //
+  // This check is structural: it asserts the exclusion happens before the limit
+  // rather than after it, because that ordering is the whole fix and it cannot be
+  // read off a row count. The behavioural proof is a read-only query against the
+  // live database, which returned 60 under the old SQL and 90 under this one.
+  const intake = WORKFLOWS.find(({ file }) => file === '01-intake.json');
+  assert(intake, '01-intake.json not found');
+  const node = nodesOf(intake.wf).find((n) =>
+    n.type === 'n8n-nodes-base.postgres' && /insert into vsc_enrollment/i.test(n.parameters.query || ''));
+  assert(node, 'no enrolment insert found in 01-intake.json');
+
+  const sql = node.parameters.query.replace(/^\s*--.*$/gm, '');
+
+  // One row per person, so the budget counts people and not visits.
+  assert(/distinct\s+on\s*\(\s*customer_key\s*\)/i.test(sql),
+    'intake does not collapse candidates to one row per customer_key, so a customer with two visits spends two cohort slots and fills one');
+
+  // The already-enrolled must be filtered out of the candidate set itself.
+  const antiJoin = /not\s+exists\s*\(\s*select\s+1\s+from\s+vsc_enrollment\b/i.exec(sql);
+  assert(antiJoin,
+    'intake never excludes already-enrolled customers from the candidate set; it relies on ON CONFLICT, which discards them only after they have spent a cohort slot');
+
+  // ...and it must come BEFORE the limit. After it, it does nothing.
+  const limitAt = sql.search(/\blimit\s+greatest\s*\(/i);
+  assert(limitAt !== -1, 'no clamped limit found');
+  assert(antiJoin.index < limitAt,
+    'the already-enrolled exclusion appears after the limit, so the limit is still spent on rows that are then discarded');
+
+  // ON CONFLICT stays, as the race guard between two concurrent sweeps.
+  assert(/on\s+conflict\s*\([^)]*\)\s*do\s+nothing/i.test(sql),
+    'the conflict guard was removed; two concurrent sweeps could now double-enrol');
+
+  return 'already-enrolled excluded before the limit, candidates deduped per person';
+});
+
 check('SQL placeholders match the replacement count', () => {
   // WHY: an undefined key is DROPPED from queryReplacement rather than sent as
   // null, which shortens the positional array and shifts every parameter after

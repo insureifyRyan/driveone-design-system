@@ -143,7 +143,20 @@ const preheader = (text) => `
 ${esc(text)}${'&#847;&zwnj;&nbsp;'.repeat(60)}
 </div>`;
 
-/** DriveOne lockup. Uses a hosted image when one is configured, otherwise a type lockup that survives images-off. */
+/**
+ * DriveOne lockup. Uses a hosted image when one is configured, otherwise a type lockup that survives images-off.
+ *
+ * The descriptor carries class lsfix-15, and the dealer lockup's second line
+ * carries lsfix-45. Both exist because letter spacing is added AFTER the last
+ * character as well as between characters, so a right aligned letter spaced
+ * line carries a trailing gap and sits optically left of the line above it. At
+ * 1.5px that is invisible on a desktop and reads as misaligned at phone scale.
+ * The compensating negative margins live in the max-width:620px block, so
+ * Outlook on Windows - which ignores media queries and already renders the
+ * desktop lockup correctly - cannot be regressed by them. Kept here rather than
+ * in the emitted CSS because build reasoning should not ship in every customer's
+ * email; the stylesheet carries a one line pointer back to this comment.
+ */
 function driveOneLockup(onDark) {
   const wm = (T.brand.wordmark) || { part1: 'drive', part2: 'one', trademark: true };
   const darkTone = onDark ? '#FFFFFF' : (C.logoInk || C.ink);
@@ -417,14 +430,7 @@ function render(e) {
     .wrap{width:100% !important;}
     .gut{padding-left:20px !important;padding-right:20px !important;}
     h1{font-size:26px !important;line-height:1.16 !important;}
-    /* Letter spacing is added AFTER the last character as well as between them,
-       so a right aligned, letter spaced line carries a trailing gap and sits
-       optically left of the line above it. At 1.5px that is invisible on a
-       desktop and obvious at phone scale, which is why VEHICLE SERVICE CONTRACT
-       looked shoved left of driveone while also reading as cramped. Pull the
-       trailing space back off the right edge. Scoped to the small screen block
-       because Outlook on Windows ignores media queries entirely and renders the
-       desktop lockup correctly already, so this cannot regress it. */
+    /* trailing letter-space compensation, see build.mjs */
     .lsfix-15{margin-right:-1.5px !important;}
     .lsfix-45{margin-right:-4.5px !important;}
   }

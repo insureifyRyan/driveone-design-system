@@ -382,6 +382,44 @@ check('no webhook path collides with another dealership', () => {
   return `${seen.size} paths across ${new Set(seen.values()).size} dealerships`;
 });
 
+check('a subject never greets a name we do not have', () => {
+  // WHY: Ferrario's feed carries 50 records whose first_name is the literal
+  // string "First" and last_name "Last" - real people with real emails and real
+  // vehicles whose names were never captured. They cluster in the newest quotes,
+  // so freshest-first intake pulled 28 of them into the first cohort of 29, and
+  // step 1 variant A went out as "First, one thing was missing from your file".
+  //
+  // Nothing errored, which is the point. "First" is a non-empty string, so the
+  // || "there" fallback never fired, and the unresolved-merge-tag guard saw a
+  // tag that had been resolved - just resolved to garbage. Only a human reading
+  // the dry-run subject lines caught it.
+  const code = nodeNamed(load('02-scheduler.json'), 'Prepare Send').parameters.jsCode;
+  const base = {
+    id: 'x', dealer_id: 'd', campaign_id: 'c', current_step: 0,
+    created_at: new Date().toISOString(), monthly_payment: 129, down_payment: 50,
+    contract_price: 3364, payment_term: 36, contract_months: 36, coverage_miles: 50000,
+    vehicle_year: '2019', vehicle_make: 'Ford', vehicle_model: 'Escape',
+    vehicle_mileage: 72000, quote_url: 'https://example.test/q', ro_closed_date: '2026-09-20',
+  };
+  const unusable = ['First', 'Last', 'CUSTOMER', 'unknown', 'n/a', 'none', 'null', 'test', '', null];
+  const rows = [];
+  unusable.forEach((n, i) => {
+    // Several keys per name so both arms of the deterministic split are hit.
+    for (let k = 0; k < 8; k++) rows.push({ ...base, customer_key: 'k' + i + '_' + k, first_name: n });
+  });
+
+  const out = new Function('$input', '$vars', 'require', code)(
+    { all: () => rows.map((r) => ({ json: r })) }, {}, nodeRequire);
+
+  const greeted = out.filter((o) => /\{\{first_name\}\}/.test(o.json.subject));
+  assert(greeted.length === 0,
+    `${greeted.length} of ${out.length} subjects ask for a name the record does not have`);
+  const named = out.filter((o) => o.json.merge.first_name !== 'there');
+  assert(named.length === 0,
+    `merge first_name should fall back to "there", got: ${[...new Set(named.map((o) => o.json.merge.first_name))].join(', ')}`);
+  return `${out.length} unusable-name rows, none greeted`;
+});
+
 /* -------------------------------------------------------------------- report */
 
 const pad = Math.max(...results.map((r) => r.name.length));

@@ -46,8 +46,7 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 | Thing | Value |
 |---|---|
-| Supabase, campaign state | **NEW PROJECT — set the ref here once created** |
-| Supabase, service drive source | `bbvkqwcapqsytrdrubci` (DriveOne production, read only) |
+| Supabase, campaign state AND service drive source | `bbvkqwcapqsytrdrubci`, project **elevate-production** |
 | Dealer | Ferrario Ford |
 | Partner id | `bd2de835-a881-467c-b78b-c5963ff9fbd5` (Supabase `partners.id`) |
 | Partner slug | `ferrario-ford` |
@@ -55,21 +54,31 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 | Program contact | Geoff Crossley, Gcrossley@ferrario.com, 607-526-7748 |
 | Campaign id | `ff_postro_vsc_2026` |
 | n8n | same instance, workflows tagged `dealer:ferrario-ford` |
-| Sending domain | `ferrario.com` — **not yet verified in Resend** |
+| Sending domain | `ferrario.driveoneprogram.com`, verified, DKIM/SPF/DMARC all aligned |
+
+**There is one database, not two.** Campaign state and the service drive source live in the
+same project, `bbvkqwcapqsytrdrubci` = **elevate-production**. An earlier version of this
+file said a separate project was still to be created, which sent two sessions hunting for a
+second Supabase that does not exist. Everything else in the Kovara org is a different
+product or empty. If someone says the service data is "in a different Supabase", ask for the
+URL and check the ref before searching: it has come back as this one both times.
 
 `partners.id` in Supabase **is** `dealers.source_id` in MetricBridge. That is the join key
 between the two systems, and it is confirmed for Ferrario.
 
-**Nothing is live yet.** No workflows imported, no rows enrolled, no templates published.
-`docs/ADDING-A-DEALERSHIP.md` is the order to do it in, and
-`docs/FERRARIO-LAUNCH.md` tracks what is still open on Ferrario specifically.
+**Ferrario is live in dry run.** Workflows 01, 02, 03 and 05 are published and running
+hourly, templates are published and checksummed, and enrolled rows are priced and linked.
+`$vars.DRY_RUN` is set, so every send is redirected to one inbox and nothing advances.
+Unsetting it is go-live. `docs/FERRARIO-LAUNCH.md` tracks what is still open.
 
 ### Blockers before a first send
 
 - Brand colours in `brand/dealers/ferrario-ford.json` are a **guessed Ford blue**. Replace
   all seven from the real brand sheet.
 - Street address is missing. CAN-SPAM requires a physical postal address in the footer.
-- No monitored mailbox on `ferrario.com` yet, and no verified sending domain.
+- `intake.staffEmailDomains` is unconfirmed, so no staff filter is emitted at all. The
+  dealership's own mail domain does not appear in the data; the vendor's does
+  (`@captureds.io`), and that one is worth filtering on its own.
 - The copy deck is shared. `email/copy/campaign.json` is one deck rendered per rooftop; there is no per dealer copy. If Ferrario's arguments should differ from Bob Johnson's, that is a real change to make and it needs somewhere to live, because today editing the deck edits both campaigns.
 
 ## Build and check
@@ -172,6 +181,47 @@ Do not impose a local mileage ceiling. Rating decides what it can price. An earl
 ceiling, copied from the local bracket table, was holding back 163 of 432 people for no
 reason: the API uses a finer bracket scheme entirely (`15001-50000`).
 
+### The checkout form pre-fills from `customers`, live
+
+Buy now lands on the guided purchase form, which asks for name, email, phone and a full
+postal address. It is pre-filled from the quote API's `customer` block, and that block is
+**joined live from `customers` every time the link is opened**. `quotes` carries no name
+and no address of its own, only `customer_id`, so there is no frozen snapshot: fix the
+source row and every existing quote link renders the fix, including ones already emailed.
+
+That cuts both ways, and the direction that bites is this one: **whatever junk is in
+`customers` is what the customer sees in the form.** A record whose name was never captured
+holds the literal strings `First` and `Last`, and those arrive pre-filled in the name
+fields, which is worse than leaving them empty. An empty field invites typing; a field
+reading `First` looks filled and gets submitted as somebody's legal name onto a contract.
+
+`first_name` and `last_name` are **NOT NULL**, so the repair is the empty string, not null.
+That is lucky rather than clever: `'' !~* '(…)'` is true so a blanked name still passes the
+intake name filter, while `null !~* '(…)'` is **null**, which is not true, so nulling a name
+would silently drop that person from eligibility with nothing erroring. Check the eligible
+count before and after any name repair.
+
+**The address cannot be pre-filled on this channel and that is not a bug to hunt.** For
+Ferrario, 1 of 1,098 eligible customers has a complete address. Five independent sources
+agree: `customers` (3 with a street), `quote_static_data` and `quote_static_table` (2 and 6
+rows total, snapshots of completed purchases), reporting-hub, MetricBridge, and the live
+quote API, which returns `address: {street:"", city:"", state:"", zip:""}`. Other partners
+in the same `customers` table populate street at ~100%, so the schema and the pipeline both
+work — the service drive channel specifically is not capturing it. The only fix is upstream
+in what the DMS writes at quote creation. Do not keep re-deriving this.
+
+**MetricBridge is not a second source.** Its `source_customer_id` **is** `customers.id`, so
+it is a downstream sync of the same table, and it carries no street column at all. It can
+never hold something the source lacks.
+
+To inspect what a customer will actually see, call the quote API directly:
+`GET https://www.getelevatewarranty.com/api/partners/quotes/<quote_id>` with the header
+`x-captured-api-key: $vars.RATING_API_KEY`. Without that header it returns 401, which reads
+like the endpoint is wrong. The sandbox this repo is usually edited in cannot reach that
+host at all, so run it from a throwaway n8n workflow and archive it afterwards. Report
+field **shapes** (empty / absent / length) rather than values, so the output is safe to
+paste into a ticket.
+
 ## Buckets
 
 The audience is cut into buckets, launched one at a time. Each bucket is a distinct
@@ -197,6 +247,50 @@ pending, so that predicate excludes nobody; it means "has not bought from us", w
 different question. Leaning on it as a proxy left 37 covered customers in a 432 person
 audience, 29 of them inside the freshest 150 — nearly one in five of the first send would
 have pitched a VSC to someone who already owned one.
+
+### What the service drive sends that is not a customer
+
+The feed is a record of repair orders, not a mailing list, and a meaningful slice of it is
+the store's own business. Eyeball every new rooftop's first cohort by hand; the shapes
+below are the ones that have actually turned up.
+
+**Organisations arrive with a placeholder in the other name field.** The DMS has two name
+columns and a business has one name, so it goes in whichever column and the other gets a
+literal `First` or `Last`. Both halves occur, and a scan of one column alone finds half
+the problem:
+
+| `first_name` | `last_name` | |
+|---|---|---|
+| `First` | `KEYSTONE SERVICES INC` | business in the surname |
+| `BOB JOHNSON SUBARU WATERTOWN` | `Last` | business in the forename |
+
+The intake name filter reads `first_name` only, which is right for the second row and
+blind to the first. When cleaning these up, **evaluate each field independently and blank
+only the half that is literally a placeholder.** `COMPLIANT AUTOMOTIVE` and
+`OKLAHOMA HIGHWAY PATROL` are real data and the only record of who the customer is;
+a blanket "junk name" sweep deletes them.
+
+Commercial and fleet accounts (`CW RESOURCES INC`, `DIVISION OF STATE POLICE`,
+`MCEVOY INSURANCE`) are **not** internal and not automatically ineligible. They are
+businesses that had a vehicle serviced. Decide per rooftop whether the consumer copy is
+honest for them rather than filtering them on the shape of the name.
+
+**Internal records that must never be mailed**, in rough order of how often they appear:
+the group's other rooftops (`BOB JOHNSON WEST`, `BOB JOHNSON CDJ`, `BOB JOHNSON VOLKSWAGEN`),
+PDI entries (`BOBJOHNSONAUTOGROUP - 859 PDI CUSTOMER`), fleet rows (`FLEET GSA`), vendor and
+staff test records, and **competing dealerships that took a trade** (`WIDRICK AUTO SALES` —
+emailing a rival a pitch signed by the dealer is a phone call nobody wants).
+
+Two traps worth knowing:
+
+- **The vendor's own address is in the data.** `@captureds.io` is Captured, the DMS vendor,
+  not a customer. Their staff also appear under consumer addresses with names like
+  `tomTest`, which no domain filter catches.
+- **Suppressing is not the same as filtering.** A past clean-up suppressed thirteen of
+  these at Bob Johnson, which is why they look handled; two more enrolled afterwards and
+  sat `active` because the intake filter matches names and theirs read as ordinary people.
+  Check `vsc_enrollment` for `status = 'active'` against the junk-address and internal-name
+  patterns before any launch, not just the source table.
 
 ### Later buckets
 
@@ -351,6 +445,44 @@ per send day = total / send days
 Bob Johnson, for the record: the full 432 backlog would have been 4,320 sends over about
 29 send days, roughly 150 a day against a 200 ceiling. The 150 cohort is about 52 a send
 day. Raise the cohort once bounce and complaint rates on the first one are clean.
+
+**Raising the cohort is the ramp, so the raise has to actually enrol people.** It did not,
+twice, in two different ways, and both failures look identical from outside: a sweep that
+reports success and inserts nothing.
+
+- A bare `limit $6` caps one RUN, not the campaign. The sweep is hourly and idempotent, so
+  it tops up to the cohort every hour and keeps going: Bob Johnson sat at 163 enrolled
+  against a cohort of 150.
+- `limit cohort - already_enrolled` fixes that and is still not enough on its own. Applied
+  to the raw candidate rows it is spent on people already enrolled, who are then discarded
+  by `on conflict do nothing` — far too late, the slot is gone. The ordering makes it
+  systematic rather than unlucky: candidates come freshest-visit-first and the previous
+  cohort was taken freshest-first, so the already-enrolled are exactly the rows at the top
+  of the queue. Measured at Ferrario, 30 → 90 enrolled 31 people rather than 60, and the
+  next sweep enrolled nobody at all, for good. **The ramp stalls at roughly double its
+  first step and stays there.**
+
+So the candidate set must exclude the already-enrolled **before** the limit, and must be
+deduplicated to one row per person first, because a customer with two visits in the window
+is two candidate rows that spend two slots and fill one. `initial_cohort` is denominated in
+people. `on conflict do nothing` stays, as the guard between two concurrent sweeps, which
+is the job it can actually do. `n8n/verify.mjs` checks both halves.
+
+After every raise, read the enrolment count back and compare it to the number you set.
+Never assume the sweep did what it was told.
+
+**Separate the audience decision from the pacing decision**, and keep them in different
+fields. `cohort_target` is who the campaign is eventually for; `initial_cohort` is where
+the ramp has got to. Only the second one enrols anybody. Ferrario's target is the whole
+bucket at 1,098 **measured** people — not the 1,244 raw `has_existing_warranty = false`
+count, which is before the window, contactability, internal-record and one-row-per-person
+filters. Re-measure rather than quoting either number from memory.
+
+Note what the cap can and cannot absorb before promising a target. 1,098 people is 10,980
+sends; at 200 a day over four send days a week that is about fourteen weeks pinned at the
+ceiling, and the overflow does not queue tidily — it defers each contact's next step, so
+the sixty day cadence quietly stretches. Raise `dailyCap` first, or accept the stretch
+deliberately.
 
 ## Product facts
 
@@ -814,4 +946,25 @@ their customer relationship.
   the entity in `email/dist/<n>-*.html` and use its index. Then checksum again.
 - **Manual executions started through the API never run.** They stay queued until the
   editor is open in a browser. Publish the workflow and execute in production mode when
-  you need a real run from a tool.
+  you need a real run from a tool. (A `manualTrigger` throwaway did execute from the API
+  and returned real data, so treat this as "expect it to hang", not "it cannot work" —
+  check the execution rather than assuming either way.)
+- **The marker scan matches the English word, not just the marker.** `scripts/check.mjs`
+  flags a dealer file field containing `NEEDS CONFIRMATION|PLACEHOLDER|REPLACE-ME`, case
+  insensitively, so a note that merely uses the word *placeholder* in prose reports itself
+  as an unconfirmed field. Reword the prose; do not weaken the guard. The same regex over
+  the generated workflows is deliberately case **sensitive** for exactly this reason.
+- **One rooftop's prose leaks into another's generated SQL.** The engine is shared, so a
+  comment naming a dealership and quoting its cohort is emitted verbatim into every other
+  dealership's query. It changes no behaviour and it is still wrong: reading one rooftop's
+  workflow should tell you about that rooftop. Describe the failure mode, not the store it
+  was measured at, and check with a grep for each dealership's name in the other's build.
+- **`UPDATE` and `DELETE` through the Supabase MCP time out at 60 seconds; `INSERT` does
+  not.** Wrap the write in a data-modifying CTE whose outer statement is an insert:
+  `with upd as (update … returning …) insert into <audit table> select … from upd
+  returning …`. That also leaves a record of exactly which rows changed. Create the audit
+  table in its own call first — a failed batch rolls back the `create table` with it.
+- **Back up before mutating a shared production table, in the database.** Name every
+  original into a side table (`vsc_name_scrub_backup`) before the write and the change
+  stays reversible without a restore. These tables are read by systems outside this repo,
+  so "I can re-derive it" is not true of data the DMS no longer sends.

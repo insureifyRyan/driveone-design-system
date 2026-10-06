@@ -66,10 +66,25 @@ URL and check the ref before searching: it has come back as this one both times.
 `partners.id` in Supabase **is** `dealers.source_id` in MetricBridge. That is the join key
 between the two systems, and it is confirmed for Ferrario.
 
-**Ferrario is live in dry run.** Workflows 01, 02, 03 and 05 are published and running
-hourly, templates are published and checksummed, and enrolled rows are priced and linked.
-`$vars.DRY_RUN` is set, so every send is redirected to one inbox and nothing advances.
-Unsetting it is go-live. `docs/FERRARIO-LAUNCH.md` tracks what is still open.
+**Ferrario is armed and waiting on one switch.** Workflows 01, 02, 03, 05 and 06 are
+published and running hourly, all ten templates are published and checksummed against
+`email/dist`, and all 30 enrolled rows are priced, linked and spread across the send window.
+`$vars.DRY_RUN` is still set, so every send is redirected to one inbox and nothing advances.
+**Deleting that variable is go-live**; there is no other step.
+
+Two things about that moment, both learned the hard way:
+
+- **Re-spread immediately before, not days before.** Every row whose send date passes while
+  the scheduler is held becomes due-now, so the backlog grows and then arrives as one burst.
+  Worse, a dry run *consumes* a re-spread: the claim pushes `next_send_at` two hours out
+  whether or not anything was really sent. A spread laid down on Tuesday is gone by
+  Wednesday lunchtime if DRY_RUN is still on and the window has opened.
+- **A cohort of 30 is 30 emails in the first hour** unless they are spread, because they all
+  come due the moment the window opens. The launch spread put ten a day across Wednesday,
+  Thursday and Friday, one or two an hour. That is the shape the ramp asks for on a brand
+  new subdomain; the daily cap does not produce it, because the cap is 200.
+
+`docs/FERRARIO-LAUNCH.md` tracks what is still open.
 
 ### Blockers before a first send
 

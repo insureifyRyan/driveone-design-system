@@ -155,7 +155,7 @@ function driveOneLockup(onDark) {
   return `
 <span style="font-family:${geometric};font-size:21px;font-weight:700;color:${darkTone};line-height:1;letter-spacing:-0.6px;">${esc(wm.part1)}</span><span style="font-family:${geometric};font-size:21px;font-weight:700;color:${C.cyan};line-height:1;letter-spacing:-0.6px;">${esc(wm.part2)}</span>${wm.trademark ? `<span style="font-family:${geometric};font-size:9px;font-weight:700;color:${sub};vertical-align:super;line-height:1;">&trade;</span>` : ''}
 <br />
-<span style="font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:700;color:${sub};line-height:1.7;letter-spacing:1.5px;white-space:nowrap;">${esc(T.brand.productDescriptor)}</span>`;
+<span class="lsfix-15" style="font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:700;color:${sub};line-height:1.7;letter-spacing:1.5px;white-space:nowrap;">${esc(T.brand.productDescriptor)}</span>`;
 }
 
 function dealerLogo() {
@@ -167,8 +167,16 @@ function dealerLogo() {
     return `<img src="${D.logo.light}" width="${D.logo.widthPx}" alt="${esc(D.logo.altText)}" style="display:block;border:0;outline:none;text-decoration:none;${font(F.display, 16, 800, C.primary, '1.2')}" />`;
   }
   const W1 = D.logo.widthPx || 190;
+  // The lockup shrink-wraps the dealership name rather than sitting in a fixed
+  // box. It used to be pinned to widthPx, which is wider than the name actually
+  // renders - FERRARIO comes out near 156px against a 190px table - so the rule
+  // and the right aligned second line both overhung the name by about 30px. On a
+  // phone that reads as FORD floating off the end of FERRARIO rather than sitting
+  // under it. widthPx is now a ceiling, not a width, so the rule underlines the
+  // name and line2 aligns to the name's real right edge in whatever font the
+  // client actually substituted.
   return `
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="${W1}" style="width:${W1}px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:${W1}px;">
   <tr><td style="padding:0;font-family:'Arial Black','Arial Bold',Gadget,Arial,sans-serif;font-size:26px;font-weight:900;font-style:italic;color:${C.primary};line-height:1;letter-spacing:-0.8px;white-space:nowrap;">${esc(wm.line1 || D.dealer.displayName)}</td></tr>
   <tr><td style="padding:3px 0 0 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -177,7 +185,7 @@ function dealerLogo() {
       <td style="height:4px;line-height:4px;font-size:4px;background-color:${C.accent};">&nbsp;</td>
     </tr></table>
   </td></tr>
-  ${wm.line2 ? `<tr><td align="right" style="padding:5px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;font-style:italic;color:${C.primary};line-height:1.2;letter-spacing:4.5px;white-space:nowrap;">${esc(wm.line2)}</td></tr>` : ''}
+  ${wm.line2 ? `<tr><td align="right" style="padding:5px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;font-style:italic;color:${C.primary};line-height:1.2;letter-spacing:4.5px;white-space:nowrap;"><span class="lsfix-45">${esc(wm.line2)}</span></td></tr>` : ''}
 </table>`;
 }
 
@@ -409,6 +417,16 @@ function render(e) {
     .wrap{width:100% !important;}
     .gut{padding-left:20px !important;padding-right:20px !important;}
     h1{font-size:26px !important;line-height:1.16 !important;}
+    /* Letter spacing is added AFTER the last character as well as between them,
+       so a right aligned, letter spaced line carries a trailing gap and sits
+       optically left of the line above it. At 1.5px that is invisible on a
+       desktop and obvious at phone scale, which is why VEHICLE SERVICE CONTRACT
+       looked shoved left of driveone while also reading as cramped. Pull the
+       trailing space back off the right edge. Scoped to the small screen block
+       because Outlook on Windows ignores media queries entirely and renders the
+       desktop lockup correctly already, so this cannot regress it. */
+    .lsfix-15{margin-right:-1.5px !important;}
+    .lsfix-45{margin-right:-4.5px !important;}
   }
 </style>
 </head>

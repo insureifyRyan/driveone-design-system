@@ -41,7 +41,8 @@ const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'ut
 const DEALER_ID = process.argv[2] || 'bob-johnson';
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
-  '04-error-handler.json', '05-pricing.json'].map((f) => ({ file: f, wf: load(f) }));
+  '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
+].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
 const check = (name, fn) => {
@@ -389,6 +390,50 @@ check('a raised cohort actually fills', () => {
     'the conflict guard was removed; two concurrent sweeps could now double-enrol');
 
   return 'already-enrolled excluded before the limit, candidates deduped per person';
+});
+
+check('a held commercial row can never be sent', () => {
+  // WHY: a corporate owned vehicle is rated with a commercial surcharge, and
+  // nothing in this engine can apply one - 05 reads a price that was set
+  // upstream and never rates anything. So a suspected business must not be
+  // quoted the consumer monthly: an email showing less than checkout charges is
+  // a price claim, the same failure the never-price-locally rule exists to stop.
+  //
+  // The hold works only because of a coincidence that is easy to break: the
+  // scheduler's claim is scoped to status = 'active', so any other status is
+  // invisible to it. Nobody wrote that as a safety mechanism, so nobody would
+  // think twice about widening the claim to 'active','paused' one day and
+  // silently releasing every held row into a send. This check makes the
+  // coincidence load bearing.
+  const intake = WORKFLOWS.find(({ file }) => file === '01-intake.json');
+  const sched  = WORKFLOWS.find(({ file }) => file === '02-scheduler.json');
+  assert(intake && sched, '01-intake.json or 02-scheduler.json not found');
+
+  const intakeSql = nodesOf(intake.wf).find((n) =>
+    n.type === 'n8n-nodes-base.postgres' && /insert into vsc_enrollment/i.test(n.parameters.query || '')
+  ).parameters.query;
+  assert(/held_commercial/.test(intakeSql),
+    'intake no longer holds suspected businesses, so a corporate vehicle would be quoted a consumer price');
+
+  // The detector must be anchored. An unanchored term matches inside surnames:
+  // "temple" inside STEMPLE, "inc" inside INCE, "ranch" inside RANCHER. Holding a
+  // real customer is not a harmless false positive - they silently stop receiving
+  // the campaign until someone reads a review queue.
+  const terms = intakeSql.match(/\\m[a-z. \\]+\\M/g) || [];
+  assert(terms.length >= 10, `expected an anchored commercial term list, found ${terms.length}`);
+
+  const claim = nodesOf(sched.wf).find((n) =>
+    n.type === 'n8n-nodes-base.postgres' && /update vsc_enrollment/i.test(n.parameters.query || '')
+  ).parameters.query;
+  const statuses = [...claim.matchAll(/status\s*=\s*'([a-z_]+)'/gi)].map((m) => m[1]);
+  assert(statuses.length > 0, 'the claim no longer filters on status at all, so held rows would be sent');
+  const sendable = [...new Set(statuses)];
+  assert(sendable.length === 1 && sendable[0] === 'active',
+    `the claim sends statuses [${sendable.join(', ')}]; only 'active' may be sent or held_commercial leaks into a send`);
+  assert(!/status\s+in\s*\(/i.test(claim),
+    'the claim uses status IN (...), which can admit a held status; keep it as a single equality');
+
+  return `hold emitted, ${terms.length} anchored terms, claim restricted to 'active'`;
 });
 
 check('SQL placeholders match the replacement count', () => {

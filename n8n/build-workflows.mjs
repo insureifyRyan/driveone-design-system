@@ -216,6 +216,51 @@ const INTAKE_STAFF_DOMAIN_SQL = staffDomains.length
   : ['  -- No staff email domain is recorded for this dealership, so no staff',
      '  -- filter is emitted. See intake.staffEmailDomains in the dealer file.'];
 
+// A corporate owned vehicle is rated differently: the contract carries a
+// commercial surcharge. Nothing in this engine can apply one - 05 reads a quote
+// that was priced upstream and never rates anything itself - so the honest
+// response to spotting a business is to NOT quote it a consumer price and to put
+// a human on it, rather than to email a number we expect to be wrong. An email
+// that shows less than checkout charges is a price claim, which is the same
+// reason prices are never computed locally.
+//
+// So a suspected business enrols at status 'held_commercial'. Workflow 02 claims
+// `where status = 'active'` and nothing else, so a held row is simply never sent;
+// no change to the scheduler was needed and none should be made. Review releases
+// it to 'active' once the surcharge is settled, or straight away when the match
+// was wrong.
+//
+// DELIBERATELY NARROW. Matching is on name shape, which is a decent suspicion
+// and a terrible pricing input: an early draft of this pattern flagged a real
+// customer, SHARON STEMPLE, as an institution because the surname contains
+// "temple". Every term is anchored with \m...\M word boundaries for that reason.
+// A detector that holds fifty people on a hunch is worse than none, because
+// nobody reviews a list that long and real prospects rot in it. Widen only after
+// watching what a new rooftop actually sends.
+//
+// This is a stopgap. The durable fix is the capture side recording what it
+// already knows - whether the RO was written to a person or to a company - in a
+// real column, so eligibility stops being inferred from spelling.
+const COMMERCIAL_TERMS = [
+  // legal form: the only genuinely unambiguous signal
+  'inc', 'llc', 'l\\.l\\.c', 'ltd', 'corp', 'corporation', 'incorporated', 'pllc', 'llp',
+  // trades that own vehicles as plant
+  'construction', 'contracting', 'contractors', 'excavating', 'excavation', 'paving',
+  'roofing', 'plumbing', 'hvac', 'electrical', 'landscaping', 'towing', 'trucking',
+  'transport', 'trucking', 'logistics', 'hauling', 'freight', 'fabrication', 'welding',
+  'machine works', 'industrial', 'manufacturing',
+  // institutions and public fleets
+  'church', 'ministry', 'parish', 'diocese', 'school district', 'academy',
+  'city of', 'town of', 'village of', 'county of', 'municipal', 'fire district',
+  'highway patrol', 'state police', 'sheriff',
+  // agricultural plant
+  'farms', 'ranch', 'orchards', 'dairy', 'creamery',
+];
+// \m and \M are Postgres's start/end of word. Single backslash in the emitted
+// SQL: standard_conforming_strings is on, so '\m' in a literal IS backslash-m,
+// and doubling it would match a literal backslash instead of a word boundary.
+const COMMERCIAL_PATTERN = COMMERCIAL_TERMS.map((t) => `\\m${t}\\M`).join('|');
+
 const INTAKE_SQL = [
   '-- Candidates, one row per QUOTE. A customer with two visits appears twice,',
   '-- which matters once the rows are counted against the cohort below.',
@@ -224,6 +269,10 @@ const INTAKE_SQL = [
   "    encode(sha256(($1 || ':' || lower(trim(c.email)))::bytea), 'hex') as customer_key,",
   '    lower(trim(c.email)) as email,',
   '    c.first_name,',
+  '    -- Carried only to classify the record, never stored on the enrolment. A',
+  '    -- business name lands in WHICHEVER name column it was not typed into, so',
+  '    -- reading first_name alone finds about half of them.',
+  '    c.last_name as last_name_src,',
   '    cv.vin,',
   '    -- the service drive creates one quote per visit, so the quote IS the visit record',
   '    q.id::text        as ro_number,',
@@ -355,7 +404,15 @@ const INTAKE_SQL = [
   '  $1, $2, customer_key, email, first_name,',
   '  vin, ro_number, ro_closed_date, vehicle_year, vehicle_make, vehicle_model,',
   '  vehicle_mileage, advisor_name, garaging_state,',
-  "  'active', 0, now(),",
+  '  -- A corporate owned vehicle needs the commercial surcharge on the contract,',
+  '  -- and nothing downstream of here can add one: 05 reads a price that was set',
+  '  -- upstream. Quoting a business the consumer monthly would be a price claim we',
+  '  -- cannot stand behind at checkout. Hold instead, and let a human settle it.',
+  '  -- 02 claims `where status = \'active\'`, so this row is never sent until it is',
+  '  -- released. See COMMERCIAL_PATTERN for why the match is deliberately narrow.',
+  '  case when lower(coalesce(first_name,\'\') || \' \' || coalesce(last_name_src,\'\'))',
+  `         ~ '(${COMMERCIAL_PATTERN})'`,
+  "       then 'held_commercial' else 'active' end, 0, now(),",
   '  -- No link is built here. The quote API returns the real customer facing',
   '  -- links, so pricing fills quote_url and a locally guessed URL never exists.',
   '  null,',
@@ -1528,6 +1585,135 @@ writeFileSync(join(ROOT, `${WF_DIR}/05-pricing.json`),
   ])), null, 2));
 
 console.log('built 05-pricing.json');
+
+
+/* ========================================= 6. COMMERCIAL REVIEW ALERT ==== */
+
+// Intake holds a suspected business at status 'held_commercial' instead of
+// 'active', so the scheduler never claims it. That stops the bad send. It does
+// not, on its own, tell anybody - and a hold nobody hears about is just a
+// customer who silently never gets the campaign, which is the failure mode this
+// repo keeps running into: nothing errors, so nothing gets looked at.
+//
+// This sweep is the other half. One digest an hour, naming every newly held row,
+// to the people who can settle the surcharge and push the contract by hand.
+// review_notified_at is stamped in the same statement that selects the rows, so
+// a row is reported exactly once rather than every hour until somebody acts.
+//
+// It sends from an internal domain rather than the dealership's. The rooftop
+// subdomain is mid-warmup carrying consumer mail, and ops alerts bouncing or
+// being foldered there would cost reputation on the thing being protected.
+const REVIEW_TO = (DEALER.campaign && DEALER.campaign.commercialReviewTo) || [];
+const REVIEW_FROM = (DEALER.campaign && DEALER.campaign.commercialReviewFrom)
+  || 'DriveOne Campaign <alerts@kovara.ai>';
+
+const reviewNodes = [
+  node('Hourly Review Sweep', 'scheduleTrigger', 1.2, [-620, 0], {
+    rule: { interval: [{ field: 'cronExpression', expression: '41 * * * *' }] },
+  }),
+
+  setNode('Campaign Config', [-380, 0], [
+    ['dealer_id', DEALER.id],
+    ['campaign_id', CAMPAIGN_ID],
+  ]),
+
+  pgNode('Claim Unreported Holds', [-120, 0], [
+    '-- Selects and stamps in one statement, so two sweeps racing cannot both',
+    '-- report the same row, and a crash mid-send costs one missed digest rather',
+    '-- than a loop that mails the same list every hour forever.',
+    'with due as (',
+    '  select id from vsc_enrollment',
+    "  where dealer_id = $1 and campaign_id = $2",
+    "    and status = 'held_commercial'",
+    '    and review_notified_at is null',
+    '  order by created_at',
+    '  limit 200',
+    '  for update skip locked',
+    ')',
+    'update vsc_enrollment e',
+    'set review_notified_at = now(), updated_at = now()',
+    'from due',
+    'where e.id = due.id',
+    'returning e.id, e.first_name, e.email, e.vehicle_year, e.vehicle_make,',
+    '  e.vehicle_model, e.vehicle_mileage, e.ro_closed_date, e.monthly_payment,',
+    '  e.contract_price, e.quote_url;',
+  ].join('\n'), '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
+
+  ifNode('Anything Held?', [140, 0], [
+    { id: 'c1', leftValue: '={{ $json.id }}', rightValue: '', operator: { type: 'string', operation: 'exists' } },
+  ]),
+
+  codeNode('Compose Review Digest', [400, -100], [
+    '// One message for the whole batch rather than one per row: a reviewer acts on',
+    '// a list, and ten separate mails about ten vehicles is how a queue gets muted.',
+    '',
+    'const rows = $input.all().map((i) => i.json);',
+    '// The suffix belongs INSIDE the formatter. Appended outside it, an unpriced',
+    '// row renders as "not yet priced/mo", which reads as a broken template in the',
+    '// one place a reviewer is being asked to trust the numbers.',
+    'const money = (v) => (v === null || v === undefined || v === "")',
+    '  ? "not yet priced"',
+    '  : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(v)) + "/mo";',
+    'const esc = (s) => String(s == null ? "" : s)',
+    '  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");',
+    '',
+    'const cells = rows.map((r) => {',
+    '  const name = [r.first_name].filter(Boolean).join(" ").trim() || "(no name on the record)";',
+    '  const veh = [r.vehicle_year, r.vehicle_make, r.vehicle_model].filter(Boolean).join(" ") || "vehicle not recorded";',
+    '  return "<tr>"',
+    '    + "<td style=\\"padding:8px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial\\">" + esc(name)',
+    '      + "<br><span style=\\"color:#6b7c90;font-size:12px\\">" + esc(r.email) + "</span></td>"',
+    '    + "<td style=\\"padding:8px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial\\">" + esc(veh) + "</td>"',
+    '    + "<td style=\\"padding:8px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial\\">" + esc(money(r.monthly_payment)) + "</td>"',
+    '    + "<td style=\\"padding:8px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial\\">"',
+    '      + (r.quote_url ? "<a href=\\"" + esc(r.quote_url) + "\\">quote</a>" : "no link yet") + "</td>"',
+    '    + "</tr>";',
+    '}).join("");',
+    '',
+    'const html = "<div style=\\"font:14px Arial;color:#1c1d1f;max-width:720px\\">"',
+    '  + "<p><strong>" + rows.length + " vehicle" + (rows.length === 1 ? "" : "s") + " held for commercial review</strong> at " + ' + JSON.stringify(DEALER.dealer.displayName) + ' + ".</p>"',
+    '  + "<p>These records look like businesses rather than retail customers, so the contract needs the commercial surcharge. "',
+    '  + "The campaign has <strong>not</strong> emailed them and will not until somebody releases them, because the price it would have quoted is the consumer price.</p>"',
+    '  + "<table style=\\"border-collapse:collapse;width:100%\\">"',
+    '  + "<tr><th align=\\"left\\" style=\\"padding:8px 12px;border-bottom:2px solid #1c1d1f;font:12px Arial;letter-spacing:1px\\">CUSTOMER</th>"',
+    '  + "<th align=\\"left\\" style=\\"padding:8px 12px;border-bottom:2px solid #1c1d1f;font:12px Arial;letter-spacing:1px\\">VEHICLE</th>"',
+    '  + "<th align=\\"left\\" style=\\"padding:8px 12px;border-bottom:2px solid #1c1d1f;font:12px Arial;letter-spacing:1px\\">CONSUMER QUOTE</th>"',
+    '  + "<th align=\\"left\\" style=\\"padding:8px 12px;border-bottom:2px solid #1c1d1f;font:12px Arial;letter-spacing:1px\\">LINK</th></tr>"',
+    '  + cells + "</table>"',
+    '  + "<p style=\\"color:#6b7c90;font-size:12px;margin-top:18px\\">Detected on the name only, so a retail customer can land here by accident. "',
+    '  + "To release one, set its vsc_enrollment row back to status = &#39;active&#39;; it then re-enters the cadence from wherever it had got to. "',
+    '  + "Each vehicle is reported once and will not appear in a later digest.</p></div>";',
+    '',
+    'return [{ json: { subject: "[" + ' + JSON.stringify(DEALER.dealer.displayName) + ' + "] " + rows.length + " held for commercial surcharge review", html } }];',
+  ].join('\n')),
+
+  node('Send Review Alert', 'httpRequest', 4.2, [660, -100], {
+    method: 'POST',
+    url: 'https://api.resend.com/emails',
+    authentication: 'genericCredentialType',
+    genericAuthType: 'httpHeaderAuth',
+    sendBody: true,
+    specifyBody: 'json',
+    jsonBody: `={{ JSON.stringify({ from: ${JSON.stringify(REVIEW_FROM)}, to: ${JSON.stringify(REVIEW_TO)}, subject: $json.subject, html: $json.html }) }}`,
+  }, {
+    retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
+    credentials: { httpHeaderAuth: { id: 'REPLACE_RESEND_CRED_ID', name: 'Resend API' } },
+  }),
+
+  node('Nothing Held', 'noOp', 1, [400, 110], {}),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/06-commercial-review.json`),
+  JSON.stringify(workflow('DriveOne VSC 06 Commercial Review (' + DEALER.dealer.displayName + ')', reviewNodes, connect([
+    ['Hourly Review Sweep', 'Campaign Config'],
+    ['Campaign Config', 'Claim Unreported Holds'],
+    ['Claim Unreported Holds', 'Anything Held?'],
+    ['Anything Held?', ['Compose Review Digest', 'Nothing Held']],
+    ['Compose Review Digest', 'Send Review Alert'],
+  ])), null, 2));
+
+console.log('built 06-commercial-review.json'
+  + (REVIEW_TO.length ? '' : '  (NO RECIPIENTS: set campaign.commercialReviewTo in the dealer file)'));
 
 
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */

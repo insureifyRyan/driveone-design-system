@@ -504,6 +504,11 @@ deliberately.
 Everything here is quoted from the signed contract form, AAS VSC 1 11-2022. If a claim is
 not in `brand/offer.json` with a basis, it does not go in an email.
 
+**The form itself is in `references/contract/`**, as the supplied PDF and as extracted text,
+so a claim is checked with `grep` rather than from memory. Read it before writing any
+product sentence a customer or a dealer will see; `offer.json` summarises it and the
+summary is the thing that drifts.
+
 - **DriveOne VSC** is the product name, what prints on the customer form. **Platinum** is
   the coverage level, the top tier and the only one sold in this program.
 - Platinum is the **exclusionary** tier, which is what makes that claim safe here. Silver
@@ -517,8 +522,19 @@ not in `brand/offer.json` with a basis, it does not go in an email.
 - Roadside included anywhere in the US, 3 events a year, towing to $100 per occurrence.
 - Repairs at any licensed repair facility **authorized by the administrator**. Not "any ASE
   certified shop nationwide", which the form does not support.
-- Obligor varies by state: NY **ORIAS Warranty Services**, FL Old Republic, otherwise
-  Ascent Administration Services, LLC. The footer resolves this from `dealer.state`.
+- **Administrator AND obligor** vary by state, and they move together everywhere except
+  Florida. The form's default is Ascent Administration Services, LLC in both roles, then:
+  **New York, ORIAS Warranty Services in both roles**; California, Old Republic Insured
+  Automotive Services in both; Florida alone splits them, Minnehoma administering and Old
+  Republic Insurance Company obligating. The footer resolves one value from `dealer.state`
+  and prints it for both, which is right for NY and CA and will be wrong for a Florida
+  rooftop.
+
+  Half-remembering this is the easy mistake: a client document in this project said
+  "administered by Ascent, with ORIAS as the New York obligor", which is wrong for every
+  Ferrario contract — in New York ORIAS replaces Ascent in **both** roles. Ferrario is in
+  NY, so ORIAS is the answer for everything this campaign sells today. Check
+  `references/contract/README.md` rather than reciting it.
 - Not sold in California.
 
 **Never in this program:** diminished value, Protection Plus (tire, key, dent, windshield),

@@ -66,13 +66,14 @@ URL and check the ref before searching: it has come back as this one both times.
 `partners.id` in Supabase **is** `dealers.source_id` in MetricBridge. That is the join key
 between the two systems, and it is confirmed for Ferrario.
 
-**Ferrario is armed and waiting on one switch.** Workflows 01, 02, 03, 05 and 06 are
-published and running hourly, all ten templates are published and checksummed against
-`email/dist`, and all 30 enrolled rows are priced, linked and spread across the send window.
-`$vars.DRY_RUN` is still set, so every send is redirected to one inbox and nothing advances.
-**Deleting that variable is go-live**; there is no other step.
+**Ferrario is LIVE.** It launched on 7 October 2026: `$vars.DRY_RUN` was deleted and real
+mail began going to real customers. Workflows 01, 02, 03, 05, 06 and 07 are published and
+running. As of 8 October: 30 enrolled, all 30 priced and linked, 10 sends of Email 1 on the
+7th, 0 errors, 0 suppressions, 0 exits, the remaining 20 spread on future send dates out to
+13 October. The ramp climbs from here toward the 1,098 person bucket.
 
-Two things about that moment, both learned the hard way:
+Two things about the launch moment, both learned the hard way and both still true for the
+next rooftop:
 
 - **Re-spread immediately before, not days before.** Every row whose send date passes while
   the scheduler is held becomes due-now, so the backlog grows and then arrives as one burst.
@@ -134,7 +135,7 @@ exist in the real send. `select * from vsc_enrollment where id = ...` costs one 
 
 ## Architecture, and why it is shaped this way
 
-Six n8n workflows, all generated from `email/copy/campaign.json` so the cadence in the
+Seven n8n workflows, all generated from `email/copy/campaign.json` so the cadence in the
 automation can never drift from the cadence in the creative.
 
 ```
@@ -142,9 +143,19 @@ automation can never drift from the cadence in the creative.
 05-pricing    hourly  ->  calls the quote API, writes the price and the checkout link
 02-scheduler  hourly  ->  gate, claim what is due, render, send, advance state
 03-events     webhook ->  purchase / unsubscribe / bounce  ->  exit and suppress
-04-error      any failure anywhere  ->  Slack alert
-06-bounce     IMAP    ->  reads bounces back out of the sending mailbox
+04-error      any failure anywhere  ->  Slack alert   (BROKEN, see below)
+06-review     hourly  ->  reports business-owned vehicles held for the surcharge
+07-scorecard  Mon 08:10 local  ->  weekly performance digest to a human
 ```
+
+The old `06-bounce` IMAP watcher is **retired**. Bounces arrive through the Resend webhook
+into 03 instead; the generator still carries the retired block, clearly marked.
+
+**04 cannot currently alert anyone.** `$vars.SLACK_ALERT_WEBHOOK` is 36 characters where a
+Slack webhook URL is about 75 to 80, so it was truncated on paste. Every other workflow
+names 04 as its error workflow, so a failure anywhere is caught and then posted nowhere.
+Until that variable is replaced, **07 is the only thing that will tell a human the campaign
+is unwell**, which is one of the reasons it sends in a quiet week.
 
 **State lives in Postgres, not in n8n.** A 60 day drip built on Wait nodes dies on every
 restart, upgrade or redeploy, silently losing everyone mid-flight, and you cannot query who
@@ -498,6 +509,58 @@ sends; at 200 a day over four send days a week that is about fourteen weeks pinn
 ceiling, and the overflow does not queue tidily — it defers each contact's next step, so
 the sixty day cadence quietly stretches. Raise `dailyCap` first, or accept the stretch
 deliberately.
+
+## Reporting, and what is actually measured
+
+**Workflow 07 is the only thing that reports a number to a human.** Monday 08:10 dealer
+local, one roll-up query, one HTML digest, sent through Resend to
+`campaign.scorecardTo` in the dealer file. Ferrario: `ryan@kovara.ai`, internal only,
+by instruction on 8 Oct 2026. The sales rep and the dealership get added once the numbers
+have been watched long enough to be trusted; that is a one line change plus a rebuild.
+
+It reports enrolment, pricing, sends by step, purchases, exits by reason, suppressions and
+errors, and it flags anything wanting a person: send errors, pricing errors, unpriced rows,
+vehicles held for the surcharge, and how much of the cohort is still unenrolled.
+
+**It sends in a quiet week on purpose.** A report that only arrives when something happened
+cannot be told apart from a report that has stopped working. This matters more than usual
+here because 04 is mute (above).
+
+### What is NOT measured, and why there is no line for it
+
+| Metric | Captured? | Where it would come from |
+|---|---|---|
+| Sent | yes | `vsc_send_log`, one row per send |
+| Purchased, unsubscribed, bounced, complained | yes | Resend webhook -> 03 -> `exit_reason`, `vsc_suppression` |
+| **Delivered** | **no** | the Resend webhook does not subscribe to `email.delivered` |
+| **Opened** | **no** | open tracking is `false` on the sending domain, so no pixel is embedded |
+| **Clicked** | **no** | click tracking is `false`, so no link is rewritten |
+
+Open and click tracking are off on **every** domain in the Resend account, Ferrario's
+included, and the webhook subscribes to `email.bounced` and `email.complained` alone. So
+these are not merely unrecorded, they are **never generated**. Subscribing to more events
+would change nothing by itself.
+
+The scorecard therefore carries **no opens or clicks row**, and `npm run verify` asserts it
+cannot grow one. A row reading "Opened: 0" every week would be read as a dead campaign
+rather than an unmeasured one, which is worse than not reporting it at all.
+
+**This is an open decision, not an oversight.** The client-facing overview promises
+reporting on "delivered, opened, clicked and purchased", and today only two of those four
+are true. The recommended resolution, in order:
+
+1. **Subscribe the webhook to `email.delivered`.** No customer-visible change at all,
+   nothing added to the email. Earns the word "delivered" honestly.
+2. **Turn on click tracking.** This is the signal worth having, because it says whether
+   anyone reached checkout. The cost is real: every link is rewritten through Resend, on a
+   warming subdomain carrying a dealership's name, and the rewritten link is the checkout
+   link.
+3. **Leave open tracking off.** Apple Mail Privacy Protection pre-fetches images, so opens
+   are inflated to the point of meaning very little, and it is the option that puts a
+   tracking pixel in a dealership's customer email.
+
+If 1 and 2 are taken and 3 is not, the client document must be edited to say "delivered,
+clicked and purchased". Do not leave the promise standing while the measurement is absent.
 
 ## Product facts
 
@@ -999,3 +1062,30 @@ their customer relationship.
   original into a side table (`vsc_name_scrub_backup`) before the write and the change
   stays reversible without a restore. These tables are read by systems outside this repo,
   so "I can re-derive it" is not true of data the DMS no longer sends.
+- **The credential names in this repo do not exist in n8n.** `build-workflows.mjs` emits
+  `REPLACE_PG_CRED_ID` / `REPLACE_RESEND_CRED_ID` with the friendly names "DriveOne
+  Postgres" and "Resend API". No credential by either name exists on the instance. The real
+  ones are `postgres` = **Postgres account** `lb0H0xZWFnSnRsBz`, and Resend =
+  **Header Auth account 3** `jqlfstqMPbvCL0lK` — one of *three* `httpHeaderAuth`
+  credentials, so the name alone will not tell you which. Deploying with the SDK's
+  `newCredential("Resend API")` does not resolve to the existing credential, it **creates a
+  new empty one**, and the workflow then fails on its first scheduled run with no database
+  and no API key. Pass the credential object literally instead —
+  `credentials: { postgres: { id: "lb0H0xZWFnSnRsBz", name: "Postgres account" } }` — and
+  read the ids off a workflow that is already live and working rather than guessing.
+- **A new workflow created through the MCP inherits neither timezone nor error workflow.**
+  It comes back with `settings` of just `executionOrder` and `availableInMCP`. A cron of
+  `10 8 * * 1` then fires at 08:10 **UTC**, which is 04:10 in New York. Set both explicitly
+  with `setWorkflowSettings` (`timezone`, `errorWorkflow`) and read the settings back before
+  publishing; the other six workflows carry `America/New_York` and `7e7gFQtQMHZJduxL`.
+- **Generating workflow code through `python3 -c "..."` in bash eats `$json`.** The shell
+  expands it inside double quotes, so `{{ $json.dealer_id }}` was written out as
+  `{{ \.dealer_id }}` and every positional SQL parameter would have come through empty.
+  Use a quoted heredoc, or read the generated file back and grep for `$json` before
+  deploying.
+- **A reporting query fails silently in a way a sending query does not.** If the roll-up
+  stops returning a column the composer reads, nothing errors: the email still renders and
+  the figure reads 0, and nobody chases a number that looks plausible. `npm run verify`
+  therefore asserts that every `r.<field>` the scorecard composer touches is a column the
+  query actually names, and that no row claims a metric nothing measures. It was confirmed
+  to go red by renaming a column on one side only.

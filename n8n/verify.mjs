@@ -42,6 +42,7 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
+  '07-scorecard.json',
 ].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
@@ -522,6 +523,43 @@ check('a subject never greets a name we do not have', () => {
   assert(named.length === 0,
     `merge first_name should fall back to "there", got: ${[...new Set(named.map((o) => o.json.merge.first_name))].join(', ')}`);
   return `${out.length} unusable-name rows, none greeted`;
+});
+
+check('the scorecard cannot report a number it never read', () => {
+  // WHY: a scorecard fails silently. If the SQL stops returning a column the
+  // composer reads - renamed, dropped, typo'd - the row does not error, it
+  // renders as 0 or blank, and a weekly email showing "Purchases: 0" is
+  // indistinguishable from a true zero. Nobody chases a number that looks
+  // plausible. So every r.<field> the composer touches must be a column the
+  // query actually names.
+  const wf = load('07-scorecard.json');
+  const sql = nodeNamed(wf, 'Gather Numbers').parameters.query;
+  const code = nodeNamed(wf, 'Compose Scorecard').parameters.jsCode;
+
+  const aliases = new Set([...sql.matchAll(/\bas\s+([a-z_][a-z0-9_]*)\s*(?=[,;])/gi)].map((m) => m[1]));
+  const refs = new Set([...code.matchAll(/\br\.([a-z_][a-z0-9_]*)/g)].map((m) => m[1]));
+  const missing = [...refs].filter((f) => !aliases.has(f));
+  assert(missing.length === 0,
+    `composer reads ${missing.join(', ')}, which the query does not select`);
+
+  // And it must actually render from those columns rather than throw.
+  const row = {};
+  for (const a of aliases) row[a] = 3;
+  const out = new Function('$input', '$vars', 'require', code)(
+    { first: () => ({ json: row }), all: () => [{ json: row }] }, {}, nodeRequire);
+  assert(out.length === 1 && out[0].json.html && out[0].json.subject, 'composer produced no email');
+
+  // No metric row may claim engagement. Open and click tracking are off on the
+  // sending domain and the Resend webhook carries bounced/complained only, so
+  // such a row would read 0 every week and be taken for a dead campaign.
+  const labelled = out[0].json.html.match(/<td[^>]*>\s*(Opened|Clicked|Open rate|Click rate|Delivered)/i);
+  assert(!labelled, `scorecard shows a "${labelled && labelled[1]}" row for something nothing measures`);
+
+  const to = JSON.parse((nodeNamed(wf, 'Send Scorecard').parameters.jsonBody
+    .match(/to:\s*(\[[^\]]*\])/) || [])[1] || '[]');
+  assert(to.length > 0 && to.every((a) => /@/.test(a)), 'scorecard has no recipient');
+
+  return `${refs.size} metrics, all selected; ${to.length} recipient(s)`;
 });
 
 /* -------------------------------------------------------------------- report */

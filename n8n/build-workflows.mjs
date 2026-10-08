@@ -1716,6 +1716,182 @@ console.log('built 06-commercial-review.json'
   + (REVIEW_TO.length ? '' : '  (NO RECIPIENTS: set campaign.commercialReviewTo in the dealer file)'));
 
 
+/* ================================================= 7. WEEKLY SCORECARD == */
+// Nothing in this campaign reported a number to a human until this workflow
+// existed. Failures were silent (04 posts to Slack through a webhook variable
+// that is truncated) and performance was invisible unless somebody opened
+// Supabase and wrote SQL. A campaign nobody can see is a campaign nobody
+// trusts, and the client-facing overview promises reporting in writing.
+//
+// It reports ONLY what this system measures. There is no opens or clicks line,
+// because open and click tracking are both disabled on the sending domain and
+// the Resend webhook subscribes to bounced and complained alone: no pixel, no
+// link rewriting, no delivery event. A row reading "Opened: 0" every week would
+// be read as a dead campaign rather than an unmeasured one, which is worse than
+// not reporting it. Turning either on changes what the customer receives, so it
+// is a decision for a person, not a default in a build script.
+//
+// It sends even in a quiet week. A scorecard that only arrives when something
+// happened cannot be distinguished from a scorecard that stopped working.
+const SCORECARD_TO = (DEALER.campaign && DEALER.campaign.scorecardTo) || [];
+const SCORECARD_FROM = (DEALER.campaign && DEALER.campaign.scorecardFrom)
+  || 'DriveOne Campaign <alerts@kovara.ai>';
+const COHORT_TARGET = (DEALER.supabase && DEALER.supabase.cohort_target) || 0;
+
+const scorecardCode = `
+// One row in, one email out. Every figure below comes from a column this
+// campaign actually writes, so a zero here means zero happened, not zero
+// measured.
+const r = $input.first().json;
+const num = (v) => Number(v || 0);
+const n = (v) => num(v).toLocaleString("en-US");
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const TZ = ${JSON.stringify(DEALER.sending.timezone)};
+const DEALER_NAME = ${JSON.stringify(DEALER.dealer.displayName)};
+const COHORT_TARGET = ${COHORT_TARGET};
+
+// The window the SQL used is the last 7 days ending now, so label it from the
+// same clock rather than from "last Monday", which would be a different week
+// whenever a run is late or retried.
+const fmt = (d) => new Intl.DateTimeFormat("en-US",
+  { timeZone: TZ, month: "short", day: "numeric" }).format(d);
+const now = new Date();
+const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+const period = fmt(weekAgo) + " to " + fmt(now);
+
+const row = (label, value, note) =>
+  "<tr><td style='padding:7px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial;color:#1c1d1f'>" + esc(label) + "</td>"
+  + "<td style='padding:7px 12px;border-bottom:1px solid #e3e8ef;font:14px Arial;color:#0B1B3F;font-weight:bold;text-align:right'>" + esc(value) + "</td>"
+  + "<td style='padding:7px 12px;border-bottom:1px solid #e3e8ef;font:12px Arial;color:#6b7c90'>" + esc(note || "") + "</td></tr>";
+
+const head = (title) =>
+  "<tr><td colspan='3' style='padding:16px 12px 5px;font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold'>"
+  + esc(title.toUpperCase()) + "</td></tr>";
+
+// Anything that wants a human. Each line names the thing and what it means, so
+// the scorecard is actionable on its own rather than a prompt to go and look.
+const flags = [];
+if (num(r.sent_7d) === 0) flags.push("No emails went out this week. If that is not the ramp pausing on purpose, workflow 02 is the place to look.");
+if (num(r.send_errors) > 0) flags.push(n(r.send_errors) + " enrolment(s) carry a send error and will keep retrying.");
+if (num(r.pricing_errors) > 0) flags.push(n(r.pricing_errors) + " enrolment(s) failed to price and cannot be emailed until they do.");
+if (num(r.unpriced) > 0) flags.push(n(r.unpriced) + " enrolment(s) have no price yet, so the scheduler will skip them.");
+if (num(r.held_commercial) > 0) flags.push(n(r.held_commercial) + " vehicle(s) held for commercial surcharge review, waiting on a person.");
+const remaining = COHORT_TARGET - num(r.enrolled_total);
+if (COHORT_TARGET > 0 && remaining > 0) flags.push(n(remaining) + " of the " + n(COHORT_TARGET) + " person bucket are not enrolled yet. The ramp adds them in steps.");
+
+const flagHtml = flags.length
+  ? "<div style='margin-top:20px;border-left:3px solid #D81E24;background:#FDECEE;padding:11px 14px'>"
+    + "<p style='margin:0 0 7px;font:bold 13px Arial;color:#0B1B3F'>Worth a look</p>"
+    + "<ul style='margin:0;padding-left:18px;font:13px Arial;color:#1c1d1f'>"
+    + flags.map((f) => "<li style='margin-bottom:4px'>" + esc(f) + "</li>").join("")
+    + "</ul></div>"
+  : "<p style='margin-top:20px;font:13px Arial;color:#6b7c90'>Nothing needs attention this week.</p>";
+
+const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:680px'>"
+  + "<p style='font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold;margin:0 0 4px'>WEEKLY SCORECARD</p>"
+  + "<p style='margin:0 0 2px;font:bold 19px Arial;color:#0B1B3F'>" + esc(DEALER_NAME) + "</p>"
+  + "<p style='margin:0 0 16px;font:13px Arial;color:#6b7c90'>" + esc(period) + "</p>"
+  + "<table style='border-collapse:collapse;width:100%'>"
+  + head("This week")
+  + row("Emails sent", n(r.sent_7d), r.sent_by_step_7d ? "by step: " + r.sent_by_step_7d : "")
+  + row("Customers newly enrolled", n(r.enrolled_7d), "")
+  + row("Purchases", n(r.purchased_7d), "")
+  + row("Unsubscribes, bounces, complaints", n(r.suppressed_7d), "")
+  + head("Campaign to date")
+  + row("Enrolled", n(r.enrolled_total), COHORT_TARGET > 0 ? "of " + n(COHORT_TARGET) + " eligible" : "")
+  + row("Still receiving emails", n(r.active_now), "")
+  + row("Emails sent", n(r.sent_total), "")
+  + row("Priced and ready", n(r.priced), num(r.unpriced) > 0 ? n(r.unpriced) + " not yet priced" : "")
+  + row("Purchases", n(r.purchased_total), "")
+  + row("Left the campaign", n(r.exited_total), r.exit_by_reason || "")
+  + "</table>"
+  + flagHtml
+  + "<p style='margin-top:22px;font:11px Arial;color:#9aa6b5;line-height:1.5'>"
+  + "Opens and clicks are not listed because they are not measured: open and click tracking are off on the sending domain, "
+  + "so no pixel is embedded and no link is rewritten. Turning either on changes what the customer receives and is a decision to make deliberately."
+  + "</p></div>";
+
+const subject = "[" + DEALER_NAME + "] Weekly scorecard: " + n(r.sent_7d) + " sent, "
+  + n(r.purchased_7d) + " purchased";
+
+return [{ json: { subject, html } }];
+`.trim();
+
+const scorecardNodes = [
+  node('Weekly Scorecard Trigger', 'scheduleTrigger', 1.2, [-620, 0], {
+    // Monday 08:10 dealer local. Ten past rather than on the hour because every
+    // other scheduled job in the world fires on the hour.
+    rule: { interval: [{ field: 'cronExpression', expression: '10 8 * * 1' }] },
+  }),
+
+  setNode('Campaign Config', [-380, 0], [
+    ['dealer_id', DEALER.id],
+    ['campaign_id', CAMPAIGN_ID],
+  ]),
+
+  pgNode('Gather Numbers', [-120, 0], [
+    '-- One row, every figure. Scalar subqueries rather than joins so that a',
+    '-- metric with no rows yet returns 0 instead of dropping the whole row,',
+    '-- which is how a scorecard silently loses a line it used to have.',
+    'select',
+    "  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2",
+    "     and sent_at >= now() - interval '7 days') as sent_7d,",
+    '  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2) as sent_total,',
+    "  (select coalesce(string_agg(s || ': ' || c, ',  ' order by s), '')",
+    '     from (select step::text s, count(*)::text c from vsc_send_log',
+    "            where dealer_id = $1 and campaign_id = $2 and sent_at >= now() - interval '7 days'",
+    '            group by step) a) as sent_by_step_7d,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2) as enrolled_total,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2',
+    "     and created_at >= now() - interval '7 days') as enrolled_7d,",
+    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and status = 'active') as active_now,",
+    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and status = 'held_commercial') as held_commercial,",
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and monthly_payment is not null) as priced,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and monthly_payment is null) as unpriced,',
+    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason = 'purchased') as purchased_total,",
+    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason = 'purchased'",
+    "     and updated_at >= now() - interval '7 days') as purchased_7d,",
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason is not null) as exited_total,',
+    "  (select coalesce(string_agg(r || ': ' || c, ',  ' order by r), '')",
+    '     from (select exit_reason r, count(*)::text c from vsc_enrollment',
+    '            where dealer_id = $1 and campaign_id = $2 and exit_reason is not null',
+    '            group by exit_reason) b) as exit_by_reason,',
+    "  (select count(*) from vsc_suppression where dealer_id = $1",
+    "     and created_at >= now() - interval '7 days') as suppressed_7d,",
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and send_error is not null) as send_errors,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and pricing_error is not null) as pricing_errors;',
+  ].join('\n'), '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
+
+  codeNode('Compose Scorecard', [140, 0], scorecardCode),
+
+  node('Send Scorecard', 'httpRequest', 4.2, [400, 0], {
+    method: 'POST',
+    url: 'https://api.resend.com/emails',
+    authentication: 'genericCredentialType',
+    genericAuthType: 'httpHeaderAuth',
+    sendBody: true,
+    specifyBody: 'json',
+    jsonBody: `={{ JSON.stringify({ from: ${JSON.stringify(SCORECARD_FROM)}, to: ${JSON.stringify(SCORECARD_TO)}, subject: $json.subject, html: $json.html }) }}`,
+  }, {
+    retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
+    credentials: { httpHeaderAuth: { id: 'REPLACE_RESEND_CRED_ID', name: 'Resend API' } },
+  }),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/07-scorecard.json`),
+  JSON.stringify(workflow('DriveOne VSC 07 Weekly Scorecard (' + DEALER.dealer.displayName + ')', scorecardNodes, connect([
+    ['Weekly Scorecard Trigger', 'Campaign Config'],
+    ['Campaign Config', 'Gather Numbers'],
+    ['Gather Numbers', 'Compose Scorecard'],
+    ['Compose Scorecard', 'Send Scorecard'],
+  ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
+
+console.log('built 07-scorecard.json'
+  + (SCORECARD_TO.length ? '' : '  (NO RECIPIENTS: set campaign.scorecardTo in the dealer file)'));
+
+
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */
 
 // There was a sixth workflow here. It logged into the sending mailbox over

@@ -549,11 +549,13 @@ check('the scorecard cannot report a number it never read', () => {
     { first: () => ({ json: row }), all: () => [{ json: row }] }, {}, nodeRequire);
   assert(out.length === 1 && out[0].json.html && out[0].json.subject, 'composer produced no email');
 
-  // No metric row may claim engagement. Open and click tracking are off on the
-  // sending domain and the Resend webhook carries bounced/complained only, so
-  // such a row would read 0 every week and be taken for a dead campaign.
-  const labelled = out[0].json.html.match(/<td[^>]*>\s*(Opened|Clicked|Open rate|Click rate|Delivered)/i);
-  assert(!labelled, `scorecard shows a "${labelled && labelled[1]}" row for something nothing measures`);
+  // Opens stay off the report. Open tracking is deliberately disabled (Apple
+  // Mail pre-fetches images, so the figure measures the client as much as the
+  // reader), so an "Opened" row could only ever read 0 and be taken for a dead
+  // campaign. Delivered and Clicked ARE allowed now that vsc_email_event
+  // records them - and the field check above is what keeps them honest.
+  const opens = out[0].json.html.match(/<td[^>]*>\s*(Opened|Open rate)\b/i);
+  assert(!opens, `scorecard shows an "${opens && opens[1]}" row, but open tracking is off so it can only read 0`);
 
   const to = JSON.parse((nodeNamed(wf, 'Send Scorecard').parameters.jsonBody
     .match(/to:\s*(\[[^\]]*\])/) || [])[1] || '[]');

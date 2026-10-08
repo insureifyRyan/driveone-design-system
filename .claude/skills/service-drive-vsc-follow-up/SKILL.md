@@ -528,39 +528,44 @@ here because 04 is mute (above).
 
 ### What is NOT measured, and why there is no line for it
 
-| Metric | Captured? | Where it would come from |
+Decided on 8 Oct 2026: capture delivered and clicked, never opens.
+
+| Metric | Captured? | Where it comes from |
 |---|---|---|
 | Sent | yes | `vsc_send_log`, one row per send |
 | Purchased, unsubscribed, bounced, complained | yes | Resend webhook -> 03 -> `exit_reason`, `vsc_suppression` |
-| **Delivered** | **no** | the Resend webhook does not subscribe to `email.delivered` |
-| **Opened** | **no** | open tracking is `false` on the sending domain, so no pixel is embedded |
-| **Clicked** | **no** | click tracking is `false`, so no link is rewritten |
+| Delivered | yes, from 8 Oct 2026 | `email.delivered` -> 03 -> `vsc_email_event` |
+| Clicked | **wired, not yet flowing** | `email.clicked` -> 03 -> `vsc_email_event`, but see the blocker below |
+| **Opened** | **no, on purpose** | open tracking stays off |
 
-Open and click tracking are off on **every** domain in the Resend account, Ferrario's
-included, and the webhook subscribes to `email.bounced` and `email.complained` alone. So
-these are not merely unrecorded, they are **never generated**. Subscribing to more events
-would change nothing by itself.
+`vsc_email_event` is the engagement log: append-only, because Resend retries a webhook
+delivery until it is acknowledged, so the same click can arrive several times and so can a
+genuine second click on a second link. **Count `distinct provider_message_id`, never
+`count(*)`.** Exits are *not* written here; they already live on `vsc_enrollment.exit_reason`
+and `vsc_suppression`.
 
-The scorecard therefore carries **no opens or clicks row**, and `npm run verify` asserts it
-cannot grow one. A row reading "Opened: 0" every week would be read as a dead campaign
-rather than an unmeasured one, which is worse than not reporting it at all.
+The non-exit branch of 03 used to be a no-op, which is exactly why none of this was
+measured: the events were received and thrown away. It now writes them.
 
-**This is an open decision, not an oversight.** The client-facing overview promises
-reporting on "delivered, opened, clicked and purchased", and today only two of those four
-are true. The recommended resolution, in order:
+**Opens stay off deliberately.** Apple Mail Privacy Protection pre-fetches images, so an
+open figure measures the mail client as much as the reader. `npm run verify` asserts the
+scorecard has no "Opened" row, so it cannot quietly grow one.
 
-1. **Subscribe the webhook to `email.delivered`.** No customer-visible change at all,
-   nothing added to the email. Earns the word "delivered" honestly.
-2. **Turn on click tracking.** This is the signal worth having, because it says whether
-   anyone reached checkout. The cost is real: every link is rewritten through Resend, on a
-   warming subdomain carrying a dealership's name, and the rewritten link is the checkout
-   link.
-3. **Leave open tracking off.** Apple Mail Privacy Protection pre-fetches images, so opens
-   are inflated to the point of meaning very little, and it is the option that puts a
-   tracking pixel in a dealership's customer email.
+> **BLOCKER: click tracking is still off and cannot be set through the API.**
+> `update-domain` on `ferrario.driveoneprogram.com` returns "Domain updated successfully"
+> and the value reads back `false` every time, on repeated attempts. It has to be switched
+> on in the **Resend dashboard** (Domains -> the domain -> Click Tracking). Everything
+> downstream is already in place, so the figures start the moment it is enabled. Until
+> then the scorecard's Clicked row is honestly 0, and the footnote tells the reader clicks
+> only exist for mail sent after tracking was enabled.
+>
+> Always read a Resend domain setting back after writing it. The success message is not
+> evidence.
 
-If 1 and 2 are taken and 3 is not, the client document must be edited to say "delivered,
-clicked and purchased". Do not leave the promise standing while the measurement is absent.
+**The client document still over-promises.** The Ferrario overview says we report
+"delivered, opened, clicked and purchased". Opens will never be reported. Once click
+tracking is on, edit the document to **"delivered, clicked and purchased"**; the PDF is
+rendered from `scratchpad/overview/overview.html` and has to be re-rendered to match.
 
 ## Product facts
 
@@ -1089,3 +1094,19 @@ their customer relationship.
   therefore asserts that every `r.<field>` the scorecard composer touches is a column the
   query actually names, and that no row claims a metric nothing measures. It was confirmed
   to go red by renaming a column on one side only.
+- **A new table is invisible to n8n until it is granted to `vsc_campaign`.** The workflows
+  do not connect as `postgres`; they connect as a least-privilege role called
+  `vsc_campaign`. A table created through the Supabase MCP is owned by `postgres` and
+  carries no grant to it, so the first scheduled run dies on `permission denied for table
+  <name>` — and on a weekly job that is a week of silence. After creating one:
+  `grant select, insert on table <name> to vsc_campaign;` plus
+  `grant usage, select on sequence <name>_id_seq to vsc_campaign;` for a `bigserial`. Grant
+  only what the workflow needs: `vsc_email_event` is append-only, so it has insert and
+  select and deliberately no update or delete. Check an existing table's grants with
+  `select relacl from pg_class where relname = 'vsc_enrollment'` and mirror them.
+- **Resend's `update-domain` lies about tracking flags.** It answers "Domain updated
+  successfully" and the setting does not change; two attempts to enable click tracking on
+  `ferrario.driveoneprogram.com` both reported success and both read back `false`. Read
+  every domain setting back after writing it, and expect to use the dashboard. The webhook
+  endpoint's `update-webhook` *does* persist correctly, so this is specific to domain
+  tracking flags rather than the whole API.

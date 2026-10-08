@@ -1090,6 +1090,13 @@ const CLASSIFY_CODE = [
   '      customer_key,',
   '      email,',
   '      campaign_id: p.campaign_id || "' + CAMPAIGN_ID + '",',
+  '      // Engagement fields. Everything that is not an exit lands on the',
+  '      // non-actionable branch and is recorded in vsc_email_event, so',
+  '      // "delivered" and "clicked" become reportable instead of being',
+  '      // dropped. email_id is what joins the row back to vsc_send_log.',
+  '      provider_message_id: p.data?.email_id || p.email_id || null,',
+  '      link_url: p.data?.click?.link || p.data?.link || null,',
+  '      occurred_at: p.created_at || p.data?.created_at || null,',
   '    },',
   '  });',
   '}',
@@ -1306,7 +1313,29 @@ const eventsNodes = [
     options: { responseCode: 200 },
   }),
 
-  node('Ignored (unknown or non-exit event)', 'noOp', 1, [40, 140], {}),
+  // Was a no-op. Everything that is not an exit - delivered, clicked, opened,
+  // delivery_delayed, anything new Resend adds - arrived here and was thrown
+  // away, which is why the campaign could report sends and purchases but
+  // nothing in between. Now it is recorded.
+  //
+  // Append-only, with no unique constraint, because Resend retries a webhook
+  // delivery until it is acknowledged: the same click can legitimately arrive
+  // several times, and so can a genuine second click on a second link. Anything
+  // reading this table counts DISTINCT provider_message_id, never count(*).
+  //
+  // The guard matters: an event with no email_id cannot be joined to a send, so
+  // storing it would inflate a denominator with rows that can never be matched.
+  pgNode('Record Engagement Event', [40, 140], [
+    'insert into vsc_email_event',
+    '  (dealer_id, campaign_id, provider_message_id, event, link_url, occurred_at)',
+    'select $1, $2, $3, $4, nullif($5, \'\'),',
+    '  coalesce(nullif($6, \'\')::timestamptz, now())',
+    'where nullif($3, \'\') is not null',
+    '  and nullif($4, \'\') is not null',
+    'returning id;',
+  ].join('\n'),
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.provider_message_id }},'
+    + ' {{ $json.received_type }}, {{ $json.link_url }}, {{ $json.occurred_at }}'),
 ];
 
 const eventsConnections = connect([
@@ -1314,11 +1343,11 @@ const eventsConnections = connect([
   ['Resend Event Webhook', 'Verify Resend Signature'],
   ['Verify Resend Signature', 'Classify Event'],
   ['Classify Event', 'Actionable?'],
-  ['Actionable?', ['Exit Enrollment', 'Ignored (unknown or non-exit event)']],
+  ['Actionable?', ['Exit Enrollment', 'Record Engagement Event']],
   ['Exit Enrollment', 'Needs Suppression?'],
   ['Needs Suppression?', ['Add To Suppression List', 'Acknowledge']],
   ['Add To Suppression List', 'Acknowledge'],
-  ['Ignored (unknown or non-exit event)', 'Acknowledge'],
+  ['Record Engagement Event', 'Acknowledge'],
 ]);
 
 writeFileSync(join(ROOT, `${WF_DIR}/03-events.json`),
@@ -1778,6 +1807,9 @@ if (num(r.send_errors) > 0) flags.push(n(r.send_errors) + " enrolment(s) carry a
 if (num(r.pricing_errors) > 0) flags.push(n(r.pricing_errors) + " enrolment(s) failed to price and cannot be emailed until they do.");
 if (num(r.unpriced) > 0) flags.push(n(r.unpriced) + " enrolment(s) have no price yet, so the scheduler will skip them.");
 if (num(r.held_commercial) > 0) flags.push(n(r.held_commercial) + " vehicle(s) held for commercial surcharge review, waiting on a person.");
+// Sent but nothing delivered is the shape of a broken webhook rather than a
+// bad week, and without this line it would read as a quiet week forever.
+if (num(r.sent_7d) > 0 && num(r.delivered_7d) === 0) flags.push("Mail was sent but nothing was recorded as delivered. Check that the Resend webhook is still reaching workflow 03.");
 const remaining = COHORT_TARGET - num(r.enrolled_total);
 if (COHORT_TARGET > 0 && remaining > 0) flags.push(n(remaining) + " of the " + n(COHORT_TARGET) + " person bucket are not enrolled yet. The ramp adds them in steps.");
 
@@ -1796,6 +1828,8 @@ const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:680px'>"
   + "<table style='border-collapse:collapse;width:100%'>"
   + head("This week")
   + row("Emails sent", n(r.sent_7d), r.sent_by_step_7d ? "by step: " + r.sent_by_step_7d : "")
+  + row("Delivered", n(r.delivered_7d), "")
+  + row("Clicked through", n(r.clicked_7d), "distinct emails, not total clicks")
   + row("Customers newly enrolled", n(r.enrolled_7d), "")
   + row("Purchases", n(r.purchased_7d), "")
   + row("Unsubscribes, bounces, complaints", n(r.suppressed_7d), "")
@@ -1804,13 +1838,15 @@ const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:680px'>"
   + row("Still receiving emails", n(r.active_now), "")
   + row("Emails sent", n(r.sent_total), "")
   + row("Priced and ready", n(r.priced), num(r.unpriced) > 0 ? n(r.unpriced) + " not yet priced" : "")
+  + row("Clicked through", n(r.clicked_total), "")
   + row("Purchases", n(r.purchased_total), "")
   + row("Left the campaign", n(r.exited_total), r.exit_by_reason || "")
   + "</table>"
   + flagHtml
   + "<p style='margin-top:22px;font:11px Arial;color:#9aa6b5;line-height:1.5'>"
-  + "Opens and clicks are not listed because they are not measured: open and click tracking are off on the sending domain, "
-  + "so no pixel is embedded and no link is rewritten. Turning either on changes what the customer receives and is a decision to make deliberately."
+  + "Opens are deliberately not reported. Open tracking stays off, because Apple Mail pre-fetches images and an open figure "
+  + "measures that as much as it measures a reader. Clicks are counted as distinct emails clicked, and only for mail sent after "
+  + "click tracking was enabled on 8 October 2026, so earlier sends show none."
   + "</p></div>";
 
 const subject = "[" + DEALER_NAME + "] Weekly scorecard: " + n(r.sent_7d) + " sent, "
@@ -1861,7 +1897,16 @@ const scorecardNodes = [
     "  (select count(*) from vsc_suppression where dealer_id = $1",
     "     and created_at >= now() - interval '7 days') as suppressed_7d,",
     '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and send_error is not null) as send_errors,',
-    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and pricing_error is not null) as pricing_errors;',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and pricing_error is not null) as pricing_errors,',
+    '-- DISTINCT message id, never count(*): vsc_email_event is append-only and',
+    '-- Resend retries a webhook until it is acknowledged, so the same delivery',
+    '-- or click can be recorded several times.',
+    "  (select count(distinct provider_message_id) from vsc_email_event where dealer_id = $1",
+    "     and event = 'email.delivered' and occurred_at >= now() - interval '7 days') as delivered_7d,",
+    "  (select count(distinct provider_message_id) from vsc_email_event where dealer_id = $1",
+    "     and event = 'email.clicked' and occurred_at >= now() - interval '7 days') as clicked_7d,",
+    "  (select count(distinct provider_message_id) from vsc_email_event where dealer_id = $1",
+    "     and event = 'email.clicked') as clicked_total;",
   ].join('\n'), '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
 
   codeNode('Compose Scorecard', [140, 0], scorecardCode),

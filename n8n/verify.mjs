@@ -557,6 +557,17 @@ check('the scorecard cannot report a number it never read', () => {
   const opens = out[0].json.html.match(/<td[^>]*>\s*(Opened|Open rate)\b/i);
   assert(!opens, `scorecard shows an "${opens && opens[1]}" row, but open tracking is off so it can only read 0`);
 
+  // Engagement counts must be scoped by the send log, not by vsc_email_event's
+  // own dealer_id. A Resend webhook is account-wide: every message the account
+  // sends hits this endpoint, and an unlabelled event defaults to this dealer.
+  // Unjoined, the first live day read 23 delivered against 14 real sends.
+  const engagement = sql.match(/from vsc_email_event[\s\S]*?(?=\)\s*as\s)/g) || [];
+  assert(engagement.length > 0, 'no engagement subquery found');
+  engagement.forEach((q, i) => {
+    assert(/join vsc_send_log/.test(q) && /l\.dealer_id = \$1/.test(q) && /l\.campaign_id = \$2/.test(q),
+      `engagement subquery ${i + 1} does not join vsc_send_log on dealer and campaign, so it counts other campaigns' mail`);
+  });
+
   const to = JSON.parse((nodeNamed(wf, 'Send Scorecard').parameters.jsonBody
     .match(/to:\s*(\[[^\]]*\])/) || [])[1] || '[]');
   assert(to.length > 0 && to.every((a) => /@/.test(a)), 'scorecard has no recipient');

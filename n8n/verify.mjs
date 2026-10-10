@@ -575,6 +575,82 @@ check('the scorecard cannot report a number it never read', () => {
   return `${refs.size} metrics, all selected; ${to.length} recipient(s)`;
 });
 
+check('a cohort does not all land on one timestamp', () => {
+  // WHY: this is the bug that got to production. The day snapping was correct
+  // and nobody had spread the CLOCK, so every advance wrote the same hour and a
+  // whole cohort arrived as one block - 29 live rows sat at exactly
+  // Tue 13 Oct 10:00, the entire weekend backlog pointed at one hour of one
+  // morning. Every existing check passed: the per-person gap was right, the
+  // cadence was right, the daily total was right. Only the hour histogram
+  // showed it, and nothing was looking at the hour histogram.
+  const code = nodeNamed(load('02-scheduler.json'), 'Prepare Send').parameters.jsCode;
+  const created = new Date(Date.now() - 3 * 86400000).toISOString();
+  const base = {
+    id: 'x', dealer_id: 'd', campaign_id: 'c', current_step: 1,
+    created_at: created, first_name: 'Eric', monthly_payment: 129, down_payment: 50,
+    contract_price: 3364, payment_term: 36, contract_months: 36, coverage_miles: 50000,
+    vehicle_year: '2019', vehicle_make: 'Ford', vehicle_model: 'Escape',
+    vehicle_mileage: 72000, quote_url: 'https://example.test/q', ro_closed_date: '2026-09-20',
+  };
+  // One cohort: same enrolment date, same step, different people. Exactly the
+  // shape that produced the pile-up.
+  const rows = Array.from({ length: 90 }, (_, i) => ({ ...base, customer_key: 'cohort_' + i }));
+  const out = new Function('$input', '$vars', 'require', code)(
+    { all: () => rows.map((r) => ({ json: r })) }, {}, nodeRequire);
+
+  const times = out.map((o) => o.json.next_send_at).filter(Boolean);
+  assert(times.length >= 50, `expected a cohort to be scheduled, got ${times.length}`);
+
+  const hours = new Set(times.map((t) => new Date(t).getUTCHours()));
+  assert(hours.size >= 3,
+    `a 90 person cohort landed on ${hours.size} distinct hour(s); it needs to fan out across the window`);
+
+  const perHour = {};
+  for (const t of times) {
+    const k = new Date(t).toISOString().slice(0, 13);
+    perHour[k] = (perHour[k] || 0) + 1;
+  }
+  const worst = Math.max(...Object.values(perHour));
+  const ceiling = Math.ceil(times.length / 3);
+  assert(worst <= ceiling,
+    `${worst} of ${times.length} sends share one hour (limit ${ceiling}); that is the pile-up, not a spread`);
+
+  // And the whole point of seeding on the contact: a person's own gaps must
+  // still be whole days, or spreading the cohort would quietly breach the
+  // three day minimum between two emails to the same human.
+  const again = new Function('$input', '$vars', 'require', code)(
+    { all: () => rows.map((r) => ({ json: r })) }, {}, nodeRequire);
+  assert(JSON.stringify(again.map((o) => o.json.next_send_at)) === JSON.stringify(times),
+    'scheduling is not deterministic: the same cohort produced different times on a second run');
+
+  return `${times.length} sends across ${hours.size} hours, worst hour ${worst}`;
+});
+
+check('intake never makes a new cohort due on arrival', () => {
+  // WHY: next_send_at = now() is harmless for one row a day and wrong for a
+  // cohort raise. 30 to 90 inserted 60 rows all due at once, which at maxPerRun
+  // is two hours of solid sending on a warming subdomain, and it had to be
+  // unwound by hand. The ramp has to be a property of the insert.
+  const sql = nodeNamed(load('01-intake.json'), 'Enroll Eligible Service Customers').parameters.query;
+  const cols = /insert into vsc_enrollment\s*\(([\s\S]*?)\)/.exec(sql);
+  assert(cols, 'could not find the enrolment insert');
+  const idx = cols[1].split(',').map((c) => c.trim()).indexOf('next_send_at');
+  assert(idx >= 0, 'insert does not write next_send_at');
+
+  assert(/\bslots\b/.test(sql) && /row_number\(\) over \(order by ts\)/.test(sql),
+    'intake does not deal new rows onto precomputed send slots');
+  assert(!/\bend,\s*0,\s*now\(\)/.test(sql),
+    'intake still inserts next_send_at = now(), so a cohort raise is due the instant it lands');
+  // The slots must exclude days the window is shut, or rows land on a Saturday
+  // and queue into Monday's first hour, which is the same pile-up by a different
+  // route.
+  assert(/extract\(dow from d\) = any\(array\[/.test(sql),
+    'slots are not restricted to days the send window is open');
+  assert(/where ts > now\(\)/.test(sql),
+    'slots are not filtered to the future, so a past slot would be due on arrival');
+  return 'new rows are dealt onto future in-window slots';
+});
+
 /* -------------------------------------------------------------------- report */
 
 const pad = Math.max(...results.map((r) => r.name.length));

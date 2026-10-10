@@ -1110,22 +1110,26 @@ their customer relationship.
   every domain setting back after writing it, and expect to use the dashboard. The webhook
   endpoint's `update-webhook` *does* persist correctly, so this is specific to domain
   tracking flags rather than the whole API.
-- **Raising the cohort queues the whole increment for the next window.** Intake inserts at
-  `current_step = 0, next_send_at = now()`, so every newly enrolled row is due the moment it
-  lands. Going 30 to 90 on 10 Oct 2026 created 60 rows all due immediately; with
-  `maxPerRun = 45` that is two hours of solid sending on a warming subdomain, which is the
-  opposite of a measured ramp. **Spread the increment by hand straight after the raise**,
-  before the next send day, and run 05 so they are priced (02 refuses a row with no
-  `quote_url`). The step 2 spread was 20 a day across the first three send days, on minutes
-  :05/:20/:35, giving about three an hour. `vsc_respread_audit` records every move.
-- **The weekend builds a Tuesday pile-up, every week.** Sending runs Tuesday to Friday, so
-  any row whose `next_send_at` falls on Saturday or Sunday becomes due and waits. On 10 Oct
-  all 29 step-1 rows sat at exactly `Tue 13 10:00` - one timestamp, 29 emails, and that was
-  before the 60 new ones were added. Spreading the new cohort alone would still have left 49
-  sends on the Tuesday with 32 in a single hour. **Check the hour histogram, not just the
-  daily total**, after any cohort change and on any Monday:
+- **Scheduling spreads across PEOPLE, inside the day, and the hour is the part that
+  matters.** The day snapping was always right; the clock was not. Every advance wrote the
+  same constant 14:00 UTC, so a cohort arrived as one block: 29 live rows sat at exactly
+  Tue 13 Oct 10:00, the whole weekend backlog pointed at one hour of one morning. Fixed on
+  10 Oct 2026. `02` now picks an hour and minute per CONTACT from `SAFE_UTC_HOURS`, the
+  hours inside the local window under BOTH daylight saving offsets, derived in the
+  generator from `sending.hours` and `sending.timezone` so it cannot drift from the gate.
+  For Ferrario that is 14, 15, 18, 19, 20 UTC. **Seed it on the contact alone, never on the
+  step**: per step spreads the cohort equally well and breaks the cadence, because a
+  contact whose step 2 lands at 20:00 and step 3 at 14:00 three days later is 2.75 days
+  apart, under the three day minimum. `01` deals new rows onto precomputed future slots on
+  window days instead of `next_send_at = now()`, so a cohort raise ramps by construction
+  rather than queueing the whole increment into the next window. `sending.newEnrolmentsPerDay`
+  sets the rate, default 20.
+- **Check the hour histogram, not the daily total.** Every existing check passed while 29
+  rows shared one timestamp: the per-person gap was right, the cadence was right, the daily
+  total was right. Only the hour showed it. After any cohort change, or any week something
+  looks lumpy:
   `select date_trunc('hour', next_send_at), count(*) from vsc_enrollment where dealer_id =
   '<id>' and status = 'active' group by 1 order by 1;`
-  This is structural, not a one-off: it recurs every weekend and grows with the cohort. The
-  real fix is for the state advance to skip non-send days when it computes the next date,
-  rather than landing on one and queueing. Until that is done, re-spread by hand.
+  `npm run verify` now owns this too: it runs a 90 person cohort through the real Prepare
+  Send code and fails if they land on fewer than three distinct hours, or if any one hour
+  takes more than a third of them.

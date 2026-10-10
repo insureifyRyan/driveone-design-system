@@ -36,6 +36,60 @@ const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'ut
 const DEALER_ID = process.argv[2] || 'bob-johnson';
 const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
 
+/**
+ * The UTC hours that are inside the dealer's local send window ALL YEAR.
+ *
+ * Everything downstream schedules in UTC, and the window is configured in the
+ * dealer's local hours, so the mapping between them moves twice a year. Picking
+ * one safe UTC hour and using it for everybody was the original answer, and it
+ * is why a whole cohort landed on a single timestamp: 29 rows all sat at
+ * Tue 13 Oct 10:00 because every advance wrote the same hour. The days were
+ * spread properly; the clock was not.
+ *
+ * So: keep the DST safety, lose the single point. An hour qualifies only if it
+ * falls inside the configured window under BOTH the standard and the daylight
+ * offset, which leaves a handful of slots to spread across instead of one.
+ * For America/New_York with a 9-11 and 13-16 window that is 14, 15, 18, 19, 20
+ * UTC. Derived here rather than written down, so changing the window or the
+ * timezone in the dealer file cannot leave this disagreeing with the gate.
+ */
+function safeUtcHours(timezone, localHours) {
+  const offsetAt = (date) => {
+    const name = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' })
+      .formatToParts(date).find((p) => p.type === 'timeZoneName').value;
+    const m = /GMT([+-]\d{1,2})(?::(\d{2}))?/.exec(name);
+    return m ? Number(m[1]) + (m[2] ? Math.sign(Number(m[1])) * Number(m[2]) / 60 : 0) : 0;
+  };
+  // Mid-winter and mid-summer cover both offsets for any zone that observes DST,
+  // and collapse to one entry for any zone that does not.
+  const offsets = [...new Set([
+    offsetAt(new Date(Date.UTC(2026, 0, 15, 12))),
+    offsetAt(new Date(Date.UTC(2026, 6, 15, 12))),
+  ])];
+  const hours = [];
+  for (let h = 0; h < 24; h++) {
+    if (offsets.every((o) => localHours.includes((((h + o) % 24) + 24) % 24))) hours.push(h);
+  }
+  return hours;
+}
+
+const SAFE_UTC_HOURS = safeUtcHours(DEALER.sending.timezone, DEALER.sending.hours);
+if (!SAFE_UTC_HOURS.length) {
+  throw new Error(
+    `No UTC hour sits inside ${DEALER.id}'s send window under both DST offsets. `
+    + `sending.hours = ${JSON.stringify(DEALER.sending.hours)} in ${DEALER.sending.timezone}. `
+    + 'Widen the window by at least one hour, or scheduling has nowhere safe to put a send.');
+}
+
+// How many newly enrolled rows to let land on one day. Intake used to insert
+// next_send_at = now(), so every row of a cohort raise was due the instant it
+// landed and the next window drained the lot: raising 30 to 90 queued 60 sends
+// into one morning on a warming subdomain. New rows are dealt onto the upcoming
+// send slots instead, so a raise ramps by construction and nobody has to
+// remember to spread it by hand.
+const NEW_PER_DAY = DEALER.sending.newEnrolmentsPerDay || 20;
+const ROWS_PER_SLOT = Math.max(1, Math.ceil(NEW_PER_DAY / SAFE_UTC_HOURS.length));
+
 // Per-dealership sending identity, baked in at build time rather than read
 // from an n8n Variable at run time.
 //
@@ -392,6 +446,39 @@ const INTAKE_SQL = [
   '    select count(*) from vsc_enrollment',
   '    where dealer_id = $1 and campaign_id = $2',
   '  ))',
+  '),',
+  '',
+  '-- Deal the new rows onto upcoming send slots instead of making them all due',
+  '-- immediately.',
+  '--',
+  '-- next_send_at used to be now(). One row a day that is harmless; a cohort',
+  '-- raise it is not. Going from 30 to 90 inserted 60 rows all due at once, and',
+  '-- at maxPerRun that is two hours of solid sending on a warming subdomain -',
+  '-- precisely what the ramp exists to prevent. It had to be undone by hand.',
+  '--',
+  '-- Numbering the batch and dealing it across the window means the ramp is a',
+  '-- property of the system rather than something an operator has to remember.',
+  'numbered as (',
+  '  select t.*, (row_number() over (order by t.visited_at desc) - 1)::int as rn',
+  '  from to_enrol t',
+  '),',
+  'slots as (',
+  '  -- Every send slot from now to 90 days out, in order. Only hours that are',
+  '  -- inside the local window under both DST offsets, and only days the window',
+  '  -- is open, so nothing is ever dealt onto a weekend to sit and stack.',
+  '  select ts, (row_number() over (order by ts) - 1)::int as si',
+  '  from (',
+  '    select ((d::date + make_interval(hours => h)) at time zone \'UTC\') as ts',
+  '    from generate_series(current_date::timestamp,',
+  '                         current_date::timestamp + interval \'90 days\',',
+  '                         interval \'1 day\') d',
+  `    cross join unnest(array[${SAFE_UTC_HOURS.join(', ')}]) as h`,
+  `    where extract(dow from d) = any(array[${DEALER.sending.days.join(', ')}])`,
+  '  ) x',
+  '  -- A slot that has already passed today would be due on arrival, which is',
+  '  -- the behaviour being removed. The margin keeps a slot from going stale',
+  '  -- between this select and the insert.',
+  '  where ts > now() + interval \'15 minutes\'',
   ')',
   '',
   'insert into vsc_enrollment (',
@@ -412,12 +499,22 @@ const INTAKE_SQL = [
   '  -- released. See COMMERCIAL_PATTERN for why the match is deliberately narrow.',
   '  case when lower(coalesce(first_name,\'\') || \' \' || coalesce(last_name_src,\'\'))',
   `         ~ '(${COMMERCIAL_PATTERN})'`,
-  "       then 'held_commercial' else 'active' end, 0, now(),",
+  "       then 'held_commercial' else 'active' end, 0,",
+  `  -- ${ROWS_PER_SLOT} rows per slot across ${SAFE_UTC_HOURS.length} slots a day is ${ROWS_PER_SLOT * SAFE_UTC_HOURS.length} a day, with`,
+  '  -- minutes fanned out inside the slot so no two share a timestamp. The',
+  '  -- coalesce is the safety net: a batch larger than 90 days of slots would',
+  '  -- otherwise write null and the row would never send at all. Better late',
+  '  -- than silently stranded.',
+  '  coalesce(',
+  `    (select s.ts from slots s where s.si = n.rn / ${ROWS_PER_SLOT})`,
+  `      + make_interval(mins => (n.rn % ${ROWS_PER_SLOT}) * 7),`,
+  '    (select max(s.ts) from slots s)',
+  '  ),',
   '  -- No link is built here. The quote API returns the real customer facing',
   '  -- links, so pricing fills quote_url and a locally guessed URL never exists.',
   '  null,',
   '  quote_id',
-  'from to_enrol',
+  'from numbered n',
   '-- Kept as a race guard. The not-exists above is what makes the cohort fill;',
   '-- this is what makes two concurrent sweeps safe.',
   'on conflict (dealer_id, campaign_id, customer_key) do nothing',
@@ -697,11 +794,36 @@ const PREPARE_SEND_CODE = [
   '    // day: a send computed for Friday 23:00 became Friday 14:00, which was',
   '    // below a floor of Friday 23:00, so it was rejected and pushed a full',
   '    // week to the next window day. That alone turned a 3 day gap into 7.',
-  '    // 14:00 UTC is 10:00 in America/New_York, inside the morning window and',
-  '    // safely clear of both ends of it either side of a daylight saving shift.',
-  '    nextSendAt.setUTCHours(14, 0, 0, 0);',
+  '    //',
+  '    // The hour used to be a single constant, 14:00 UTC, chosen because it is',
+  '    // inside the window either side of a daylight saving shift. It was right',
+  '    // about DST and wrong about everything else: every row advanced by every',
+  '    // run got the SAME timestamp, so a cohort arrived as one block. 29 rows',
+  '    // sat at exactly Tue 13 Oct 10:00, and that was the whole of a weekend',
+  '    // backlog pointed at one hour of one morning. The day snapping below was',
+  '    // working; there was simply no spread inside the day.',
+  '    //',
+  '    // So the hour is now a deterministic slot per contact and step, drawn',
+  '    // from the hours that are inside the window under BOTH offsets, with a',
+  '    // minute to match. Same contact, same step, same answer however often',
+  '    // the sweep runs, and a cohort fans out across the day instead of',
+  '    // stacking. The floor is built at that same hour and minute, which is',
+  '    // what keeps the comparison above honest.',
+  '    const SAFE_UTC_HOURS = ' + JSON.stringify(SAFE_UTC_HOURS) + ';',
+  '    // Seeded on the CONTACT ALONE, never on the step. Seeding it per step',
+  '    // spreads the cohort just as well and quietly breaks the cadence: a',
+  '    // contact whose step 2 lands at 20:00 and step 3 at 14:00 three days',
+  '    // later is 2.75 days apart, under the three day minimum that exists so',
+  '    // nobody gets two marketing emails in quick succession. Constant per',
+  '    // contact means every gap stays whole days, exactly as the deck wrote',
+  '    // them, while different contacts still fan out across the window.',
+  '    const slotSeed = parseInt(crypto.createHash("md5")',
+  '      .update(r.customer_key + ":slot").digest("hex").slice(0, 8), 16);',
+  '    const slotHour = SAFE_UTC_HOURS[slotSeed % SAFE_UTC_HOURS.length];',
+  '    const slotMinute = (Math.floor(slotSeed / SAFE_UTC_HOURS.length) % 12) * 5;',
+  '    nextSendAt.setUTCHours(slotHour, slotMinute, 0, 0);',
   '    const floor = new Date(Date.now());',
-  '    floor.setUTCHours(14, 0, 0, 0);',
+  '    floor.setUTCHours(slotHour, slotMinute, 0, 0);',
   '    floor.setUTCDate(floor.getUTCDate() + MIN_GAP_DAYS);',
   '    if (nextSendAt.getTime() < floor.getTime()) nextSendAt.setTime(floor.getTime());',
   '',

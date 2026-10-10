@@ -551,16 +551,17 @@ measured: the events were received and thrown away. It now writes them.
 open figure measures the mail client as much as the reader. `npm run verify` asserts the
 scorecard has no "Opened" row, so it cannot quietly grow one.
 
-> **BLOCKER: click tracking is still off and cannot be set through the API.**
-> `update-domain` on `ferrario.driveoneprogram.com` returns "Domain updated successfully"
-> and the value reads back `false` every time, on repeated attempts. It has to be switched
-> on in the **Resend dashboard** (Domains -> the domain -> Click Tracking). Everything
-> downstream is already in place, so the figures start the moment it is enabled. Until
-> then the scorecard's Clicked row is honestly 0, and the footnote tells the reader clicks
-> only exist for mail sent after tracking was enabled.
->
-> Always read a Resend domain setting back after writing it. The success message is not
-> evidence.
+**Click tracking went live on 10 Oct 2026** on a CUSTOM tracking subdomain,
+`links.ferrario.driveoneprogram.com` (CNAME to `links2.resend-dns.com`, plus a CAA record,
+both verified). Custom rather than Resend's shared tracking domain on purpose: the rewritten
+link is what a cautious customer sees when they hover the checkout button, so it stays on
+the dealership's own domain and off reputation shared with every other Resend sender. The
+subdomain is `links` because it reads as plumbing; `click` or `track` read as surveillance
+on an email written to sound like a note from the service drive.
+
+**Clicks only exist for mail sent after that date.** The first three days of sends, 30
+emails, can never have click data. A click rate computed across the whole campaign will be
+wrong until those age out.
 
 **The client document still over-promises.** The Ferrario overview says we report
 "delivered, opened, clicked and purchased". Opens will never be reported. Once click
@@ -1104,12 +1105,14 @@ their customer relationship.
   only what the workflow needs: `vsc_email_event` is append-only, so it has insert and
   select and deliberately no update or delete. Check an existing table's grants with
   `select relacl from pg_class where relname = 'vsc_enrollment'` and mirror them.
-- **Resend's `update-domain` lies about tracking flags.** It answers "Domain updated
-  successfully" and the setting does not change; two attempts to enable click tracking on
-  `ferrario.driveoneprogram.com` both reported success and both read back `false`. Read
-  every domain setting back after writing it, and expect to use the dashboard. The webhook
-  endpoint's `update-webhook` *does* persist correctly, so this is specific to domain
-  tracking flags rather than the whole API.
+- **`update-domain` silently no-ops `clickTracking` until a tracking subdomain exists.**
+  Two API calls to enable it returned "Domain updated successfully" and the value read back
+  `false` both times. The cause was not a broken API: Resend rewrites links through a
+  tracking domain, and with none configured there is nowhere for the flag to point, so it
+  is accepted and dropped. Create the tracking subdomain first (dashboard: Domains -> the
+  domain -> Enable Tracking), which sets the flag as a side effect. Either way the lesson
+  holds: **read a Resend domain setting back after writing it**, because the success
+  message is not evidence. `update-webhook` does persist correctly.
 - **Scheduling spreads across PEOPLE, inside the day, and the hour is the part that
   matters.** The day snapping was always right; the clock was not. Every advance wrote the
   same constant 14:00 UTC, so a cohort arrived as one block: 29 live rows sat at exactly

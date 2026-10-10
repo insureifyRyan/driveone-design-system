@@ -1110,3 +1110,22 @@ their customer relationship.
   every domain setting back after writing it, and expect to use the dashboard. The webhook
   endpoint's `update-webhook` *does* persist correctly, so this is specific to domain
   tracking flags rather than the whole API.
+- **Raising the cohort queues the whole increment for the next window.** Intake inserts at
+  `current_step = 0, next_send_at = now()`, so every newly enrolled row is due the moment it
+  lands. Going 30 to 90 on 10 Oct 2026 created 60 rows all due immediately; with
+  `maxPerRun = 45` that is two hours of solid sending on a warming subdomain, which is the
+  opposite of a measured ramp. **Spread the increment by hand straight after the raise**,
+  before the next send day, and run 05 so they are priced (02 refuses a row with no
+  `quote_url`). The step 2 spread was 20 a day across the first three send days, on minutes
+  :05/:20/:35, giving about three an hour. `vsc_respread_audit` records every move.
+- **The weekend builds a Tuesday pile-up, every week.** Sending runs Tuesday to Friday, so
+  any row whose `next_send_at` falls on Saturday or Sunday becomes due and waits. On 10 Oct
+  all 29 step-1 rows sat at exactly `Tue 13 10:00` - one timestamp, 29 emails, and that was
+  before the 60 new ones were added. Spreading the new cohort alone would still have left 49
+  sends on the Tuesday with 32 in a single hour. **Check the hour histogram, not just the
+  daily total**, after any cohort change and on any Monday:
+  `select date_trunc('hour', next_send_at), count(*) from vsc_enrollment where dealer_id =
+  '<id>' and status = 'active' group by 1 order by 1;`
+  This is structural, not a one-off: it recurs every weekend and grows with the cohort. The
+  real fix is for the state advance to skip non-send days when it computes the next date,
+  rather than landing on one and queueing. Until that is done, re-spread by hand.

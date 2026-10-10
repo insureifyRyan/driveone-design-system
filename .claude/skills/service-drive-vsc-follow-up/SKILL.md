@@ -1136,3 +1136,24 @@ their customer relationship.
   `npm run verify` now owns this too: it runs a 90 person cohort through the real Prepare
   Send code and fails if they land on fewer than three distinct hours, or if any one hour
   takes more than a third of them.
+- **04 was mute because the DEPLOYED copy read `$env`, not because the variable was wrong.**
+  Diagnosed 10 Oct 2026 by firing a real failure rather than reading config. The live
+  `Alert Slack` node had `url: {{ $env.SLACK_ALERT_WEBHOOK }}`; n8n Cloud sets
+  `N8N_BLOCK_ENV_ACCESS_IN_NODE`, so the expression died with "access to env vars denied"
+  before any request left the box. **No value in that variable could ever have worked**, so
+  the long-held "the webhook got truncated on paste" theory was wrong, and a whole round of
+  re-pasting the URL fixed nothing. The generator has warned about `$env` at the top of the
+  file since before this was deployed and has always emitted `$vars`: the repo was right and
+  the deployment had simply never been redeployed. Fixed by setting the node back to
+  `$vars` and publishing.
+- **Config read from the dealer file is `$vars`, never `$env`.** `$env` is blocked on n8n
+  Cloud, and it fails as a *silent* expression error on the node, not as a visible
+  misconfiguration.
+- **Prove an alert path by causing a real failure, never by reading the config.** Error
+  workflows fire on PRODUCTION executions only, so a manual run proves nothing. The recipe:
+  a throwaway workflow with a Webhook trigger and a Code node that throws, its
+  `errorWorkflow` set to 04, published, then executed with `executionMode: "production"`.
+  Check 04's own execution: `status: success` and the Alert Slack node returning `"ok"` is
+  Slack confirming receipt. Unpublish and archive the throwaway afterwards. The egress proxy
+  in this environment blocks `*.app.n8n.cloud`, so the webhook cannot be curled from here;
+  drive it through `execute_workflow` instead.

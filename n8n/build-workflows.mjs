@@ -2079,6 +2079,177 @@ console.log('built 07-scorecard.json'
   + (SCORECARD_TO.length ? '' : '  (NO RECIPIENTS: set campaign.scorecardTo in the dealer file)'));
 
 
+/* ==================================================== 8. SALES ALERT ===== */
+// Posts every completed sale to Slack, as it happens.
+//
+// The source of truth is `quotes.payment_status = 'completed'`, NOT the
+// campaign's own exit_reason and NOT the transactions table. Both alternatives
+// were checked and both would have produced a channel that never speaks:
+// `transactions` is empty (0 rows), and exit_reason only becomes 'purchased'
+// if a vsc.purchased event reaches workflow 03, which has never fired. A quote
+// flipping to completed is the one place money is actually recorded.
+//
+// It is deliberately NOT scoped to one rooftop. Ferrario has sold nothing yet,
+// so a Ferrario-only alert would be silent for weeks and nobody would know
+// whether it worked. Every sale across every partner is reported, and the ones
+// the campaign drove are labelled, which is also the only honest way to show
+// attribution: a sale is campaign-driven when its quote is the quote an
+// enrolment was priced from.
+//
+// Shared across rooftops like 04, so it is generated into each dealer's
+// directory but deployed once.
+const salesNodes = [
+  node('Sales Sweep', 'scheduleTrigger', 1.2, [-620, 0], {
+    // Every ten minutes, off the hour. A sale is the one event worth hearing
+    // about quickly, and the query is cheap.
+    rule: { interval: [{ field: 'cronExpression', expression: '6,16,26,36,46,56 * * * *' }] },
+  }),
+
+  pgNode('Claim New Sales', [-380, 0], [
+    '-- Announce-once, by construction.',
+    '--',
+    '-- The insert IS the claim: only rows this run actually inserted come back,',
+    '-- so two sweeps racing cannot both post the same sale, and a crash after',
+    '-- the insert costs one missed message rather than a channel that repeats',
+    '-- every ten minutes forever. The primary key on quote_id is what makes',
+    '-- that true; do not replace it with a timestamp comparison.',
+    '--',
+    '-- vsc_sale_announced was seeded with every already-completed quote when it',
+    '-- was created, so this never announces history. Re-seed it the same way if',
+    '-- it is ever rebuilt, or the channel gets 280 messages at once.',
+    'with fresh as (',
+    '  select q.id',
+    '  from quotes q',
+    "  where q.payment_status = 'completed'",
+    '    and not exists (',
+    '      select 1 from vsc_sale_announced a where a.quote_id = q.id',
+    '    )',
+    '  order by coalesce(q.payment_completed_at, q.created_at)',
+    '  limit 25',
+    '),',
+    'claimed as (',
+    '  insert into vsc_sale_announced (quote_id)',
+    '  select id from fresh',
+    '  on conflict (quote_id) do nothing',
+    '  returning quote_id',
+    ')',
+    'select',
+    '  q.contract_number,',
+    '  coalesce(q.payment_completed_at, q.created_at) as sold_at,',
+    '  q.contract_price, q.payment_total_amount, q.payment_term,',
+    '  q.down_payment, q.contract_months, q.coverage_miles,',
+    '  p.business_name as dealer,',
+    '  c.first_name, c.last_name, c.state,',
+    '  cv.year as vehicle_year, cv.make as vehicle_make,',
+    '  cv.model as vehicle_model, cv.mileage as vehicle_mileage,',
+    '  -- Present only when the sale came from a campaign enrolment, which is',
+    '  -- what turns this from a sales feed into an attribution signal.',
+    '  e.dealer_id as campaign_dealer, e.current_step as campaign_step',
+    'from claimed cl',
+    'join quotes q on q.id = cl.quote_id',
+    'left join partners p on p.id = q.partner_id',
+    'left join customers c on c.id = q.customer_id',
+    'left join customer_vehicles cv on cv.id = q.customer_vehicle_id',
+    'left join vsc_enrollment e on e.quote_id = q.id',
+    'order by sold_at;',
+  ].join('\n'), ''),
+
+  ifNode('Any Sales?', [-140, 0], [
+    { id: 'c1', leftValue: '={{ $json.sold_at }}', rightValue: '', operator: { type: 'string', operation: 'exists' } },
+  ]),
+
+  codeNode('Compose Sale Message', [100, -100], `
+// One message per run rather than one per sale. At one or two sales a day they
+// are the same thing, and on the day a backlog clears it is the difference
+// between a channel people read and a channel people mute.
+const rows = $input.all().map((i) => i.json);
+
+const money = (v) => (v === null || v === undefined || v === '')
+  ? null
+  : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',
+      maximumFractionDigits: Number(v) % 1 === 0 ? 0 : 2 }).format(Number(v));
+
+// The DMS stores names and makes in block capitals and pads them with stray
+// spaces: the first live message read "Tonya M  Pyle" and "2019 FORD Fusion".
+// Same recasing rule as the email renderer, so a name someone typed properly is
+// never mangled, and GMC and BMW do not become Gmc and Bmw.
+const properName = (s) => {
+  const t = String(s == null ? '' : s).trim();
+  if (!t || t !== t.toUpperCase()) return t;
+  return t.toLowerCase()
+    .replace(/(^|[\\s'\\-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase())
+    .replace(/\\bMc([a-z])/g, (m, ch) => 'Mc' + ch.toUpperCase());
+};
+const tidy = (s) => String(s == null ? '' : s).replace(/\\s+/g, ' ').trim();
+const makeLabel = (mk) => {
+  const t = tidy(mk);
+  if (!t) return '';
+  return t.length <= 3 ? t.toUpperCase() : properName(t);
+};
+
+const lines = [];
+for (const r of rows) {
+  const who = tidy([properName(r.first_name), properName(r.last_name)].filter(Boolean).join(' '))
+    || 'name not on the record';
+  const veh = [r.vehicle_year, makeLabel(r.vehicle_make), properName(tidy(r.vehicle_model))]
+    .filter(Boolean).join(' ') || 'vehicle not recorded';
+  const miles = r.vehicle_mileage ? Number(r.vehicle_mileage).toLocaleString('en-US') + ' mi' : null;
+
+  // The monthly figure is what the customer agreed to, so it is the headline.
+  // payment_total_amount is the financed total and contract_price the sticker;
+  // show whichever exist rather than inventing one from the other.
+  const monthly = r.payment_term && r.payment_total_amount
+    ? money(Number(r.payment_total_amount) / Number(r.payment_term)) + '/mo'
+    : null;
+  const terms = [monthly, r.payment_term ? r.payment_term + ' months' : null].filter(Boolean).join(' · ');
+
+  lines.push('*' + (tidy(r.dealer) || 'Dealer not on the quote') + '* · ' + who);
+  lines.push('> ' + [veh, miles].filter(Boolean).join(' · '));
+  lines.push('> ' + [money(r.contract_price), terms].filter(Boolean).join(' · '));
+  if (r.contract_number) lines.push('> Contract ' + r.contract_number);
+  if (r.campaign_dealer) {
+    lines.push('> :envelope: *From the service drive campaign* (' + r.campaign_dealer
+      + ', after email ' + (r.campaign_step || '?') + ')');
+  }
+  lines.push('');
+}
+
+const n = rows.length;
+const header = n === 1 ? ':tada: *New VSC sale*' : ':tada: *' + n + ' new VSC sales*';
+const attributed = rows.filter((r) => r.campaign_dealer).length;
+const footer = attributed
+  ? '_' + attributed + ' of ' + n + ' from the service drive campaign._'
+  : '';
+
+return [{ json: { text: [header, '', ...lines, footer].filter((l) => l !== undefined).join('\\n') } }];
+`.trim()),
+
+  node('Post Sale To Slack', 'httpRequest', 4.2, [340, -100], {
+    method: 'POST',
+    // $vars, never $env. n8n Cloud blocks env access inside nodes, which is
+    // exactly how workflow 04 sat mute for days.
+    url: '={{ $vars.SLACK_ALERT_WEBHOOK }}',
+    sendBody: true,
+    specifyBody: 'json',
+    jsonBody: '={{ JSON.stringify({ text: $json.text }) }}',
+  }, {
+    retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
+  }),
+
+  node('No Sales', 'noOp', 1, [100, 110], {}),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/08-sales-alert.json`),
+  JSON.stringify(workflow('DriveOne VSC 08 Sales Alert', salesNodes, connect([
+    ['Sales Sweep', 'Claim New Sales'],
+    ['Claim New Sales', 'Any Sales?'],
+    ['Any Sales?', ['Compose Sale Message', 'No Sales']],
+    ['Compose Sale Message', 'Post Sale To Slack'],
+  ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
+
+console.log('built 08-sales-alert.json');
+
+
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */
 
 // There was a sixth workflow here. It logged into the sending mailbox over

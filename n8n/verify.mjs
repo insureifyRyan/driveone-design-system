@@ -42,7 +42,7 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
-  '07-scorecard.json',
+  '07-scorecard.json', '08-sales-alert.json',
 ].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
@@ -649,6 +649,46 @@ check('intake never makes a new cohort due on arrival', () => {
   assert(/where ts > now\(\)/.test(sql),
     'slots are not filtered to the future, so a past slot would be due on arrival');
   return 'new rows are dealt onto future in-window slots';
+});
+
+check('no node reads $env', () => {
+  // WHY: workflow 04 sat mute for days because its deployed Alert Slack node
+  // read {{ $env.SLACK_ALERT_WEBHOOK }}. n8n Cloud sets
+  // N8N_BLOCK_ENV_ACCESS_IN_NODE, so the expression dies with "access to env
+  // vars denied" before any request is made. It fails as a silent expression
+  // error on the node, not as a visible misconfiguration, and no amount of
+  // fixing the variable helps. Config comes from $vars.
+  const offenders = [];
+  for (const { file, wf } of WORKFLOWS) {
+    for (const n of wf.nodes) {
+      const blob = JSON.stringify(n.parameters || {});
+      if (/\$env\b/.test(blob)) offenders.push(`${file}:${n.name}`);
+    }
+  }
+  assert(offenders.length === 0,
+    `$env is blocked on n8n Cloud and fails silently; use $vars. Found in: ${offenders.join(', ')}`);
+  return `${WORKFLOWS.length} workflows clean`;
+});
+
+check('a sale can never be announced twice', () => {
+  // WHY: a duplicate "New VSC sale" in Slack is worse than a missed one. It
+  // makes the channel untrustworthy, and nobody can tell a real second sale
+  // from a repeat. The insert has to BE the claim: announce only the rows this
+  // run actually inserted, so two sweeps racing cannot both win the same quote.
+  const sql = nodeNamed(load('08-sales-alert.json'), 'Claim New Sales').parameters.query;
+
+  assert(/insert into vsc_sale_announced/.test(sql), 'does not record what it announced');
+  assert(/on conflict \(quote_id\) do nothing/.test(sql),
+    'no conflict guard, so two concurrent sweeps can both announce the same sale');
+  assert(/returning quote_id/.test(sql) && /from claimed/.test(sql),
+    'does not select from the rows its own insert won, so the claim is not atomic');
+  // Selecting straight from quotes would announce rows another run just took.
+  assert(!/from quotes q\s*\n\s*(left )?join claimed/i.test(sql),
+    'drives the announcement from quotes rather than from claimed');
+
+  const url = nodeNamed(load('08-sales-alert.json'), 'Post Sale To Slack').parameters.url;
+  assert(/\$vars\.SLACK_ALERT_WEBHOOK/.test(url), 'sales alert does not post to the Slack webhook variable');
+  return 'insert is the claim, guarded by the quote_id primary key';
 });
 
 /* -------------------------------------------------------------------- report */

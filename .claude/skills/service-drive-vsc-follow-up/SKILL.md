@@ -1157,3 +1157,44 @@ their customer relationship.
   Slack confirming receipt. Unpublish and archive the throwaway afterwards. The egress proxy
   in this environment blocks `*.app.n8n.cloud`, so the webhook cannot be curled from here;
   drive it through `execute_workflow` instead.
+
+## Workflow 08, the sales alert
+
+Posts every completed VSC sale to the Slack channel within ten minutes, across
+ALL partners, flagging the ones this campaign drove. Added 11 Oct 2026.
+
+**The source of truth is `quotes.payment_status = 'completed'`.** Two obvious
+alternatives were checked first and both would have produced a channel that
+never speaks: `transactions` is **empty** (0 rows, despite 280 sales), and
+`vsc_enrollment.exit_reason` only becomes `'purchased'` if a `vsc.purchased`
+event reaches workflow 03, which has never fired. A quote flipping to completed
+is the only place money is actually recorded.
+
+**Not scoped to one rooftop, on purpose.** Ferrario had sold nothing when this
+was built, so a Ferrario-only alert would have been silent for weeks with no way
+to tell working from broken. Attribution is shown instead: a sale is
+campaign-driven when its quote is the quote an enrolment was priced from
+(`vsc_enrollment.quote_id = quotes.id`), and those lines carry an envelope.
+
+**`vsc_sale_announced` is the announce-once ledger.** The insert IS the claim:
+08 inserts, then announces only the rows its own insert won, so two sweeps
+racing cannot double-post and a crash costs one missed message rather than a
+channel that repeats forever. **Seed it with every already-completed quote if it
+is ever rebuilt**, or the channel gets 280 messages at once.
+- **A GRANT is only half the access. RLS is the other half, and it fails
+  silently.** 08's first live message read "Dealer not recorded" even though
+  every completed quote has a matching partner. `grant select on partners` had
+  cleared the `permission denied` error, and then row level security returned
+  zero rows: `partners` carried one policy, scoped to a Clerk JWT, and the
+  workflow role has no JWT. The permission error is loud; the RLS filter is a
+  plausible-looking empty join. Every source table the workflows read needs BOTH
+  `grant select ... to vsc_campaign` AND a policy
+  `create policy vsc_campaign_read on <table> for select to vsc_campaign using (true);`
+  — `quotes`, `customers` and `customer_vehicles` already had one, which is why
+  intake worked and this did not. Check with
+  `select tablename, policyname, roles from pg_policies where tablename = '<t>'`.
+- **Recase anything that comes from the DMS before a human reads it.** 08's
+  first message said "Tonya M  Pyle" and "2019 FORD Fusion": block capitals and
+  padded spaces, the same defect the email renderer already handles. Reuse the
+  `properName` rule, collapse whitespace, and keep makes of three characters or
+  fewer in capitals so GMC and BMW survive.

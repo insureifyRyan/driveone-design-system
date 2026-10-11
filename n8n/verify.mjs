@@ -701,25 +701,54 @@ check('only a service drive account reaches the service drive channel', () => {
   // buy-here-pay-here account, in front of the service drive team.
   const sql = nodeNamed(load('08-sales-alert.json'), 'Claim New Sales').parameters.query;
 
-  assert(/partner_type/.test(sql), 'the claim is not scoped to an account type at all');
-  assert(/like 'service-drive%'/.test(sql),
-    'does not scope to service drive accounts by partner_type prefix');
+  // Assert against what the query DOES, not what it says about itself: the
+  // header comment names the two scopes that were wrong, and matching on that
+  // prose would fail a correct query. Strip SQL comments first.
+  const code = sql.replace(/--[^\n]*/g, '');
+
+  // partner_type is NOT the test. Nine partners carry a service-drive type and
+  // only the ones with a dealer file are on this campaign, so scoping on the
+  // type would hand the channel LYNX Automotive, Empire Toyota and Mark Allen
+  // Tulsa. The roster has to be explicit partner ids.
+  assert(!/partner_type/.test(code),
+    'scopes on partner_type, which includes service drive stores that are not on this campaign');
 
   // The scope has to bind where rows are CLAIMED. Filtering only in the final
-  // select would still consume the claim limit on BHPH rows and bury them in
-  // the announce-once ledger, so widening the scope later would skip them.
-  const fresh = /with fresh as \(([\s\S]*?)\n\),/.exec(sql);
+  // select would still consume the claim limit on out-of-scope rows and bury
+  // them in the ledger, so widening the scope later would skip them.
+  const fresh = /with fresh as \(([\s\S]*?)\n\),/.exec(code);
   assert(fresh, 'cannot find the claim CTE to check what it scopes');
-  assert(/partner_type/.test(fresh[1]),
-    'account scope is applied after the claim, so BHPH sales are still claimed');
-  assert(/join partners/.test(fresh[1]),
-    'the claim CTE cannot see partner_type: it never joins partners');
+  assert(/q\.partner_id = any\(array\[/.test(fresh[1]),
+    'the claim is not pinned to a roster of partner ids');
 
-  // A campaign-driven sale belongs here whatever its store is typed as.
+  // Every rooftop whose file says live must actually be in the built query.
+  // This is the trap for flipping campaign.live and forgetting that 08 is
+  // shared, built once, and carries the ids in its SQL.
+  const dealers = readdirSync(join(ROOT, 'brand/dealers'))
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')));
+  const live = dealers.filter((d) => d.campaign && d.campaign.live === true);
+  assert(live.length > 0, 'no rooftop is marked campaign.live, so the channel can never speak');
+  for (const d of live) {
+    const pid = d.supabase && d.supabase.partner_id;
+    assert(pid, `${d.id} is live but has no supabase.partner_id`);
+    assert(fresh[1].includes(pid),
+      `${d.id} is campaign.live but its partner id is not in the built query; rebuild 08`);
+  }
+  // And a rooftop that is NOT live must not be in there.
+  for (const d of dealers.filter((x) => !(x.campaign && x.campaign.live === true))) {
+    const pid = d.supabase && d.supabase.partner_id;
+    if (pid) {
+      assert(!fresh[1].includes(pid),
+        `${d.id} is not live but its sales would be announced`);
+    }
+  }
+
+  // A campaign-driven sale belongs here whatever store its quote hangs off.
   assert(/from vsc_enrollment e where e\.quote_id = q\.id/.test(fresh[1]),
-    'an enrolled customer who bought could be filtered out by account type');
+    'an enrolled customer who bought could be filtered out by the roster');
 
-  return 'claims service drive accounts and campaign-driven sales, nothing else';
+  return `roster: ${live.map((d) => d.id).join(', ')}, plus any enrolled buyer`;
 });
 
 check('every announced sale names the dealer', () => {

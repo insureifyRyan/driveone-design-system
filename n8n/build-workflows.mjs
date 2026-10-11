@@ -37,6 +37,40 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
 
 /**
+ * Every rooftop, not just the one being built.
+ *
+ * Workflows 04 and 08 are shared: one deployment serves all rooftops, so they
+ * have to know about dealerships this build is not targeting. 08 needs it twice
+ * over - for the roster of partner ids whose sales belong in the Slack channel,
+ * and to print "Ferrario Ford" where it used to print "ferrario-ford".
+ *
+ * campaign.live is the roster flag and it is deliberately NOT inferred from the
+ * database. Nine partners carry a service-drive partner_type and only two are
+ * ours; partner_type describes a kind of business, not whether we run their
+ * follow-up. Scoping 08 on the type put other people's stores in the channel.
+ */
+const ALL_DEALERS = readdirSync(join(ROOT, 'brand/dealers'))
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')));
+
+const DEALER_NAME_BY_ID = Object.fromEntries(ALL_DEALERS.map((d) =>
+  [d.id, (d.dealer && (d.dealer.displayName || d.dealer.name)) || d.id]));
+
+const LIVE_ROOFTOPS = ALL_DEALERS
+  .filter((d) => d.campaign && d.campaign.live === true)
+  .map((d) => ({ id: d.id, name: DEALER_NAME_BY_ID[d.id], partnerId: d.supabase && d.supabase.partner_id }));
+
+// A live rooftop with no partner_id would silently drop out of the roster and
+// take its sales with it, which is the kind of quiet that took a day to find
+// the last time. Fail the build instead.
+for (const r of LIVE_ROOFTOPS) {
+  if (!r.partnerId) {
+    throw new Error(`${r.id} is campaign.live but has no supabase.partner_id, `
+      + 'so its sales could never be announced. Add the partner id or set live false.');
+  }
+}
+
+/**
  * The UTC hours that are inside the dealer's local send window ALL YEAR.
  *
  * Everything downstream schedules in UTC, and the window is configured in the
@@ -2118,31 +2152,36 @@ const salesNodes = [
     '-- was created, so this never announces history. Re-seed it the same way if',
     '-- it is ever rebuilt, or the channel gets 280 messages at once.',
     '--',
-    '-- SERVICE DRIVE ACCOUNTS ONLY. This posts into the service drive channel,',
-    '-- and the platform is overwhelmingly not service drive: of 280 completed',
-    '-- sales, 278 are BHPH across 26 stores. Announcing all of them put a',
-    '-- "New VSC sale" for 321 Drive, a buy-here-pay-here account, in front of',
-    '-- the service drive team, which is noise at best and reads as campaign',
-    '-- progress at worst. partner_type is the database\'s own classification',
-    '-- and the only honest test of whether a store belongs here: the rooftops',
-    '-- are service-drive and service-drive-ferrario, the rest are bhph and',
-    '-- agency. Match on the prefix rather than a list of partner ids so a new',
-    '-- rooftop is picked up the day it is set up, with no code change.',
+    '-- THIS CAMPAIGN\'S ROOFTOPS ONLY, by partner id, listed below.',
     '--',
-    '-- The filter lives in this CTE, not in the select, so a BHPH sale is never',
-    '-- CLAIMED. Claiming and then declining to post would burn the limit below',
-    '-- on rows nobody wants and bury them in the ledger if the scope is ever',
-    '-- widened again.',
+    '-- Two scopes were tried and both were wrong. Announcing every completed',
+    '-- sale put a "New VSC sale" for 321 Drive, a buy-here-pay-here account, in',
+    '-- front of the service drive team: 278 of 280 completed sales are BHPH.',
+    "-- Narrowing to partner_type like 'service-drive%' was still wrong, just",
+    '-- less visibly so - NINE partners carry that type, among them LYNX',
+    '-- Automotive, Empire Toyota and Mark Allen Tulsa, and none of them are on',
+    '-- this campaign. partner_type describes a kind of business; it says',
+    '-- nothing about whether we run their follow-up.',
+    '--',
+    '-- So the roster is explicit and comes from the dealer files: every',
+    '-- brand/dealers/*.json with campaign.live true contributes its',
+    '-- supabase.partner_id here. Bringing a rooftop live therefore means',
+    '-- flipping that flag AND rebuilding this workflow, because 08 is shared',
+    '-- and deployed once. verify.mjs fails if a live rooftop is missing.',
+    '--',
+    '-- The filter lives in this CTE, not in the select, so an out-of-scope sale',
+    '-- is never CLAIMED. Claiming and then declining to post would burn the',
+    '-- limit below on rows nobody wants and bury them in the ledger if the',
+    '-- scope is ever widened again.',
     'with fresh as (',
     '  select q.id',
     '  from quotes q',
-    '  left join partners p on p.id = q.partner_id',
     "  where q.payment_status = 'completed'",
     '    and (',
-    "      p.partner_type::text like 'service-drive%'",
+    `      q.partner_id = any(array[${LIVE_ROOFTOPS.map((d) => `'${d.partnerId}'`).join(', ') || ''}]::uuid[])  -- ${LIVE_ROOFTOPS.map((d) => d.name).join(', ') || 'NO ROOFTOP IS LIVE'}`,
     '      -- Or a sale this campaign drove, wherever its quote happens to sit.',
     '      -- Belt and braces: an enrolled customer who bought is this channel\'s',
-    '      -- business by definition, whatever the store is typed as.',
+    '      -- business by definition, whatever store the quote is attached to.',
     '      or exists (select 1 from vsc_enrollment e where e.quote_id = q.id)',
     '    )',
     '    and not exists (',
@@ -2246,12 +2285,7 @@ const bizName = (s) => {
 // Campaign slug -> the dealer's display name, generated from the brand files so
 // the attribution line reads "Ferrario Ford" instead of "ferrario-ford". Every
 // rooftop is in here, not just the one this build targets, because 08 is shared.
-const CAMPAIGN_DEALER_NAMES = ${JSON.stringify(
-  Object.fromEntries(readdirSync(join(ROOT, 'brand/dealers'))
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')))
-    .map((d) => [d.id, (d.dealer && (d.dealer.displayName || d.dealer.name)) || d.id])),
-)};
+const CAMPAIGN_DEALER_NAMES = ${JSON.stringify(DEALER_NAME_BY_ID)};
 
 const lines = [];
 for (const r of rows) {

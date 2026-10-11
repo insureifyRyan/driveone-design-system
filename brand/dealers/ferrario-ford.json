@@ -61,6 +61,8 @@
     "unsubscribeNote": "Same deployed Supabase Edge Function as Bob Johnson. It is keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
     "id": "ff_postro_vsc_2026",
     "idNote": "Distinct from Bob Johnson on purpose. vsc_enrollment and vsc_email_template are keyed on (dealer_id, campaign_id, ...), so a shared id would put two dealerships in one campaign namespace.",
+    "live": true,
+    "liveNote": "LIVE since 7 Oct 2026. This is the roster flag for the shared workflows, and right now the only thing it drives is workflow 08: the Slack sales alert announces a sale only from a rooftop whose file says live, so #driveone_service speaks for THIS campaign and nothing else.\n\nIt cannot be inferred from partner_type. Nine partners in the database carry a service-drive type - LYNX Automotive, Empire Toyota, Mark Allen Tulsa, Arizona Suspension Specialist, NextGen Car Care, Sensible Sales and Leasing, DriveOne Direct, Bob Johnson and this one - and only the ones with a file in brand/dealers are ours. Scoping on the type put other people's stores in the channel; scoping on partner_id from this flag is what fixed it.\n\nFLIPPING THIS IS NOT ENOUGH ON ITS OWN. 08 is shared across rooftops and deployed once, so the partner ids are baked into its SQL at build time: rebuild it and redeploy, or the flag is a lie. `node n8n/verify.mjs <dealer>` fails if a live rooftop is missing from the built query, which is the trap for exactly that.",
     "commercialReviewTo": [
       "stephen@kovara.ai",
       "nlives@ascentadmin.com"

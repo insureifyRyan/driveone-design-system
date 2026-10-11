@@ -221,6 +221,40 @@ holds the literal strings `First` and `Last`, and those arrive pre-filled in the
 fields, which is worse than leaving them empty. An empty field invites typing; a field
 reading `First` looks filled and gets submitted as somebody's legal name onto a contract.
 
+**The missing names are not recoverable, and the search is closed.** Asked and
+answered on 11 Oct 2026, after checking every route, because "surely it is in there
+somewhere" is an expensive instinct. For Ferrario's 46 nameless enrolments of 90:
+
+| Route | Result |
+|---|---|
+| VIN match against any other owner record | **0 of 46** (all 46 have a VIN) |
+| Phone match against any other customer | **0 of 46** (all 46 have a phone) |
+| A second `customers` row on the same email | **0 of 46** |
+| MetricBridge MCP | a straight copy of `customers`, same values, same casing |
+| `vsc_name_scrub_backup` | holds `First` / `Last`; nothing real was scrubbed |
+| `quote_static_data` / `moto_file_import_data` / `lead_email_leads` | 2 rows / 0 rows / no overlap |
+
+Besides the email, the only thing held on these people is a phone number. The name
+exists solely in Ferrario's DMS, on the ticket written when the car came in. **Decision
+by Ryan, 11 Oct: do not chase it; run with what we have.** The name guard already routes
+these contacts to the subject line that greets nobody, so they receive correct email.
+
+**The name arrives when they buy, and that already works.** Checkout pre-fills from
+`customers`, and a blanked name is an empty **required** field, so the buyer types it.
+All 280 completed purchases on the platform have a name on record. This is the payoff for
+blanking the placeholders rather than leaving them: a field reading `First` looks filled
+and gets submitted onto a contract.
+
+> **The write-back goes to Supabase, never "through the MCP".** Every MetricBridge tool is
+> a `get_`; there is no write. It is also *downstream* — it syncs **from** Supabase
+> (`synced_at` moves hourly), so anything written there would be overwritten by the next
+> sync. Supabase is the source of truth for customer identity. Fix it there and
+> MetricBridge follows.
+>
+> And note what this does and does not buy: the name lands **after** the sale, so it never
+> improves the email that earned it. It helps the contract, the Slack alert and post-sale
+> nurture. It does not help the campaign.
+
 `first_name` and `last_name` are **NOT NULL**, so the repair is the empty string, not null.
 That is lucky rather than clever: `'' !~* '(…)'` is true so a blanked name still passes the
 intake name filter, while `null !~* '(…)'` is **null**, which is not true, so nulling a name

@@ -1204,10 +1204,30 @@ and those lines carry an envelope.
 > nothing about whether we run that store's follow-up, and the channel is for
 > the rooftops this campaign actually sends for.
 >
+> **Attempt 3 that was proposed and checked, MetricBridge's own
+> classification.** The reasonable objection is that the MCP already identifies
+> partners as BHPH or service drive, so why keep a roster by hand. Checked on
+> 11 Oct 2026: `get_dealers(source: 'elevate_service_drive')` returns **11
+> dealers, all `status: approved`** — Arizona Suspension Specialist, NextGen Car
+> Care, Select Eurocars, Empire Toyota, DriveOne Direct, Mark Allen Tulsa, LYNX
+> Automotive, Ferrario Ford, Towns Auto Sales, Bob Johnson Auto, Sensible Sales
+> and Leasing. We run the follow-up for one of them. It is the same answer as
+> `partner_type` because it is the same fact, synced: a business classification,
+> not a statement about whose email we send.
+>
+> It is also a **copy, and it lags**. Select Eurocars and Towns Auto Sales both
+> read `bhph` in Supabase today but still sit under `elevate_service_drive` in
+> MetricBridge, `synced_at` 29 Sep and 17 Apr against 11 Oct for the rest. So
+> that list would put two buy-here-pay-here stores in the service drive channel
+> until the sync catches up. Check `synced_at` before trusting any MetricBridge
+> row as current, and prefer Supabase when the two disagree about a fact
+> Supabase owns.
+>
 > **So the roster is explicit, and `campaign.live` in the dealer file is the one
 > switch.** A rooftop is in the channel when its file says live and its
 > `supabase.partner_id` is in the built query. Do not re-derive it from the
-> database; there is no column that means "we run this one".
+> database or from MetricBridge; neither has a column that means "we run this
+> one", because that fact lives here, not there.
 >
 > **08 is shared and deployed once, so the ids are baked into its SQL at build
 > time.** Flipping `campaign.live` and not rebuilding makes the flag a lie.

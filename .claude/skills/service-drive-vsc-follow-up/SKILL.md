@@ -1197,4 +1197,40 @@ is ever rebuilt**, or the channel gets 280 messages at once.
   first message said "Tonya M  Pyle" and "2019 FORD Fusion": block capitals and
   padded spaces, the same defect the email renderer already handles. Reuse the
   `properName` rule, collapse whitespace, and keep makes of three characters or
-  fewer in capitals so GMC and BMW survive.
+  fewer in capitals so GMC and BMW survive. **Dealer names need their own rule,
+  not `properName`:** they shout too ("112 AUTO SALES") but they carry company
+  suffixes, and `properName` turns "ALPHA AUTO GROUP LLC" into "Alpha Auto Group
+  Llc", which reads as a typo on the one line everybody actually looks at. Use
+  `bizName`, which recases word by word and leaves `KEEP_UPPER` tokens and any
+  one or two letter token alone.
+- **`partners.business_name` is the dealer. The contract number is not.**
+  `quotes.dealership_id` is null on every row, `partners.group_id` is unset, and
+  `partner_type` on the current sellers is `bhph`, so `business_name` is the
+  only name there is. Do not read a store out of `contract_number`: the `ELKOV`
+  prefix is the **administrator's numbering series**, and I reported a 321 Drive
+  sale as an Elko Volkswagen sale by assuming otherwise. `verify.mjs` now fails
+  any query that aliases something off `contract_number` as the dealer.
+- **Carry `has_partner` so a missing name accuses the right thing.** A quote
+  with no partner and a partner row that would not read look identical in the
+  output — both are null after the left join — and have nothing in common as
+  causes. The old single fallback said "Dealer not recorded", which pointed at
+  the quote when the fault was a read permission, and that cost a day. 08 now
+  selects `q.partner_id is not null as has_partner` and prints either
+  "dealer name unreadable (partners read permission)" or "no dealer on this
+  quote", both with a warning sign.
+- **Attribution names the store, never the slug.** The campaign line used to
+  print `vsc_enrollment.dealer_id` raw, so it read `ferrario-ford` in front of
+  the client. The generator now inlines a slug to display-name map built from
+  **every** `brand/dealers/*.json`, not just the rooftop being built, because 08
+  is shared across rooftops and deployed once. Add a dealer file and the map
+  picks it up on the next build; forget to rebuild 08 and that rooftop's sales
+  show a slug.
+- **To re-announce a sale** (to test, or because a message went out wrong),
+  delete its row from `vsc_sale_announced` and run 08 in `production` mode.
+  A bare `DELETE` through the Supabase MCP stalls at 60s, so wrap it and make
+  the outer statement an INSERT that inserts nothing:
+  `with gone as (delete from vsc_sale_announced where quote_id = (...) returning quote_id) insert into vsc_sale_announced (quote_id) select quote_id from gone where false returning quote_id;`
+  Do not push a filler row into `vsc_respread_audit` to satisfy the
+  insert-outer rule; that table means something. Check
+  `count(*)` of unannounced completed quotes before running, or the sweep posts
+  more than you intended.

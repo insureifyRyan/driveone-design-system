@@ -22,7 +22,7 @@
  * keeps the sending address and the API key out of this repo, which is the other
  * reason to prefer it over inlining the values here.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -2138,7 +2138,22 @@ const salesNodes = [
     '  coalesce(q.payment_completed_at, q.created_at) as sold_at,',
     '  q.contract_price, q.payment_total_amount, q.payment_term,',
     '  q.down_payment, q.contract_months, q.coverage_miles,',
-    '  p.business_name as dealer,',
+    '  -- THE DEALER NAME IS THE FIRST THING ON THE MESSAGE, so it gets a',
+    '  -- fallback chain and an honest diagnosis rather than one vague string.',
+    '  -- business_name is the selling dealer ("321 Drive", "112 AUTO SALES");',
+    '  -- slug is the same name machine-cased, worth having when the display',
+    '  -- name is blank. The ELKOV prefix on contract_number is the',
+    '  -- administrator\'s numbering series, NOT the store, so never read a',
+    '  -- dealer out of it: that is how this sale got reported as Elko',
+    '  -- Volkswagen when the dealer was 321 Drive.',
+    "  coalesce(nullif(btrim(p.business_name), ''), p.slug) as dealer,",
+    '  -- has_partner separates "no dealer on this quote" from "the dealer row',
+    '  -- did not come back". They look identical in the output and have',
+    '  -- completely different causes: the second one is an RLS or grant',
+    '  -- problem on partners, which is exactly what silenced the first live',
+    '  -- message, and a fallback that blamed the quote sent me looking in the',
+    '  -- wrong place.',
+    '  q.partner_id is not null as has_partner,',
     '  c.first_name, c.last_name, c.state,',
     '  cv.year as vehicle_year, cv.make as vehicle_make,',
     '  cv.model as vehicle_model, cv.mileage as vehicle_mileage,',
@@ -2187,6 +2202,33 @@ const makeLabel = (mk) => {
   return t.length <= 3 ? t.toUpperCase() : properName(t);
 };
 
+// Dealer names come out of the DMS shouting too: "112 AUTO SALES". Recase them
+// word by word rather than with properName, because a company suffix must stay
+// upper: properName turns "ALPHA AUTO GROUP LLC" into "Alpha Auto Group Llc",
+// which looks like a typo on the one line of the message people actually read.
+const KEEP_UPPER = new Set(['LLC','INC','LTD','LLP','LP','PC','CO','DBA','USA','US',
+  'BHPH','RV','GMC','BMW','KIA','VW','CDJR','AG','SA','NV']);
+const bizName = (s) => {
+  const t = tidy(s);
+  if (!t || t !== t.toUpperCase()) return t;   // already mixed case: leave it alone
+  return t.split(' ').map((w) => {
+    const bare = w.replace(/[^A-Z]/g, '');
+    if (!bare) return w;                        // "321", "&", "-"
+    if (KEEP_UPPER.has(bare) || bare.length <= 2) return w;
+    return properName(w);
+  }).join(' ');
+};
+
+// Campaign slug -> the dealer's display name, generated from the brand files so
+// the attribution line reads "Ferrario Ford" instead of "ferrario-ford". Every
+// rooftop is in here, not just the one this build targets, because 08 is shared.
+const CAMPAIGN_DEALER_NAMES = ${JSON.stringify(
+  Object.fromEntries(readdirSync(join(ROOT, 'brand/dealers'))
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')))
+    .map((d) => [d.id, (d.dealer && (d.dealer.displayName || d.dealer.name)) || d.id])),
+)};
+
 const lines = [];
 for (const r of rows) {
   const who = tidy([properName(r.first_name), properName(r.last_name)].filter(Boolean).join(' '))
@@ -2203,12 +2245,20 @@ for (const r of rows) {
     : null;
   const terms = [monthly, r.payment_term ? r.payment_term + ' months' : null].filter(Boolean).join(' · ');
 
-  lines.push('*' + (tidy(r.dealer) || 'Dealer not on the quote') + '* · ' + who);
+  // Who sold it leads the message. When the name is missing, say which kind of
+  // missing it is, so nobody repeats the day I spent reading the quote when the
+  // fault was a read permission on partners.
+  const dealer = bizName(r.dealer)
+    || (r.has_partner ? ':warning: dealer name unreadable (partners read permission)'
+                      : ':warning: no dealer on this quote');
+
+  lines.push('*' + dealer + '* · ' + who);
   lines.push('> ' + [veh, miles].filter(Boolean).join(' · '));
   lines.push('> ' + [money(r.contract_price), terms].filter(Boolean).join(' · '));
   if (r.contract_number) lines.push('> Contract ' + r.contract_number);
   if (r.campaign_dealer) {
-    lines.push('> :envelope: *From the service drive campaign* (' + r.campaign_dealer
+    lines.push('> :envelope: *From the service drive campaign* ('
+      + (CAMPAIGN_DEALER_NAMES[r.campaign_dealer] || r.campaign_dealer)
       + ', after email ' + (r.campaign_step || '?') + ')');
   }
   lines.push('');

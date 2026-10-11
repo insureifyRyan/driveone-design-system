@@ -691,6 +691,67 @@ check('a sale can never be announced twice', () => {
   return 'insert is the claim, guarded by the quote_id primary key';
 });
 
+check('every announced sale names the dealer', () => {
+  // WHY: the first live sale message went to the channel with no dealer on it.
+  // The query asked for partners.business_name and the composer had a line for
+  // it, so both halves looked right; the read was blocked by RLS on partners
+  // and the left join quietly returned null. Then the fallback text said
+  // "Dealer not on the quote", which was false - the quote had a partner - and
+  // cost a day of looking at the wrong table. A sale nobody can attribute to a
+  // store is not reportable, so this asserts the name renders, that shouting
+  // DMS names and company suffixes survive, and that the two ways it can go
+  // missing are told apart in the message itself.
+  const wf = load('08-sales-alert.json');
+  const sql = nodeNamed(wf, 'Claim New Sales').parameters.query;
+
+  assert(/business_name/.test(sql), 'the claim query never asks for the dealer name');
+  assert(/q\.partner_id is not null as has_partner/.test(sql),
+    'cannot tell a quote with no dealer from a dealer row it failed to read');
+  // The contract prefix is the administrator's series, not the store. Reading a
+  // dealer out of it is how a 321 Drive sale got reported as Elko Volkswagen.
+  assert(!/contract_number[^\n]*as dealer/.test(sql),
+    'derives the dealer from the contract number, which names the administrator');
+
+  const code = nodeNamed(wf, 'Compose Sale Message').parameters.jsCode;
+  const run = (rows) => new Function('$input', '$vars', 'require', code)(
+    { all: () => rows.map((r) => ({ json: r })) }, {}, nodeRequire)[0].json.text;
+
+  const base = {
+    sold_at: '2026-10-10T18:01:55Z', contract_number: 'ELKOV0106999',
+    contract_price: 2729, payment_total_amount: 2729, payment_term: 18,
+    first_name: 'Tonya M ', last_name: 'Pyle', has_partner: true,
+    vehicle_year: 2019, vehicle_make: 'FORD', vehicle_model: 'Fusion',
+    vehicle_mileage: 141894,
+  };
+
+  const plain = run([{ ...base, dealer: '321 Drive' }]);
+  assert(plain.includes('321 Drive'), 'the dealer name does not reach the message');
+
+  // "112 AUTO SALES" must not stay shouting, and "LLC" must not become "Llc".
+  const shouty = run([{ ...base, dealer: '112 AUTO SALES' }]);
+  assert(shouty.includes('112 Auto Sales'), `block capitals not recased: ${shouty.split('\n')[2]}`);
+  const suffixed = run([{ ...base, dealer: 'ALPHA AUTO GROUP LLC' }]);
+  assert(suffixed.includes('Alpha Auto Group LLC'),
+    `company suffix mangled: ${suffixed.split('\n')[2]}`);
+
+  // The two failure modes have to read differently, and neither may blame the
+  // quote when the quote is not at fault.
+  const blocked = run([{ ...base, dealer: null, has_partner: true }]);
+  const absent = run([{ ...base, dealer: null, has_partner: false }]);
+  assert(/unreadable/.test(blocked), 'an unreadable dealer row is not flagged as a permissions problem');
+  assert(!/unreadable/.test(absent) && /no dealer/.test(absent),
+    'a quote with no partner is reported as a permissions problem');
+  assert(blocked !== absent, 'both ways of losing the dealer produce the same message');
+
+  // Attribution must name the store, not its slug.
+  const attributed = run([{ ...base, dealer: '321 Drive', campaign_dealer: 'ferrario-ford', campaign_step: 2 }]);
+  assert(attributed.includes('Ferrario Ford'),
+    'the campaign line shows the slug rather than the dealer name');
+  assert(!/\(ferrario-ford,/.test(attributed), 'raw slug left in the campaign line');
+
+  return 'dealer name renders, recases, and fails loudly in the right direction';
+});
+
 /* -------------------------------------------------------------------- report */
 
 const pad = Math.max(...results.map((r) => r.name.length));

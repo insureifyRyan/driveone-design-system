@@ -1170,11 +1170,37 @@ never speaks: `transactions` is **empty** (0 rows, despite 280 sales), and
 event reaches workflow 03, which has never fired. A quote flipping to completed
 is the only place money is actually recorded.
 
-**Not scoped to one rooftop, on purpose.** Ferrario had sold nothing when this
-was built, so a Ferrario-only alert would have been silent for weeks with no way
-to tell working from broken. Attribution is shown instead: a sale is
-campaign-driven when its quote is the quote an enrolment was priced from
+**Scoped to service drive ACCOUNTS, not to one rooftop and not to the whole
+platform.** The claim takes `partners.partner_type::text like 'service-drive%'`,
+or any quote tied to an enrolment. Attribution is shown on top of that: a sale
+is campaign-driven when its quote is the quote an enrolment was priced from
 (`vsc_enrollment.quote_id = quotes.id`), and those lines carry an envelope.
+
+> **This shipped wrong and is worth understanding before touching the scope
+> again.** The first build announced *every* completed sale on the platform. The
+> reasoning written down at the time was that Ferrario had sold nothing yet, so
+> a scoped alert would be silent with no way to tell working from broken — which
+> is trading the channel's meaning for my own convenience in testing it, and it
+> is not a trade that was mine to make. **278 of the 280 completed sales are
+> BHPH across 26 stores**, so "every sale" is in practice "other people's
+> business", and the first live message put a 321 Drive sale, a
+> buy-here-pay-here account, in front of the service drive team. A quiet channel
+> is the correct output when there is nothing to say. If you need to prove the
+> path works, run the workflow and read the execution, or un-claim one real
+> in-scope sale — do not widen what the channel means.
+>
+> **Scope on `partner_type`, never on a list of partner ids.** It is the
+> database's own classification, so a new rooftop is picked up the day it is set
+> up. The values are not uniform and must not be normalised: Bob Johnson is
+> `service-drive`, Ferrario is `service-drive-ferrario`, the rest of the
+> platform is `bhph` or `agency`. The prefix match is what makes both rooftops
+> work without a code change.
+>
+> **The filter belongs in the `fresh` CTE, where rows are claimed**, not in the
+> final select. Claiming a BHPH sale and then declining to post it would spend
+> the `limit 25` on rows nobody wants and bury them in the announce-once ledger,
+> so widening the scope later would silently skip them. `verify.mjs` asserts the
+> scope is inside the claim CTE and that the CTE joins `partners` at all.
 
 **`vsc_sale_announced` is the announce-once ledger.** The insert IS the claim:
 08 inserts, then announces only the rows its own insert won, so two sweeps

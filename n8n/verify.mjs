@@ -691,6 +691,37 @@ check('a sale can never be announced twice', () => {
   return 'insert is the claim, guarded by the quote_id primary key';
 });
 
+check('only a service drive account reaches the service drive channel', () => {
+  // WHY: 08 shipped announcing every completed sale on the platform. The
+  // reasoning was that Ferrario had sold nothing yet, so a scoped alert would
+  // be silent with no way to tell working from broken - which traded the
+  // channel's whole meaning for my convenience in testing it. 278 of the 280
+  // completed sales are BHPH across 26 stores, so "every sale" is really "other
+  // people's business", and the first live message put a 321 Drive sale, a
+  // buy-here-pay-here account, in front of the service drive team.
+  const sql = nodeNamed(load('08-sales-alert.json'), 'Claim New Sales').parameters.query;
+
+  assert(/partner_type/.test(sql), 'the claim is not scoped to an account type at all');
+  assert(/like 'service-drive%'/.test(sql),
+    'does not scope to service drive accounts by partner_type prefix');
+
+  // The scope has to bind where rows are CLAIMED. Filtering only in the final
+  // select would still consume the claim limit on BHPH rows and bury them in
+  // the announce-once ledger, so widening the scope later would skip them.
+  const fresh = /with fresh as \(([\s\S]*?)\n\),/.exec(sql);
+  assert(fresh, 'cannot find the claim CTE to check what it scopes');
+  assert(/partner_type/.test(fresh[1]),
+    'account scope is applied after the claim, so BHPH sales are still claimed');
+  assert(/join partners/.test(fresh[1]),
+    'the claim CTE cannot see partner_type: it never joins partners');
+
+  // A campaign-driven sale belongs here whatever its store is typed as.
+  assert(/from vsc_enrollment e where e\.quote_id = q\.id/.test(fresh[1]),
+    'an enrolled customer who bought could be filtered out by account type');
+
+  return 'claims service drive accounts and campaign-driven sales, nothing else';
+});
+
 check('every announced sale names the dealer', () => {
   // WHY: the first live sale message went to the channel with no dealer on it.
   // The query asked for partners.business_name and the composer had a line for

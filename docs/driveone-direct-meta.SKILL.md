@@ -58,6 +58,33 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 12 Oct 2026: the blackouts are a $1,000 account spending cap.**
+
+**This explains the repeated blackouts.** After delivery resumed on 1 Oct the daily spend ran
+$161.93, $172.22, $171.22, $103.79, $117.09, $72.16, $103.57, $95.66, then **$2.36 on 9 Oct**.
+Those nine figures sum to **exactly $1,000.00**, the last is a part-day stub, and delivery stopped
+dead; nothing on 10 to 12 Oct. Nine independent daily values do not land on $1,000.00 by chance.
+The Sep blackout has the same signature: a full day at $86.38, a part day at $30.18, then 14 days
+of nothing. Sequence: cap filled mid Sep, 14 days dark, someone raised or reset it around 30 Sep,
+resumed 1 Oct, filled again in nine days.
+
+**The Account Spending Limit field is not visible through Adspirer**, so this is inference from
+the arithmetic, not a reading. Ryan was asked to check it under billing. **Diagnostic to reuse:
+sum the daily spend across a delivery run and see whether it lands on a round number.**
+
+The $100/day budget versus the $152/day actual is not a separate problem: it is why a $1,000 cap
+lasted nine days instead of ten.
+
+**Lead event: third consecutive zero.** 11 Oct (08:00 to 18:00): 382 PageViews, **0 Leads**, 3
+InitiateCheckout (0.79%), 0 Purchase. Across 27 Sep, 4 Oct and 11 Oct that is **1,021 PageViews
+and not one Lead**, while InitiateCheckout fires at 1.15% and 0.79%, both inside the 0.38% to 3.8%
+band Leads used to occupy. The relabel conclusion stands and strengthens weekly.
+
+**Placement split, fourth confirmation.** Of $998.46 across 1 to 9 Oct: Facebook Reels $516.43
+(52%), Instream Video $194.79 (20%), Reels Overlay $91.21 (0.81% CTR), Right Hand Column $7.44
+(0.44% CTR), **81% to those four**. Facebook Feed $49.01. **Instagram Feed $0, absent from the
+list, fourth measurement running.** Stop re-testing this.
+
 **State as of 5 Oct 2026: delivery resumed, overspending, Lead event confirmed dead.**
 
 **Dark 17 to 30 Sep (14 days), resumed 1 Oct** on the old campaign. The cause of the stop was
@@ -177,7 +204,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), **6,500 (5 Oct)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), **8,400 (12 Oct)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

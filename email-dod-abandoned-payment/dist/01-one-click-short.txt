@@ -1,0 +1,28 @@
+You did the hard part. Then you stopped at the easy part.
+
+You picked a plan for your {{{VEHICLE}}}. You signed. The contract exists, with a number and everything. Then the payment screen happened and something else won.
+Statistically it was a phone call, a child, or a cat on the keyboard. We do not judge. We just noticed.
+
+WHAT IS SITTING THERE
+Vehicle: {{{VEHICLE}}}
+Plan: {{{PLAN}}}
+Contract number: {{{CONTRACT}}}
+Status: Written, not yet active
+
+TO FINISH IT: {{{DOWN}}} today, then {{{MONTHLY}}} a month for {{{TERM}}}. 0% APR. No finance charge. No credit check. That is the plan, not a teaser.
+
+Nothing reset. Nothing expired. The link below opens the payment step for this exact contract, not a new quote.
+
+Finish my payment -> {{{RESUME_URL}}}
+Takes about as long as reading this sentence twice.
+
+Over the next few weeks you will get one short email at a time about what this coverage actually does for your {{{VEHICLE}}}. No countdown clocks. An unsubscribe link on every one.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

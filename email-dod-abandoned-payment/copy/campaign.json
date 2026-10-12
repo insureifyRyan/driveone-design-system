@@ -1,0 +1,366 @@
+{
+  "$comment": "DriveOne Direct abandoned PAYMENT series. Audience: signed the contract, Ascent issued a contract number, started the Budco 0% plan, never completed funding (Supabase quotes.status=payment_pending, payment_status=budco_initiated, no budco_ric_url). This is NOT the abandoned quote drip (dod-abandon-e01..e08). Voice: Red Bull register. Deadpan, absurd, confident. No exclamation points. No em dashes or en dashes. Never call it a warranty. Never say the customer is covered: the contract is written, not active, until Budco funds it. Lead with the monthly and the down payment; never restate the full contract total. 0% in every email. One hero per email. No invented deadlines.",
+  "campaign": {
+    "id": "dod_abandoned_payment_2026",
+    "name": "DriveOne Direct: Finish Your Payment",
+    "audience": "driveonedirect.com customers who signed and started a Budco payment plan but did not complete it",
+    "totalDays": 60,
+    "exitOn": "quotes.status = paid (Budco confirmed). Daily suppression job unsubscribes with suppressed_reason=purchased.",
+    "sender": "DriveOne Direct <coverage@mail.driveonedirect.com>",
+    "replyTo": "support@driveonedirect.com",
+    "variables": {
+      "VEHICLE": "your car",
+      "MONTHLY": "the monthly on your contract",
+      "DOWN": "the small first payment",
+      "TERM": "the term you picked",
+      "PLAN": "your plan",
+      "CONTRACT": "on file",
+      "RESUME_URL": "https://www.driveonedirect.com/#quote",
+      "REF": "on file"
+    },
+    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins; never declare them. Fallbacks must never look numeric. RESUME_URL must reopen the Budco payment step for this contract; confirm the exact link with Asad/Resolv before enrolling anyone."
+  },
+  "emails": [
+    {
+      "step": 1,
+      "sendDay": 0,
+      "delayFromPrevious": 0,
+      "slug": "01-one-click-short",
+      "goal": "Name exactly where they stopped. Make finishing feel like the smallest thing on their list.",
+      "subject": "Your {{{VEHICLE}}} contract is one click short",
+      "subjectAlt": "{{{FIRST_NAME}}}, you stopped at the easy part",
+      "preheader": "The contract is written. It is waiting on the payment you already built.",
+      "eyebrow": "RIGHT WHERE YOU LEFT IT",
+      "headline": "You did the hard part.<br>Then you stopped at the<br>easy part.",
+      "body": [
+        "You picked a plan for your <strong>{{{VEHICLE}}}</strong>. You signed. The contract exists, with a number and everything. Then the payment screen happened and something else won.",
+        "Statistically it was a phone call, a child, or a cat on the keyboard. We do not judge. We just noticed."
+      ],
+      "card": {
+        "title": "WHAT IS SITTING THERE",
+        "rows": [
+          ["Vehicle", "{{{VEHICLE}}}"],
+          ["Plan", "{{{PLAN}}}"],
+          ["Contract number", "{{{CONTRACT}}}"],
+          ["Status", "Written, not yet active"]
+        ]
+      },
+      "hero": {
+        "label": "TO FINISH IT",
+        "big": "{{{DOWN}}} today",
+        "sub": "then {{{MONTHLY}}} a month for {{{TERM}}}",
+        "fine": "0% APR. No finance charge. No credit check. That is the plan, not a teaser."
+      },
+      "after": "Nothing reset. Nothing expired. The link below opens the payment step for this exact contract, not a new quote.",
+      "cta": "Finish my payment &rarr;",
+      "ctaNote": "Takes about as long as reading this sentence twice.",
+      "ps": "Over the next few weeks you will get one short email at a time about what this coverage actually does for your {{{VEHICLE}}}. No countdown clocks. An unsubscribe link on every one."
+    },
+    {
+      "step": 2,
+      "sendDay": 1,
+      "delayFromPrevious": 1,
+      "slug": "02-if-the-form-fought-you",
+      "goal": "Remove the practical blocker. Budco payment help line and the two reasons payments fail.",
+      "subject": "If the payment page fought back",
+      "subjectAlt": "A form should not be the hardest part of owning a {{{VEHICLE}}}",
+      "preheader": "Two things stop most payments. Both are fixable in under five minutes.",
+      "eyebrow": "THE UNSTICK",
+      "headline": "A payment form should<br>never be the hardest part<br>of owning a car.",
+      "body": [
+        "If you stopped because the page gave you trouble, that is on us to fix, not you. Nearly every stalled payment comes down to one of two things.",
+        "One: the card declined or the bank wanted a second look. Two: the page timed out between signing and paying. Both are boring. Both are five minute fixes."
+      ],
+      "card": {
+        "title": "TWO WAYS TO FINISH",
+        "rows": [
+          ["Online", "Reopen the payment step below"],
+          ["By phone", "Budco payments, 888-352-7901"],
+          ["Have ready", "Contract {{{CONTRACT}}}"],
+          ["Cost to call", "Nothing"]
+        ]
+      },
+      "hero": {
+        "label": "STILL THE SAME NUMBERS",
+        "big": "{{{MONTHLY}}} a month",
+        "sub": "{{{DOWN}}} down, {{{TERM}}}, for your {{{VEHICLE}}}",
+        "fine": "0% APR. Budco runs the payment plan. Ascent runs the coverage. We run the website. Everyone stays in their lane."
+      },
+      "after": "Budco is the payment company behind the 0% plan. They are good on the phone and they will not try to sell you anything, because they do not have anything to sell you.",
+      "cta": "Reopen the payment step &rarr;",
+      "ctaNote": "Or call Budco at 888-352-7901, weekdays. Say the contract number.",
+      "ps": "If it was neither of those and you just changed your mind, that is allowed. Hit unsubscribe and we will go quietly."
+    },
+    {
+      "step": 3,
+      "sendDay": 3,
+      "delayFromPrevious": 2,
+      "slug": "03-zero-is-a-number",
+      "goal": "Make 0% believable. Address the catch everyone is waiting for.",
+      "subject": "Zero is not a promotion. It is a number.",
+      "subjectAlt": "The rate on your {{{VEHICLE}}} plan, in one digit",
+      "preheader": "No intro period. No step up at month seven. The rate is the rate.",
+      "eyebrow": "THE FINANCING PART",
+      "headline": "You are waiting for<br>the catch. We checked.<br>There is not one.",
+      "body": [
+        "Most 0% offers are a magic trick. Zero for six months, then a rate that would embarrass a pawn shop. Yours is not that.",
+        "Your plan is 0% APR for the whole term. There is no finance charge, no deferred interest, no balloon payment waiting at the end like a surprise party nobody wanted."
+      ],
+      "card": null,
+      "hero": {
+        "label": "THE ENTIRE MATH",
+        "big": "{{{MONTHLY}}} &times; {{{TERM}}}",
+        "sub": "after {{{DOWN}}} today",
+        "fine": "Add those up and you get your contract price. Not a dollar more. That is what 0% means when it is real."
+      },
+      "after": "No credit check either. Budco does not pull your credit for this plan, so a 0% plan does not cost you a point on your score to find out about.",
+      "cta": "Lock in the 0% &rarr;",
+      "ctaNote": "Same contract, same numbers, same {{{VEHICLE}}}.",
+      "ps": "If you want to pay it all at once instead, you can do that on the same page. Some people like the feeling. We respect it."
+    },
+    {
+      "step": 4,
+      "sendDay": 6,
+      "delayFromPrevious": 3,
+      "slug": "04-no-sticker-price",
+      "goal": "The $100 deductible. Repairs are the only part of ownership with no sticker price.",
+      "subject": "The only part of your {{{VEHICLE}}} with no price tag",
+      "subjectAlt": "A repair bill is a surprise party you have to pay for",
+      "preheader": "Everything about your car has a known price except the thing that breaks.",
+      "eyebrow": "THE DEDUCTIBLE",
+      "headline": "Every part of car ownership<br>has a price tag.<br>Except the repair.",
+      "body": [
+        "You know the payment. You know the insurance. You know roughly what gas costs, because you have been angry about it.",
+        "The one number you do not know is the repair. It shows up at a time of its own choosing, with a figure of its own choosing, and it does not take questions."
+      ],
+      "card": {
+        "title": "WITH YOUR PLAN ACTIVE",
+        "rows": [
+          ["You pay", "$100 per visit"],
+          ["We pay", "The shop, directly"],
+          ["You negotiate", "Nothing"],
+          ["Covered repairs", "Parts and labor"]
+        ]
+      },
+      "hero": {
+        "label": "THE KNOWN NUMBER",
+        "big": "$100",
+        "sub": "per covered visit, on your {{{VEHICLE}}}",
+        "fine": "Still {{{MONTHLY}}} a month at 0% APR. The plan replaces the one unknown number with two known ones."
+      },
+      "after": "A transmission has never once negotiated. A $100 deductible has never once changed its mind. Pick which one you want to deal with.",
+      "cta": "Make the repair a known number &rarr;",
+      "ctaNote": "Finishes the payment on contract {{{CONTRACT}}}.",
+      "ps": "Reminder: coverage is not active until the payment goes through. The contract is written. It is not working yet."
+    },
+    {
+      "step": 5,
+      "sendDay": 10,
+      "delayFromPrevious": 4,
+      "slug": "05-you-pick-the-shop",
+      "goal": "Any ASE-certified shop. No captive dealer. We pay the shop directly.",
+      "subject": "You pick the shop. We pay the shop.",
+      "subjectAlt": "No, you do not have to drive it back to where you bought it",
+      "preheader": "Any ASE-certified repair shop in the country. Your mechanic counts.",
+      "eyebrow": "WHERE IT GETS FIXED",
+      "headline": "Your mechanic.<br>Your choice.<br>Our bill.",
+      "body": [
+        "Some plans make you drive back to the dealership that sold you the car, which is a strange thing to require when the dealership is in another state and the car is on a flatbed.",
+        "Yours does not. Any ASE-certified shop in the country. The guy you trust. The place near work. The one your brother in law swears by, if you are feeling brave."
+      ],
+      "card": {
+        "title": "HOW A CLAIM GOES",
+        "rows": [
+          ["1", "Take the {{{VEHICLE}}} to any ASE-certified shop"],
+          ["2", "Shop calls Ascent at 866-660-7003 before work starts"],
+          ["3", "We pay the shop. You pay $100."],
+          ["4", "You drive home. Nobody calls you later."]
+        ]
+      },
+      "hero": {
+        "label": "WHAT THIS COSTS YOU",
+        "big": "{{{MONTHLY}}} a month",
+        "sub": "0% APR, {{{DOWN}}} down, {{{TERM}}}",
+        "fine": "Openbay+ is included too, so if you do not have a shop you trust yet, you can book an ASE-certified one from your phone."
+      },
+      "after": "The shop calls the administrator before touching anything. That one phone call is the whole claims process. There is no form, no receipt to mail, no reimbursement to wait for.",
+      "cta": "Activate it on my {{{VEHICLE}}} &rarr;",
+      "ctaNote": "Payment step only. Everything else is already done.",
+      "ps": "ASE-certified means the technician passed a national exam. It does not mean they will be nice to you. That part is on the shop."
+    },
+    {
+      "step": 6,
+      "sendDay": 15,
+      "delayFromPrevious": 5,
+      "slug": "06-lose-value-at-a-red-light",
+      "goal": "Diminished Value Protection, up to $5,000. The benefit nobody else includes.",
+      "subject": "Your {{{VEHICLE}}} can lose money at a red light",
+      "subjectAlt": "The loss that happens without anything breaking",
+      "preheader": "Diminished Value Protection is included. Most people have never heard of it. That is the point.",
+      "eyebrow": "THE ONE NOBODY TALKS ABOUT",
+      "headline": "Somebody taps your<br>bumper. Your car is<br>worth less forever.",
+      "body": [
+        "Here is a thing that happens. Someone rear ends you at a light. Their insurance fixes the bumper. The car looks perfect. And it is now worth thousands less, because it has an accident on its history and buyers can read.",
+        "That gap is called diminished value. Your plan includes protection for it. Up to $5,000. It is listed on your contract under Also Included, which is a modest place to put something that useful."
+      ],
+      "card": {
+        "title": "ALSO INCLUDED ON YOUR CONTRACT",
+        "rows": [
+          ["Diminished Value Protection", "Up to $5,000"],
+          ["Openbay+", "Book ASE-certified shops, service discounts"],
+          ["Cost to add", "Already in {{{MONTHLY}}} a month"]
+        ]
+      },
+      "hero": {
+        "label": "STILL WAITING ON YOU",
+        "big": "{{{DOWN}}} today",
+        "sub": "then {{{MONTHLY}}} a month at 0% APR",
+        "fine": "The contract already lists Diminished Value Protection. It just does not do anything until the payment clears."
+      },
+      "after": "No other direct plan we know of includes this. We are not going to name them. You can check. Bring snacks.",
+      "cta": "Finish it before the red light does &rarr;",
+      "ctaNote": "Opens the payment step for contract {{{CONTRACT}}}.",
+      "ps": "If you do get rear ended, the other thing to do is take a photo of their plate. We cover the value. We cannot cover forgetting to do that."
+    },
+    {
+      "step": 7,
+      "sendDay": 22,
+      "delayFromPrevious": 7,
+      "slug": "07-breakdowns-are-rude",
+      "goal": "Roadside, rental, trip interruption. The breakdown day benefits.",
+      "subject": "Breakdowns never check your calendar",
+      "subjectAlt": "The expensive part of breaking down is not the car",
+      "preheader": "Roadside, a rental, and a hotel if you are far from home. Included.",
+      "eyebrow": "THE BAD DAY",
+      "headline": "The car dying is the<br>cheap part. The rest of<br>the day is the bill.",
+      "body": [
+        "A breakdown is not one problem. It is a tow, then a rental, then two days of asking people for rides, then possibly a hotel because it happened three hundred miles from your bed.",
+        "The plan handles that part too. It was built by people who have stood on a shoulder at 11pm and would like you to have a better evening than they did."
+      ],
+      "card": {
+        "title": "ON A BAD DAY",
+        "rows": [
+          ["24/7 roadside", "877-626-0880, up to 3 events a year"],
+          ["Rental car", "Up to $250 per covered claim"],
+          ["Trip interruption", "Up to $450 if you are far from home"],
+          ["Your part", "One phone call"]
+        ]
+      },
+      "hero": {
+        "label": "THE WHOLE PLAN, STILL",
+        "big": "{{{MONTHLY}}} a month",
+        "sub": "0% APR, {{{TERM}}}, for your {{{VEHICLE}}}",
+        "fine": "{{{DOWN}}} down to turn it on. Roadside starts working the moment it is active."
+      },
+      "after": "None of this requires a good attitude on the day. It requires the plan to be active, which requires the payment, which requires about forty seconds.",
+      "cta": "Turn on roadside &rarr;",
+      "ctaNote": "Same contract. Same numbers. New level of calm.",
+      "ps": "The roadside number goes in your phone under R. You will thank a past version of yourself."
+    },
+    {
+      "step": 8,
+      "sendDay": 32,
+      "delayFromPrevious": 10,
+      "slug": "08-the-exit-is-unlocked",
+      "goal": "Remove the commitment fear. 30 day full refund, prorated after, transferable.",
+      "subject": "The exit is unlocked. That is why the door is easy.",
+      "subjectAlt": "Thirty days to decide you were wrong about us",
+      "preheader": "Full refund in 30 days if no claim has been paid. Prorated after that. No hostage situation.",
+      "eyebrow": "THE OUT",
+      "headline": "We left the exit<br>unlocked on purpose.",
+      "body": [
+        "Some people stop at the payment step because it feels like signing up for a gym. Five years of something you cannot get out of.",
+        "This is not that. Cancel in the first 30 days with no paid claim and you get every dollar back. Cancel after that and it is prorated. Sell the {{{VEHICLE}}} and the coverage can go with it."
+      ],
+      "card": {
+        "title": "IF YOU CHANGE YOUR MIND",
+        "rows": [
+          ["First 30 days", "Full refund, no claim paid"],
+          ["After that", "Prorated refund, less a fee where your state allows"],
+          ["Sell the car", "Coverage transfers to the buyer"],
+          ["Who you call", "Ascent, 866-660-7003"]
+        ]
+      },
+      "hero": {
+        "label": "WHAT IT TAKES TO TRY IT",
+        "big": "{{{DOWN}}}",
+        "sub": "then {{{MONTHLY}}} a month, 0% APR",
+        "fine": "You can run the whole 30 day test for the price of the first payment. If we were worried about that, we would not offer it."
+      },
+      "after": "A company that locks the door is telling you something about the room. We would rather you walk in, look around, and decide to stay.",
+      "cta": "Start the 30 days &rarr;",
+      "ctaNote": "Finishes contract {{{CONTRACT}}}. The clock starts when it is active.",
+      "ps": "Transferable coverage also makes your {{{VEHICLE}}} easier to sell later. Buyers like a car that comes with a plan. We would say that, but it also happens to be true."
+    },
+    {
+      "step": 9,
+      "sendDay": 45,
+      "delayFromPrevious": 13,
+      "slug": "09-this-email-is-the-salesperson",
+      "goal": "Own the no call center promise. The online model is the product.",
+      "subject": "Nobody from DriveOne Direct is going to call you",
+      "subjectAlt": "This email is the salesperson. It is not very pushy.",
+      "preheader": "No hold music, no manager to check with, no Tuesday callback. The whole thing is online.",
+      "eyebrow": "HOW THIS WORKS",
+      "headline": "This email is the<br>salesperson. It gets<br>paid in clicks.",
+      "body": [
+        "You already know what buying coverage usually feels like. Somebody reads a script. Somebody checks with a manager who does not exist. Somebody calls you on a Tuesday while you are in a meeting.",
+        "We took all of that out. There is no call center. There is no one assigned to you. There is a payment page, which you have seen, and a link to it, which is below."
+      ],
+      "card": {
+        "title": "WHO YOU WILL ACTUALLY TALK TO",
+        "rows": [
+          ["To finish paying", "Nobody. The page does it."],
+          ["Payment questions", "Budco, 888-352-7901"],
+          ["Coverage or claims", "Ascent, 866-660-7003"],
+          ["Sales pressure", "Not a department we have"]
+        ]
+      },
+      "hero": {
+        "label": "SAME AS DAY ONE",
+        "big": "{{{MONTHLY}}} a month",
+        "sub": "{{{DOWN}}} down, 0% APR, {{{TERM}}}",
+        "fine": "Still the plan you built for your {{{VEHICLE}}}. Still waiting. Still not calling you about it."
+      },
+      "after": "Open the link at 11pm in a kitchen if that is when you have forty seconds. It does not care what you are wearing.",
+      "cta": "Finish it without talking to anyone &rarr;",
+      "ctaNote": "Payment step for contract {{{CONTRACT}}}.",
+      "ps": "We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it."
+    },
+    {
+      "step": 10,
+      "sendDay": 60,
+      "delayFromPrevious": 15,
+      "slug": "10-last-one",
+      "goal": "Graceful close. No fake deadline. Leave the door open and stop.",
+      "subject": "Last one, then we will leave you alone",
+      "subjectAlt": "Final note about your {{{VEHICLE}}} contract",
+      "preheader": "This is the last email in the series. The contract stays written. We stop writing.",
+      "eyebrow": "THE LAST ONE",
+      "headline": "We said we would stop.<br>This is us stopping.",
+      "body": [
+        "Ten emails is enough. Either you are going to finish the payment or you are not, and a seventh reminder about roadside assistance was never going to be the thing that decided it.",
+        "So here is where it stands. The contract for your {{{VEHICLE}}} is still written. The payment step still opens from the link below. If pricing for your vehicle changes in the future, the page will tell you before you pay, not after."
+      ],
+      "card": {
+        "title": "FOR THE RECORD",
+        "rows": [
+          ["Vehicle", "{{{VEHICLE}}}"],
+          ["Plan", "{{{PLAN}}}"],
+          ["Contract number", "{{{CONTRACT}}}"],
+          ["Payment questions", "Budco, 888-352-7901"]
+        ]
+      },
+      "hero": {
+        "label": "ONE MORE TIME",
+        "big": "{{{DOWN}}} today",
+        "sub": "then {{{MONTHLY}}} a month at 0% APR for {{{TERM}}}",
+        "fine": "No deadline. No countdown. Just the last time we put it in front of you."
+      },
+      "after": "If the answer is no, thank you for reading ten of these. That is more attention than most of our competitors get in a year, and we do not even have a mascot.",
+      "cta": "Finish my payment &rarr;",
+      "ctaNote": "Works today. Works next month. We just will not be the ones reminding you.",
+      "ps": "You are welcome back any time. Nobody will say we told you so. Mostly because nobody here will know."
+    }
+  ]
+}

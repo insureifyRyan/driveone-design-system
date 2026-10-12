@@ -1,0 +1,22 @@
+You are waiting for the catch. We checked. There is not one.
+
+Most 0% offers are a magic trick. Zero for six months, then a rate that would embarrass a pawn shop. Yours is not that.
+Your plan is 0% APR for the whole term. There is no finance charge, no deferred interest, no balloon payment waiting at the end like a surprise party nobody wanted.
+
+THE ENTIRE MATH: {{{MONTHLY}}} x {{{TERM}}}, after {{{DOWN}}} today. Add those up and you get your contract price. Not a dollar more. That is what 0% means when it is real.
+
+No credit check either. Budco does not pull your credit for this plan, so a 0% plan does not cost you a point on your score to find out about.
+
+Lock in the 0% -> {{{RESUME_URL}}}
+Same contract, same numbers, same {{{VEHICLE}}}.
+
+If you want to pay it all at once instead, you can do that on the same page. Some people like the feeling. We respect it.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

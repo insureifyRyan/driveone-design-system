@@ -1,0 +1,28 @@
+This email is the salesperson. It gets paid in clicks.
+
+You already know what buying coverage usually feels like. Somebody reads a script. Somebody checks with a manager who does not exist. Somebody calls you on a Tuesday while you are in a meeting.
+We took all of that out. There is no call center. There is no one assigned to you. There is a payment page, which you have seen, and a link to it, which is below.
+
+WHO YOU WILL ACTUALLY TALK TO
+To finish paying: Nobody. The page does it.
+Payment questions: Budco, 888-352-7901
+Coverage or claims: Ascent, 866-660-7003
+Sales pressure: Not a department we have
+
+SAME AS DAY ONE: {{{MONTHLY}}} a month, {{{DOWN}}} down, 0% APR, {{{TERM}}}. Still the plan you built for your {{{VEHICLE}}}. Still waiting. Still not calling you about it.
+
+Open the link at 11pm in a kitchen if that is when you have forty seconds. It does not care what you are wearing.
+
+Finish it without talking to anyone -> {{{RESUME_URL}}}
+Payment step for contract {{{CONTRACT}}}.
+
+We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

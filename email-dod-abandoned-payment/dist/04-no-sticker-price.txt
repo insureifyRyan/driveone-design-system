@@ -1,0 +1,28 @@
+Every part of car ownership has a price tag. Except the repair.
+
+You know the payment. You know the insurance. You know roughly what gas costs, because you have been angry about it.
+The one number you do not know is the repair. It shows up at a time of its own choosing, with a figure of its own choosing, and it does not take questions.
+
+WITH YOUR PLAN ACTIVE
+You pay: $100 per visit
+We pay: The shop, directly
+You negotiate: Nothing
+Covered repairs: Parts and labor
+
+THE KNOWN NUMBER: $100, per covered visit, on your {{{VEHICLE}}}. Still {{{MONTHLY}}} a month at 0% APR. The plan replaces the one unknown number with two known ones.
+
+A transmission has never once negotiated. A $100 deductible has never once changed its mind. Pick which one you want to deal with.
+
+Make the repair a known number -> {{{RESUME_URL}}}
+Finishes the payment on contract {{{CONTRACT}}}.
+
+Reminder: coverage is not active until the payment goes through. The contract is written. It is not working yet.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

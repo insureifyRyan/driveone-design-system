@@ -40,7 +40,10 @@ run retries it.
    `#dod-sales`), copy the `https://hooks.slack.com/services/...` URL.
 2. **Store it as a secret.** In the claude.ai/code environment settings for this repo, add
    the environment variable `SLACK_DOD_PURCHASE_WEBHOOK`. Never commit it.
-3. **Enable the Routine** "DriveOne Direct purchase alert". It is created disabled.
+3. **Finish the Routine** "DriveOne Direct purchase alert" (`trig_01BGnF7JZbLJV8EkmmdNH4sC`,
+   hourly at :09) in the claude.ai Routines UI: attach the **Metricbridge MCP** connector and
+   the `insureifyRyan/driveone-design-system` repo, then enable it. It was created disabled
+   because connectors cannot be attached from a coding session.
 
 ## Run by hand
 

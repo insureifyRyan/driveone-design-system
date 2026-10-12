@@ -132,3 +132,13 @@ characters. Complements the subject; never repeats it.
 
 When the next email surface is built, it reads `brand/driveone-direct.tokens.json` and this file.
 It does not copy hex values from another template.
+
+## 11. Video card (optional)
+
+A bordered card [color.rule, radius 14] after the callout and before the dark strip. Left
+cell: 162 x 122 thumbnail, radius 10, ink background behind it so a blocked image still
+reads as a tile. Right cell: 10px / 700 / tracking 0.14em cyanDark eyebrow, 15px / 700 ink
+title, 13px / 400 bodyText line, then a 13px / 700 cyanDark link with a play glyph. Both
+the image and the link go to the video with UTMs. One per email, never above the primary
+button, caption always in our voice (the YouTube title is not copy). Currently used in
+Finish Your Payment E9 only, as an A/B arm.

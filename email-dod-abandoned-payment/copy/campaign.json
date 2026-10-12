@@ -1,5 +1,5 @@
 {
-  "$comment": "DriveOne Direct abandoned PAYMENT series. Audience: signed the contract, Ascent issued a contract number, started the Budco 0% plan, never completed funding (Supabase quotes.status=payment_pending, payment_status=budco_initiated, no budco_ric_url). This is NOT the abandoned quote drip (dod-abandon-e01..e08). Voice: Red Bull register. Deadpan, absurd, confident. No exclamation points. No em dashes or en dashes. Never call it a warranty. Never say the customer is covered: the contract is written, not active, until Budco funds it. Lead with the monthly and the down payment; never restate the full contract total. 0% in every email. One hero per email. No invented deadlines.",
+  "$comment": "DriveOne Direct abandoned PAYMENT series. Audience: signed the contract, Ascent issued a contract number, started the Budco 0% plan, never completed funding (Supabase quotes.status=payment_pending, payment_status=budco_initiated, no budco_ric_url). This is NOT the abandoned quote drip (dod-abandon-e01..e08). Voice: Red Bull register. Deadpan, absurd, confident. No exclamation points. No em dashes or en dashes. Never call it a warranty. Never say the customer is covered: the contract is written, not active, until Budco funds it. Lead with the monthly and the down payment; never restate the full contract total. 0% in every email. One hero per email. No invented deadlines. Optional `video` block on an email renders a thumbnail card after the P.S. callout: one video max per email, never above the primary button, caption written in our voice (never the YouTube title). Test arm per SEQUENCE.md.",
   "campaign": {
     "id": "dod_abandoned_payment_2026",
     "name": "DriveOne Direct: Finish Your Payment",
@@ -39,10 +39,22 @@
       "card": {
         "title": "WHAT IS SITTING THERE",
         "rows": [
-          ["Vehicle", "{{{VEHICLE}}}"],
-          ["Plan", "{{{PLAN}}}"],
-          ["Contract number", "{{{CONTRACT}}}"],
-          ["Status", "Written, not yet active"]
+          [
+            "Vehicle",
+            "{{{VEHICLE}}}"
+          ],
+          [
+            "Plan",
+            "{{{PLAN}}}"
+          ],
+          [
+            "Contract number",
+            "{{{CONTRACT}}}"
+          ],
+          [
+            "Status",
+            "Written, not yet active"
+          ]
         ]
       },
       "hero": {
@@ -74,10 +86,22 @@
       "card": {
         "title": "TWO WAYS TO FINISH",
         "rows": [
-          ["Online", "Reopen the payment step below"],
-          ["By phone", "Budco payments, 888-352-7901"],
-          ["Have ready", "Contract {{{CONTRACT}}}"],
-          ["Cost to call", "Nothing"]
+          [
+            "Online",
+            "Reopen the payment step below"
+          ],
+          [
+            "By phone",
+            "Budco payments, 888-352-7901"
+          ],
+          [
+            "Have ready",
+            "Contract {{{CONTRACT}}}"
+          ],
+          [
+            "Cost to call",
+            "Nothing"
+          ]
         ]
       },
       "hero": {
@@ -136,10 +160,22 @@
       "card": {
         "title": "WITH YOUR PLAN ACTIVE",
         "rows": [
-          ["You pay", "$100 per visit"],
-          ["We pay", "The shop, directly"],
-          ["You negotiate", "Nothing"],
-          ["Covered repairs", "Parts and labor"]
+          [
+            "You pay",
+            "$100 per visit"
+          ],
+          [
+            "We pay",
+            "The shop, directly"
+          ],
+          [
+            "You negotiate",
+            "Nothing"
+          ],
+          [
+            "Covered repairs",
+            "Parts and labor"
+          ]
         ]
       },
       "hero": {
@@ -171,10 +207,22 @@
       "card": {
         "title": "HOW A CLAIM GOES",
         "rows": [
-          ["1", "Take the {{{VEHICLE}}} to any ASE-certified shop"],
-          ["2", "Shop calls Ascent at 866-660-7003 before work starts"],
-          ["3", "We pay the shop. You pay $100."],
-          ["4", "You drive home. Nobody calls you later."]
+          [
+            "1",
+            "Take the {{{VEHICLE}}} to any ASE-certified shop"
+          ],
+          [
+            "2",
+            "Shop calls Ascent at 866-660-7003 before work starts"
+          ],
+          [
+            "3",
+            "We pay the shop. You pay $100."
+          ],
+          [
+            "4",
+            "You drive home. Nobody calls you later."
+          ]
         ]
       },
       "hero": {
@@ -206,9 +254,18 @@
       "card": {
         "title": "ALSO INCLUDED ON YOUR CONTRACT",
         "rows": [
-          ["Diminished Value Protection", "Up to $5,000"],
-          ["Openbay+", "Book ASE-certified shops, service discounts"],
-          ["Cost to add", "Already in {{{MONTHLY}}} a month"]
+          [
+            "Diminished Value Protection",
+            "Up to $5,000"
+          ],
+          [
+            "Openbay+",
+            "Book ASE-certified shops, service discounts"
+          ],
+          [
+            "Cost to add",
+            "Already in {{{MONTHLY}}} a month"
+          ]
         ]
       },
       "hero": {
@@ -240,10 +297,22 @@
       "card": {
         "title": "ON A BAD DAY",
         "rows": [
-          ["24/7 roadside", "877-626-0880, up to 3 events a year"],
-          ["Rental car", "Up to $250 per covered claim"],
-          ["Trip interruption", "Up to $450 if you are far from home"],
-          ["Your part", "One phone call"]
+          [
+            "24/7 roadside",
+            "877-626-0880, up to 3 events a year"
+          ],
+          [
+            "Rental car",
+            "Up to $250 per covered claim"
+          ],
+          [
+            "Trip interruption",
+            "Up to $450 if you are far from home"
+          ],
+          [
+            "Your part",
+            "One phone call"
+          ]
         ]
       },
       "hero": {
@@ -275,10 +344,22 @@
       "card": {
         "title": "IF YOU CHANGE YOUR MIND",
         "rows": [
-          ["First 30 days", "Full refund, no claim paid"],
-          ["After that", "Prorated refund, less a fee where your state allows"],
-          ["Sell the car", "Coverage transfers to the buyer"],
-          ["Who you call", "Ascent, 866-660-7003"]
+          [
+            "First 30 days",
+            "Full refund, no claim paid"
+          ],
+          [
+            "After that",
+            "Prorated refund, less a fee where your state allows"
+          ],
+          [
+            "Sell the car",
+            "Coverage transfers to the buyer"
+          ],
+          [
+            "Who you call",
+            "Ascent, 866-660-7003"
+          ]
         ]
       },
       "hero": {
@@ -310,10 +391,22 @@
       "card": {
         "title": "WHO YOU WILL ACTUALLY TALK TO",
         "rows": [
-          ["To finish paying", "Nobody. The page does it."],
-          ["Payment questions", "Budco, 888-352-7901"],
-          ["Coverage or claims", "Ascent, 866-660-7003"],
-          ["Sales pressure", "Not a department we have"]
+          [
+            "To finish paying",
+            "Nobody. The page does it."
+          ],
+          [
+            "Payment questions",
+            "Budco, 888-352-7901"
+          ],
+          [
+            "Coverage or claims",
+            "Ascent, 866-660-7003"
+          ],
+          [
+            "Sales pressure",
+            "Not a department we have"
+          ]
         ]
       },
       "hero": {
@@ -325,7 +418,16 @@
       "after": "Open the link at 11pm in a kitchen if that is when you have forty seconds. It does not care what you are wearing.",
       "cta": "Finish it without talking to anyone &rarr;",
       "ctaNote": "Payment step for contract {{{CONTRACT}}}.",
-      "ps": "We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it."
+      "ps": "We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it.",
+      "video": {
+        "url": "https://www.youtube.com/shorts/HEg1cKDNbZY",
+        "thumb": "https://i.ytimg.com/vi/HEg1cKDNbZY/hqdefault.jpg",
+        "eyebrow": "40 SECONDS, NO SALESPERSON",
+        "title": "What buying this online actually looks like",
+        "line": "One phone, one checkout, start to finish. Nobody calls. Nobody checks with a manager.",
+        "cta": "Watch the short",
+        "utm": "utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment&utm_content=e09_video"
+      }
     },
     {
       "step": 10,
@@ -345,10 +447,22 @@
       "card": {
         "title": "FOR THE RECORD",
         "rows": [
-          ["Vehicle", "{{{VEHICLE}}}"],
-          ["Plan", "{{{PLAN}}}"],
-          ["Contract number", "{{{CONTRACT}}}"],
-          ["Payment questions", "Budco, 888-352-7901"]
+          [
+            "Vehicle",
+            "{{{VEHICLE}}}"
+          ],
+          [
+            "Plan",
+            "{{{PLAN}}}"
+          ],
+          [
+            "Contract number",
+            "{{{CONTRACT}}}"
+          ],
+          [
+            "Payment questions",
+            "Budco, 888-352-7901"
+          ]
         ]
       },
       "hero": {

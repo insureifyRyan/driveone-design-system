@@ -75,6 +75,26 @@ function heroHtml(h) {
     </table>`, 22);
 }
 
+
+function videoHtml(v) {
+  if (!v) return "";
+  const href = `${v.url}?${v.utm}`;
+  return pad(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${C.line};border-radius:${L.radius}px">
+      <tr>
+        <td width="176" valign="top" style="padding:14px 0 14px 14px">
+          <a href="${href}" style="text-decoration:none"><img src="${v.thumb}" width="162" height="122" alt="${v.title}" style="display:block;width:162px;height:122px;border-radius:10px;border:0;object-fit:cover;background-color:${C.ink}"></a>
+        </td>
+        <td valign="middle" style="padding:14px 18px 14px 12px">
+          <div style="${F};font-weight:700;font-size:10px;line-height:1;color:${C.link};letter-spacing:0.14em">${v.eyebrow}</div>
+          <div style="${F};font-weight:700;font-size:15px;line-height:1.3;color:${C.ink};padding-top:7px">${v.title}</div>
+          <div style="${F};font-weight:400;font-size:13px;line-height:1.5;color:${C.body};padding-top:6px">${v.line}</div>
+          <div style="padding-top:10px"><a href="${href}" style="${F};font-weight:700;font-size:13px;line-height:1;color:${C.link};text-decoration:none">&#9654;&nbsp; ${v.cta}</a></div>
+        </td>
+      </tr>
+    </table>`, 18);
+}
+
 function html(e) {
   const body = e.body.map((b, i) => pad(p(b), i === 0 ? 16 : 14)).join("");
   return `<!DOCTYPE html>
@@ -100,6 +120,7 @@ function html(e) {
   ${pad(`<a href="{{{RESUME_URL}}}" style="background-color:${C.cyan};color:${C.ink};${F};font-weight:700;font-size:15px;line-height:1;text-decoration:none;padding:${L.buttonPadding};border-radius:${L.radiusPill}px;display:inline-block">${e.cta}</a>`, 22, 4)}
   ${pad(`<div style="${F};font-weight:400;font-size:12px;line-height:1.6;color:${C.mute}">${e.ctaNote}</div>`, 12)}
   ${pad(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tint}" style="background-color:${C.tint};border-radius:${L.radius}px"><tr><td style="padding:16px 20px">${p(e.ps, "font-size:14px;")}</td></tr></table>`, 26)}
+  ${videoHtml(e.video)}
   <tr><td style="height:30px;font-size:0;line-height:0">&nbsp;</td></tr>
 
   <tr><td bgcolor="${C.ink}" style="background-color:${C.ink};padding:26px 32px">
@@ -122,6 +143,7 @@ const strip = (s) => s.replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").repla
 function text(e) {
   const lines = [strip(e.headline), "", ...e.body.map(strip), ""];
   if (e.card) { lines.push(strip(e.card.title)); e.card.rows.forEach(([k, v]) => lines.push(`${strip(k)}: ${strip(v)}`)); lines.push(""); }
+  if (e.video) lines.push(`${strip(e.video.title)}: ${e.video.url}?${e.video.utm}`, "");
   lines.push(`${strip(e.hero.label)}: ${strip(e.hero.big)}, ${strip(e.hero.sub)}. ${strip(e.hero.fine)}`, "", strip(e.after), "", `${strip(e.cta)} {{{RESUME_URL}}}`, strip(e.ctaNote), "", strip(e.ps), "", `Stuck on the payment step? Budco Financial Services: ${P.budcoPayments}. Coverage or claims: Ascent, ${P.ascentClaims}.`, "", "---", strip(FOOTER_LEGAL), "", strip(ADDRESS), "Contract {{{CONTRACT}}} - Reference {{{REF}}}", "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
   return lines.join("\n");
 }

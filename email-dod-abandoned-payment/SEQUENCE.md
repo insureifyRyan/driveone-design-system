@@ -188,3 +188,14 @@ Monday scorecard once the first cohort passes Day 60.
    first three days for the backlog.
 6. Enable only on Ryan's explicit approval, after the three open items in the README are
    closed: the Budco resume link, the monthly formula, and the compliance footer.
+
+### Test 5: UGC video card in E9 (added 2026-10-12)
+
+E9 carries an optional video card after the P.S. callout: thumbnail, our own caption
+(never the YouTube title), and a "Watch the short" link to
+https://www.youtube.com/shorts/HEg1cKDNbZY with `utm_content=e09_video`. Arm A is E9
+with the card, arm B is E9 without it (delete the `video` block in the copy deck and
+rebuild). Judge on payment completion within 7 days of E9, not on video clicks. The card
+stays below the primary button on purpose; if it ever moves above it, the test is
+measuring something else. Note: the YouTube channel name reads "Drive One Direct" with
+spaces; fix on YouTube.

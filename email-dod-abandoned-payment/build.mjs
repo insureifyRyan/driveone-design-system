@@ -17,12 +17,17 @@ const deck = JSON.parse(readFileSync(join(here, "copy/campaign.json"), "utf8"));
 const out = join(here, "dist");
 mkdirSync(out, { recursive: true });
 
-const F = "font-family:Helvetica,Arial,sans-serif";
-const MONO = "font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace";
-const C = { ink: "#0E1B2C", cyan: "#1FBFEC", page: "#EEF2F6", body: "#3D4A5C", mute: "#8A99B5", card: "#F4F6F9", line: "#E3E8EF", link: "#1189B3", tint: "#EAF7FC", cyanDark: "#1189B3" };
+const T = JSON.parse(readFileSync(join(here, "../brand/driveone.tokens.json"), "utf8"));
+const B = T.brand.direct;
+const F = `font-family:${T.font.body}`;
+const MONO = `font-family:${T.font.mono}`;
+// Every color below is a token. Add a token before adding a color.
+const C = { ink: T.color.ink, cyan: T.color.cyan, page: T.color.paper, body: T.color.bodyText, mute: T.color.mutedText, card: T.color.cardFill, line: T.color.rule, link: T.color.cyanDark, tint: T.color.cyanSoft, cyanDark: T.color.cyanDark, inkMuted: T.color.inkMuted, white: T.color.white };
+const L = T.layout;
+const P = B.phones;
 
-const FOOTER_LEGAL = "This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.";
-const ADDRESS = "Insureify AI, Inc. DBA Kovara AI &middot; 304 South Jones Blvd, Las Vegas, NV 89107";
+const FOOTER_LEGAL = "This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. Coverage is not active until your payment is completed. Payment amounts shown are from the contract you signed; your exact terms are confirmed by Budco Financial Services at checkout. A $100 deductible applies per visit. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at " + P.ascentClaims + ".";
+const ADDRESS = `${B.entity} &middot; ${B.postal}`;
 
 // Guard: the voice rules are enforced at build time, not by hoping.
 function lint(e) {
@@ -54,17 +59,17 @@ function cardHtml(card) {
   }).join("");
   return pad(`
     <div style="${F};font-weight:700;font-size:10px;line-height:1;color:${C.ink};letter-spacing:0.16em;padding-bottom:10px">${card.title}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="background-color:${C.card};border-radius:14px">${rows}</table>`, 22);
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="background-color:${C.card};border-radius:${L.radius}px">${rows}</table>`, 22);
 }
 
 function heroHtml(h) {
   return pad(`
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.ink}" style="background-color:${C.ink};border-radius:14px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.ink}" style="background-color:${C.ink};border-radius:${L.radius}px">
       <tr><td style="padding:24px 26px">
         <div style="${F};font-weight:600;font-size:11px;line-height:1;color:${C.mute};letter-spacing:0.14em">${h.label}</div>
         <div style="${F};font-weight:800;font-size:36px;line-height:1.1;color:${C.cyan};letter-spacing:-0.03em;padding-top:12px">${h.big}</div>
-        <div style="${F};font-weight:600;font-size:13px;line-height:1.5;color:#FFFFFF;padding-top:10px">${h.sub}</div>
-        <div style="${F};font-weight:400;font-size:12px;line-height:1.6;color:#A9BACB;padding-top:8px">${h.fine}</div>
+        <div style="${F};font-weight:600;font-size:13px;line-height:1.5;color:${C.white};padding-top:10px">${h.sub}</div>
+        <div style="${F};font-weight:400;font-size:12px;line-height:1.6;color:${C.inkMuted};padding-top:8px">${h.fine}</div>
       </td></tr>
     </table>`, 22);
 }
@@ -78,11 +83,11 @@ function html(e) {
 <div style="display:none;font-size:1px;color:${C.page};line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden">${e.preheader}${"&#8204;&nbsp;".repeat(18)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.page}" style="background-color:${C.page}">
 <tr><td align="center" style="padding:26px 12px">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#FFFFFF;border-radius:16px;overflow:hidden">
+<table role="presentation" width="${L.emailWidth}" cellpadding="0" cellspacing="0" border="0" style="width:${L.emailWidth}px;max-width:100%;background-color:${C.white};border-radius:${L.radiusOuter}px;overflow:hidden">
 
   <tr><td bgcolor="${C.ink}" align="center" style="background-color:${C.ink};padding:26px 32px">
-    <div style="${F};font-weight:800;font-size:22px;line-height:1;color:#FFFFFF;letter-spacing:-0.01em">Drive<span style="color:${C.cyan}">One</span>Direct</div>
-    <div style="${F};font-weight:600;font-size:9px;line-height:1;color:${C.mute};letter-spacing:0.22em;padding-top:8px">EXTENDED SERVICE CONTRACT</div>
+    <div style="${F};font-weight:800;font-size:22px;line-height:1;color:${C.white};letter-spacing:-0.01em">${B.wordmark[0]}<span style="color:${C.cyan}">${B.wordmark[1]}</span>${B.wordmark[2]}</div>
+    <div style="${F};font-weight:600;font-size:9px;line-height:1;color:${C.mute};letter-spacing:0.22em;padding-top:8px">${T.brand.productDescriptor}</div>
   </td></tr>
 
   ${pad(`<div style="${F};font-weight:700;font-size:10px;line-height:1;color:${C.link};letter-spacing:0.16em">${e.eyebrow}</div>`, 30)}
@@ -91,14 +96,14 @@ function html(e) {
   ${cardHtml(e.card)}
   ${heroHtml(e.hero)}
   ${pad(p(e.after), 18)}
-  ${pad(`<a href="{{{RESUME_URL}}}" style="background-color:${C.cyan};color:${C.ink};${F};font-weight:700;font-size:15px;line-height:1;text-decoration:none;padding:15px 30px;border-radius:999px;display:inline-block">${e.cta}</a>`, 22, 4)}
+  ${pad(`<a href="{{{RESUME_URL}}}" style="background-color:${C.cyan};color:${C.ink};${F};font-weight:700;font-size:15px;line-height:1;text-decoration:none;padding:${L.buttonPadding};border-radius:${L.radiusPill}px;display:inline-block">${e.cta}</a>`, 22, 4)}
   ${pad(`<div style="${F};font-weight:400;font-size:12px;line-height:1.6;color:${C.mute}">${e.ctaNote}</div>`, 12)}
-  ${pad(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tint}" style="background-color:${C.tint};border-radius:12px"><tr><td style="padding:16px 20px">${p(e.ps, "font-size:14px;")}</td></tr></table>`, 26)}
+  ${pad(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tint}" style="background-color:${C.tint};border-radius:${L.radius}px"><tr><td style="padding:16px 20px">${p(e.ps, "font-size:14px;")}</td></tr></table>`, 26)}
   <tr><td style="height:30px;font-size:0;line-height:0">&nbsp;</td></tr>
 
   <tr><td bgcolor="${C.ink}" style="background-color:${C.ink};padding:26px 32px">
-    <div style="${F};font-weight:700;font-size:13px;line-height:1.5;color:#FFFFFF;padding-bottom:4px">Stuck on the payment step?</div>
-    <div style="${F};font-weight:400;font-size:13px;line-height:1.6;color:#A9BACB">Call Budco Financial Services, who run the 0% plan, at <a href="tel:18883527901" style="color:${C.cyan};text-decoration:none;font-weight:700">888-352-7901</a>. Coverage or claims questions go to Ascent, the administrator, at <a href="tel:18666607003" style="color:${C.cyan};text-decoration:none;font-weight:700">866-660-7003</a>. Neither will sell you anything.</div>
+    <div style="${F};font-weight:700;font-size:13px;line-height:1.5;color:${C.white};padding-bottom:4px">Stuck on the payment step?</div>
+    <div style="${F};font-weight:400;font-size:13px;line-height:1.6;color:${C.inkMuted}">Call Budco Financial Services, who run the 0% plan, at <a href="tel:1${P.budcoPayments.replace(/-/g,"")}" style="color:${C.cyan};text-decoration:none;font-weight:700">${P.budcoPayments}</a>. Coverage or claims questions go to Ascent, the administrator, at <a href="tel:1${P.ascentClaims.replace(/-/g,"")}" style="color:${C.cyan};text-decoration:none;font-weight:700">${P.ascentClaims}</a>. Neither will sell you anything.</div>
   </td></tr>
   <tr><td bgcolor="${C.page}" style="background-color:${C.page};padding:22px 32px 30px">
     <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute}">${FOOTER_LEGAL}</div>
@@ -116,7 +121,7 @@ const strip = (s) => s.replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").repla
 function text(e) {
   const lines = [strip(e.headline), "", ...e.body.map(strip), ""];
   if (e.card) { lines.push(strip(e.card.title)); e.card.rows.forEach(([k, v]) => lines.push(`${strip(k)}: ${strip(v)}`)); lines.push(""); }
-  lines.push(`${strip(e.hero.label)}: ${strip(e.hero.big)}, ${strip(e.hero.sub)}. ${strip(e.hero.fine)}`, "", strip(e.after), "", `${strip(e.cta)} {{{RESUME_URL}}}`, strip(e.ctaNote), "", strip(e.ps), "", "Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.", "", "---", strip(FOOTER_LEGAL), "", strip(ADDRESS), "Contract {{{CONTRACT}}} - Reference {{{REF}}}", "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
+  lines.push(`${strip(e.hero.label)}: ${strip(e.hero.big)}, ${strip(e.hero.sub)}. ${strip(e.hero.fine)}`, "", strip(e.after), "", `${strip(e.cta)} {{{RESUME_URL}}}`, strip(e.ctaNote), "", strip(e.ps), "", `Stuck on the payment step? Budco Financial Services: ${P.budcoPayments}. Coverage or claims: Ascent, ${P.ascentClaims}.`, "", "---", strip(FOOTER_LEGAL), "", strip(ADDRESS), "Contract {{{CONTRACT}}} - Reference {{{REF}}}", "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
   return lines.join("\n");
 }
 

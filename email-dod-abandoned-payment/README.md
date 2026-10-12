@@ -108,3 +108,10 @@ RESUME_URL decision (Ryan, 2026-10-12): the pre-filled quote link. Copy was soft
 Elevate rating API (`POST /api/partners/rating`, header `x-captured-api-key`) returns
 `monthly_payment` and `down_payment` per option; use it to verify the derived MONTHLY once
 the key is on hand. It has no resume URL.
+
+Pricing note (Ryan, 2026-10-12): the Elevate rating API (`partner_slug` = `driveone-direct`)
+confirms the MONTHLY formula to the cent: down = 5% of price, monthly = (price minus down)
+divided by the financing term. Current API prices for the three launch enrollees ran higher
+than their signed contracts; Ryan's decision is to keep the series running as is, since
+rates may have been updated after they signed and the checkout page shows the live price
+before anyone pays. Do not pause the automation on a price mismatch alone.

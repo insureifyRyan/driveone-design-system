@@ -1,0 +1,30 @@
+{
+  "alerted": {
+    "c9360187-48c4-4fd7-9da2-a275a099ff80:checkout": {
+      "contract": "20260903-d7474a20",
+      "at": "2026-10-12T20:08:42.795Z",
+      "seeded": true
+    },
+    "b5d8d79b-be93-47e8-a415-14169b9f494e:checkout": {
+      "contract": "20260915-495a9fa4",
+      "at": "2026-10-12T20:08:42.795Z",
+      "seeded": true
+    },
+    "a521b9be-6790-4cde-aaed-7c03b661dd1f:checkout": {
+      "contract": "20260926-0b786de0",
+      "at": "2026-10-12T20:08:42.795Z",
+      "seeded": true
+    },
+    "4c5ea1a6-fe66-41fc-97e7-15653573224b:checkout": {
+      "contract": "20260926-d3900ddd",
+      "at": "2026-10-12T20:08:42.795Z",
+      "seeded": true
+    },
+    "713ba20d-bc07-4471-95a7-92089e5c5eb8:checkout": {
+      "contract": "20261010-7183d26c",
+      "at": "2026-10-12T20:08:42.795Z",
+      "seeded": true
+    }
+  },
+  "updated_at": "2026-10-12T20:08:42.795Z"
+}

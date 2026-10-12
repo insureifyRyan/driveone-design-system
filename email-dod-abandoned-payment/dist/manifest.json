@@ -17,7 +17,7 @@
       "RESUME_URL": "https://www.driveonedirect.com/#quote",
       "REF": "on file"
     },
-    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins; never declare them. Fallbacks must never look numeric. RESUME_URL must reopen the Budco payment step for this contract; confirm the exact link with Asad/Resolv before enrolling anyone."
+    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins; never declare them. Fallbacks must never look numeric. RESUME_URL is the pre-filled quote link (year, make, mileage, term, ref, UTMs, #quote). Decided by Ryan 2026-10-12. It reopens checkout with the vehicle and term filled in; it does not resume the signed Budco session."
   },
   "emails": [
     {
@@ -31,7 +31,7 @@
       "subjectAlt": "{{{FIRST_NAME}}}, you stopped at the easy part",
       "preheader": "The contract is written. It is waiting on the payment you already built.",
       "goal": "Name exactly where they stopped. Make finishing feel like the smallest thing on their list.",
-      "bytes": 11070
+      "bytes": 11088
     },
     {
       "step": 2,
@@ -44,7 +44,7 @@
       "subjectAlt": "A form should not be the hardest part of owning a {{{VEHICLE}}}",
       "preheader": "Two things stop most payments. Both are fixable in under five minutes.",
       "goal": "Remove the practical blocker. Budco payment help line and the two reasons payments fail.",
-      "bytes": 11177
+      "bytes": 11301
     },
     {
       "step": 3,
@@ -70,7 +70,7 @@
       "subjectAlt": "A repair bill is a surprise party you have to pay for",
       "preheader": "Everything about your car has a known price except the thing that breaks.",
       "goal": "The $100 deductible. Repairs are the only part of ownership with no sticker price.",
-      "bytes": 11038
+      "bytes": 11065
     },
     {
       "step": 5,
@@ -83,7 +83,7 @@
       "subjectAlt": "No, you do not have to drive it back to where you bought it",
       "preheader": "Any ASE-certified repair shop in the country. Your mechanic counts.",
       "goal": "Any ASE-certified shop. No captive dealer. We pay the shop directly.",
-      "bytes": 11127
+      "bytes": 11120
     },
     {
       "step": 6,
@@ -96,7 +96,7 @@
       "subjectAlt": "The loss that happens without anything breaking",
       "preheader": "Diminished Value Protection is included. Most people have never heard of it. That is the point.",
       "goal": "Diminished Value Protection, up to $5,000. The benefit nobody else includes.",
-      "bytes": 10817
+      "bytes": 10802
     },
     {
       "step": 7,
@@ -122,7 +122,7 @@
       "subjectAlt": "Thirty days to decide you were wrong about us",
       "preheader": "Full refund in 30 days if no claim has been paid. Prorated after that. No hostage situation.",
       "goal": "Remove the commitment fear. 30 day full refund, prorated after, transferable.",
-      "bytes": 11242
+      "bytes": 11231
     },
     {
       "step": 9,
@@ -135,7 +135,7 @@
       "subjectAlt": "This email is the salesperson. It is not very pushy.",
       "preheader": "No hold music, no manager to check with, no Tuesday callback. The whole thing is online.",
       "goal": "Own the no call center promise. The online model is the product.",
-      "bytes": 13021
+      "bytes": 13016
     },
     {
       "step": 10,
@@ -148,7 +148,7 @@
       "subjectAlt": "Final note about your {{{VEHICLE}}} contract",
       "preheader": "This is the last email in the series. The contract stays written. We stop writing.",
       "goal": "Graceful close. No fake deadline. Leave the door open and stop.",
-      "bytes": 11178
+      "bytes": 11208
     }
   ]
 }

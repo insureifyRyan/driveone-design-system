@@ -11,7 +11,7 @@ Status: Written, not yet active
 
 TO FINISH IT: {{{DOWN}}} today, then {{{MONTHLY}}} a month for {{{TERM}}}. 0% APR. No finance charge. No credit check. That is the plan, not a teaser.
 
-Nothing reset. Nothing expired. The link below opens the payment step for this exact contract, not a new quote.
+Nothing reset. Nothing expired. The link below reopens checkout for your {{{VEHICLE}}} with the same plan and term, ready to pay.
 
 Finish my payment -> {{{RESUME_URL}}}
 Takes about as long as reading this sentence twice.

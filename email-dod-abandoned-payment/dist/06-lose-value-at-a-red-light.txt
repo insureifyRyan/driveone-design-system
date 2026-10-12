@@ -13,7 +13,7 @@ STILL WAITING ON YOU: {{{DOWN}}} today, then {{{MONTHLY}}} a month at 0% APR. Th
 No other direct plan we know of includes this. We are not going to name them. You can check. Bring snacks.
 
 Finish it before the red light does -> {{{RESUME_URL}}}
-Opens the payment step for contract {{{CONTRACT}}}.
+Reopens your {{{VEHICLE}}} checkout.
 
 If you do get rear ended, the other thing to do is take a photo of their plate. We cover the value. We cannot cover forgetting to do that.
 

@@ -14,7 +14,7 @@ THE KNOWN NUMBER: $100, per covered visit, on your {{{VEHICLE}}}. Still {{{MONTH
 A transmission has never once negotiated. A $100 deductible has never once changed its mind. Pick which one you want to deal with.
 
 Make the repair a known number -> {{{RESUME_URL}}}
-Finishes the payment on contract {{{CONTRACT}}}.
+Reopens your {{{VEHICLE}}} checkout. Contract {{{CONTRACT}}} stays on file.
 
 Reminder: coverage is not active until the payment goes through. The contract is written. It is not working yet.
 

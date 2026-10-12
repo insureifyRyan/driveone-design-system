@@ -90,3 +90,21 @@ node build.mjs      # dist/*.html, dist/*.txt, dist/manifest.json
 
 The build fails on an em dash, an en dash, an exclamation point, the word warranty, any
 claim that coverage is active, or a numeric variable in a subject line.
+
+## Live (2026-10-12)
+
+| Thing | ID |
+|---|---|
+| Resend segment "DriveOne Direct: Finish Your Payment" | `3845a57f-a6f8-44fb-8da2-41eaed5f5f41` |
+| Event `dod.payment.abandoned` | `01a1325a-9ab8-7309-8d89-6c72f384a4f1` |
+| Automation (ENABLED) | `01a13268-a919-7179-b79b-597b0c570e10` |
+| Templates E1 to E10 | `6a18edb5-835c-431d-97c4-9ab89522c226`, `b02be909-ec17-4621-ada0-9508b05bc8cb`, `7171d1f6-9fe3-43e3-8bd8-833fcdd445d2`, `f2fd121f-00e7-48c2-bfca-f6f6396b7bf3`, `9a793c8f-13b8-409e-8362-bf4adac8f565`, `13e1531d-3ecf-45e3-8697-bb557abeb53a`, `7469842b-1d89-4d38-a13d-0c4033586f9b`, `2e56031f-cd7d-4a32-bb24-1b08aa61fb87`, `dff8dbf0-4fcb-40be-9596-dceb2b45ee2b`, `721a3067-07e3-4bb7-9660-5f7badfb11f2` (aliases `dod-payment-e01..e10`) |
+| Daily enrollment + suppression job | `trig_01NW9DxgJ6RSydSpnLckA9z7`, 9:41 AM ET |
+| Ledger | Project doc `claude/dod-finish-payment-enrollment.md` |
+
+RESUME_URL decision (Ryan, 2026-10-12): the pre-filled quote link. Copy was softened from
+"this exact contract" to "reopens checkout with your vehicle and term filled in".
+
+Elevate rating API (`POST /api/partners/rating`, header `x-captured-api-key`) returns
+`monthly_payment` and `down_payment` per option; use it to verify the derived MONTHLY once
+the key is on hand. It has no resume URL.

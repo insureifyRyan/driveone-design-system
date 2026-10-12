@@ -14,7 +14,7 @@ WHAT IT TAKES TO TRY IT: {{{DOWN}}}, then {{{MONTHLY}}} a month, 0% APR. You can
 A company that locks the door is telling you something about the room. We would rather you walk in, look around, and decide to stay.
 
 Start the 30 days -> {{{RESUME_URL}}}
-Finishes contract {{{CONTRACT}}}. The clock starts when it is active.
+Reopens your checkout. The clock starts when it is active.
 
 Transferable coverage also makes your {{{VEHICLE}}} easier to sell later. Buyers like a car that comes with a plan. We would say that, but it also happens to be true.
 

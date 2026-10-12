@@ -1,7 +1,7 @@
 We said we would stop. This is us stopping.
 
 Ten emails is enough. Either you are going to finish the payment or you are not, and a seventh reminder about roadside assistance was never going to be the thing that decided it.
-So here is where it stands. The contract for your {{{VEHICLE}}} is still written. The payment step still opens from the link below. If pricing for your vehicle changes in the future, the page will tell you before you pay, not after.
+So here is where it stands. The contract for your {{{VEHICLE}}} is still written. Checkout still opens from the link below, with your vehicle and term filled in. If pricing for your vehicle changes in the future, the page will tell you before you pay, not after.
 
 FOR THE RECORD
 Vehicle: {{{VEHICLE}}}

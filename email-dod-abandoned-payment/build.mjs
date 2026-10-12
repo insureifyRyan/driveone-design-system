@@ -143,7 +143,7 @@ const strip = (s) => s.replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").repla
 function text(e) {
   const lines = [strip(e.headline), "", ...e.body.map(strip), ""];
   if (e.card) { lines.push(strip(e.card.title)); e.card.rows.forEach(([k, v]) => lines.push(`${strip(k)}: ${strip(v)}`)); lines.push(""); }
-  if (e.video) lines.push(`${strip(e.video.title)}: ${e.video.url}?${e.video.utm}`, "");
+  if (e.video && e.video.url) lines.push(`${strip(e.video.title)}: ${e.video.url}?${e.video.utm}`, "");
   lines.push(`${strip(e.hero.label)}: ${strip(e.hero.big)}, ${strip(e.hero.sub)}. ${strip(e.hero.fine)}`, "", strip(e.after), "", `${strip(e.cta)} {{{RESUME_URL}}}`, strip(e.ctaNote), "", strip(e.ps), "", `Stuck on the payment step? Budco Financial Services: ${P.budcoPayments}. Coverage or claims: Ascent, ${P.ascentClaims}.`, "", "---", strip(FOOTER_LEGAL), "", strip(ADDRESS), "Contract {{{CONTRACT}}} - Reference {{{REF}}}", "Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}");
   return lines.join("\n");
 }

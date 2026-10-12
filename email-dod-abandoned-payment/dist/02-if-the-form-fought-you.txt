@@ -1,21 +1,19 @@
 A payment form should never be the hardest part of owning a car.
 
 If you stopped because the page gave you trouble, that is on us to fix, not you. Nearly every stalled payment comes down to one of two things.
-One: the card declined or the bank wanted a second look. Two: the page timed out between signing and paying. Both are boring. Both are five minute fixes.
+One: the card declined or the bank wanted a second look. Two: the page timed out between signing and paying. Both are boring. Both are five minute fixes. The link below reopens checkout with your {{{VEHICLE}}} filled in; Budco can also finish it over the phone against your contract number.
 
 TWO WAYS TO FINISH
-Online: Reopen the payment step below
+Online: Reopen checkout below
 By phone: Budco payments, 888-352-7901
 Have ready: Contract {{{CONTRACT}}}
 Cost to call: Nothing
-
-The payment step, in real time: ?utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment&utm_content=e02_video
 
 STILL THE SAME NUMBERS: {{{MONTHLY}}} a month, {{{DOWN}}} down, {{{TERM}}}, for your {{{VEHICLE}}}. 0% APR. Budco runs the payment plan. Ascent runs the coverage. We run the website. Everyone stays in their lane.
 
 Budco is the payment company behind the 0% plan. They are good on the phone and they will not try to sell you anything, because they do not have anything to sell you.
 
-Reopen the payment step -> {{{RESUME_URL}}}
+Reopen my checkout -> {{{RESUME_URL}}}
 Or call Budco at 888-352-7901, weekdays. Say the contract number.
 
 If it was neither of those and you just changed your mind, that is allowed. Hit unsubscribe and we will go quietly.

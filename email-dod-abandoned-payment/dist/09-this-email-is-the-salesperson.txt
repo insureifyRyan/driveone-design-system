@@ -16,7 +16,7 @@ SAME AS DAY ONE: {{{MONTHLY}}} a month, {{{DOWN}}} down, 0% APR, {{{TERM}}}. Sti
 Open the link at 11pm in a kitchen if that is when you have forty seconds. It does not care what you are wearing.
 
 Finish it without talking to anyone -> {{{RESUME_URL}}}
-Payment step for contract {{{CONTRACT}}}.
+Reopens your {{{VEHICLE}}} checkout.
 
 We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it.
 

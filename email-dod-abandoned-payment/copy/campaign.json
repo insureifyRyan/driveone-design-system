@@ -18,7 +18,7 @@
       "RESUME_URL": "https://www.driveonedirect.com/#quote",
       "REF": "on file"
     },
-    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins; never declare them. Fallbacks must never look numeric. RESUME_URL must reopen the Budco payment step for this contract; confirm the exact link with Asad/Resolv before enrolling anyone."
+    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins; never declare them. Fallbacks must never look numeric. RESUME_URL is the pre-filled quote link (year, make, mileage, term, ref, UTMs, #quote). Decided by Ryan 2026-10-12. It reopens checkout with the vehicle and term filled in; it does not resume the signed Budco session."
   },
   "emails": [
     {
@@ -63,7 +63,7 @@
         "sub": "then {{{MONTHLY}}} a month for {{{TERM}}}",
         "fine": "0% APR. No finance charge. No credit check. That is the plan, not a teaser."
       },
-      "after": "Nothing reset. Nothing expired. The link below opens the payment step for this exact contract, not a new quote.",
+      "after": "Nothing reset. Nothing expired. The link below reopens checkout for your {{{VEHICLE}}} with the same plan and term, ready to pay.",
       "cta": "Finish my payment &rarr;",
       "ctaNote": "Takes about as long as reading this sentence twice.",
       "ps": "Over the next few weeks you will get one short email at a time about what this coverage actually does for your {{{VEHICLE}}}. No countdown clocks. An unsubscribe link on every one."
@@ -81,14 +81,14 @@
       "headline": "A payment form should<br>never be the hardest part<br>of owning a car.",
       "body": [
         "If you stopped because the page gave you trouble, that is on us to fix, not you. Nearly every stalled payment comes down to one of two things.",
-        "One: the card declined or the bank wanted a second look. Two: the page timed out between signing and paying. Both are boring. Both are five minute fixes."
+        "One: the card declined or the bank wanted a second look. Two: the page timed out between signing and paying. Both are boring. Both are five minute fixes. The link below reopens checkout with your {{{VEHICLE}}} filled in; Budco can also finish it over the phone against your contract number."
       ],
       "card": {
         "title": "TWO WAYS TO FINISH",
         "rows": [
           [
             "Online",
-            "Reopen the payment step below"
+            "Reopen checkout below"
           ],
           [
             "By phone",
@@ -111,7 +111,7 @@
         "fine": "0% APR. Budco runs the payment plan. Ascent runs the coverage. We run the website. Everyone stays in their lane."
       },
       "after": "Budco is the payment company behind the 0% plan. They are good on the phone and they will not try to sell you anything, because they do not have anything to sell you.",
-      "cta": "Reopen the payment step &rarr;",
+      "cta": "Reopen my checkout &rarr;",
       "ctaNote": "Or call Budco at 888-352-7901, weekdays. Say the contract number.",
       "ps": "If it was neither of those and you just changed your mind, that is allowed. Hit unsubscribe and we will go quietly.",
       "video": {
@@ -119,7 +119,7 @@
         "thumb": "",
         "eyebrow": "THE PART YOU STOPPED ON",
         "title": "The payment step, in real time",
-        "line": "31 seconds on a phone. No cuts. This is the screen the link below opens.",
+        "line": "31 seconds on a phone. No cuts. This is the checkout the link below opens.",
         "cta": "Watch it first",
         "utm": "utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment&utm_content=e02_video",
         "note": "Card is hidden until url is set. See VIDEO-E2-PAYMENT.md."
@@ -196,7 +196,7 @@
       },
       "after": "A transmission has never once negotiated. A $100 deductible has never once changed its mind. Pick which one you want to deal with.",
       "cta": "Make the repair a known number &rarr;",
-      "ctaNote": "Finishes the payment on contract {{{CONTRACT}}}.",
+      "ctaNote": "Reopens your {{{VEHICLE}}} checkout. Contract {{{CONTRACT}}} stays on file.",
       "ps": "Reminder: coverage is not active until the payment goes through. The contract is written. It is not working yet."
     },
     {
@@ -243,7 +243,7 @@
       },
       "after": "The shop calls the administrator before touching anything. That one phone call is the whole claims process. There is no form, no receipt to mail, no reimbursement to wait for.",
       "cta": "Activate it on my {{{VEHICLE}}} &rarr;",
-      "ctaNote": "Payment step only. Everything else is already done.",
+      "ctaNote": "Your vehicle and term are already filled in.",
       "ps": "ASE-certified means the technician passed a national exam. It does not mean they will be nice to you. That part is on the shop."
     },
     {
@@ -286,7 +286,7 @@
       },
       "after": "No other direct plan we know of includes this. We are not going to name them. You can check. Bring snacks.",
       "cta": "Finish it before the red light does &rarr;",
-      "ctaNote": "Opens the payment step for contract {{{CONTRACT}}}.",
+      "ctaNote": "Reopens your {{{VEHICLE}}} checkout.",
       "ps": "If you do get rear ended, the other thing to do is take a photo of their plate. We cover the value. We cannot cover forgetting to do that."
     },
     {
@@ -380,7 +380,7 @@
       },
       "after": "A company that locks the door is telling you something about the room. We would rather you walk in, look around, and decide to stay.",
       "cta": "Start the 30 days &rarr;",
-      "ctaNote": "Finishes contract {{{CONTRACT}}}. The clock starts when it is active.",
+      "ctaNote": "Reopens your checkout. The clock starts when it is active.",
       "ps": "Transferable coverage also makes your {{{VEHICLE}}} easier to sell later. Buyers like a car that comes with a plan. We would say that, but it also happens to be true."
     },
     {
@@ -427,7 +427,7 @@
       },
       "after": "Open the link at 11pm in a kitchen if that is when you have forty seconds. It does not care what you are wearing.",
       "cta": "Finish it without talking to anyone &rarr;",
-      "ctaNote": "Payment step for contract {{{CONTRACT}}}.",
+      "ctaNote": "Reopens your {{{VEHICLE}}} checkout.",
       "ps": "We are aware that an email saying nobody will contact you is, itself, contact. We have made peace with it.",
       "video": {
         "url": "https://www.youtube.com/shorts/HEg1cKDNbZY",
@@ -452,7 +452,7 @@
       "headline": "We said we would stop.<br>This is us stopping.",
       "body": [
         "Ten emails is enough. Either you are going to finish the payment or you are not, and a seventh reminder about roadside assistance was never going to be the thing that decided it.",
-        "So here is where it stands. The contract for your {{{VEHICLE}}} is still written. The payment step still opens from the link below. If pricing for your vehicle changes in the future, the page will tell you before you pay, not after."
+        "So here is where it stands. The contract for your {{{VEHICLE}}} is still written. Checkout still opens from the link below, with your vehicle and term filled in. If pricing for your vehicle changes in the future, the page will tell you before you pay, not after."
       ],
       "card": {
         "title": "FOR THE RECORD",

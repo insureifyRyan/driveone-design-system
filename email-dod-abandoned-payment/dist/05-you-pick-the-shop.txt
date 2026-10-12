@@ -14,7 +14,7 @@ WHAT THIS COSTS YOU: {{{MONTHLY}}} a month, 0% APR, {{{DOWN}}} down, {{{TERM}}}.
 The shop calls the administrator before touching anything. That one phone call is the whole claims process. There is no form, no receipt to mail, no reimbursement to wait for.
 
 Activate it on my {{{VEHICLE}}} -> {{{RESUME_URL}}}
-Payment step only. Everything else is already done.
+Your vehicle and term are already filled in.
 
 ASE-certified means the technician passed a national exam. It does not mean they will be nice to you. That part is on the shop.
 

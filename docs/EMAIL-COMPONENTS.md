@@ -2,7 +2,7 @@
 
 The shared parts of every DriveOne Direct email: the welcome email in the app, the
 abandoned quote drip in Resend, and the Finish Your Payment series in this repo. Three
-places render these. This is the one spec. Values come from `brand/driveone.tokens.json`;
+places render these. This is the one spec. Values come from `brand/driveone-direct.tokens.json`;
 the names in brackets are the token keys.
 
 Rules that apply to every component:
@@ -17,13 +17,13 @@ Rules that apply to every component:
 
 ## 1. Header
 
-Ink strip [color.ink], centered. Wordmark 22px / 800 / tracking -0.01em [type.wordmark].
+Ink strip [color.ink], centered. Wordmark 22px / 800 / tracking -0.01em [type.wordmark], followed by a 9px superscript TM in inkMuted [brand.wordmarkMark].
 Descriptor beneath it: 9px / 600 / tracking 0.22em, mutedText on ink [type.descriptor],
 reads EXTENDED SERVICE CONTRACT [brand.productDescriptor]. Padding 26px 32px.
 
 ```html
 <tr><td bgcolor="#0E1B2C" align="center" style="background-color:#0E1B2C;padding:26px 32px">
-  <div style="font-family:Helvetica,Arial,sans-serif;font-weight:800;font-size:22px;line-height:1;color:#FFFFFF;letter-spacing:-0.01em">Drive<span style="color:#1FBFEC">One</span>Direct</div>
+  <div style="font-family:Helvetica,Arial,sans-serif;font-weight:800;font-size:22px;line-height:1;color:#FFFFFF;letter-spacing:-0.01em">Drive<span style="color:#1FBFEC">One</span>Direct<sup style="font-size:9px;font-weight:600;line-height:0;vertical-align:super;color:#A9BACB;padding-left:1px">&trade;</sup></div>
   <div style="font-family:Helvetica,Arial,sans-serif;font-weight:600;font-size:9px;line-height:1;color:#8A99B5;letter-spacing:0.22em;padding-top:8px">EXTENDED SERVICE CONTRACT</div>
 </td></tr>
 ```
@@ -99,15 +99,15 @@ button, never before it.
 
 Ink strip, padding 26px 32px. Bold 13px white title, then 13px / 400 inkMuted body with
 phone numbers as cyan `tel:` links (700 weight, no underline). Carries the two numbers:
-Budco payments [brand.direct.phones.budcoPayments] and Ascent claims
-[brand.direct.phones.ascentClaims]. Always says that neither will sell you anything.
+Budco payments [brand.phones.budcoPayments] and Ascent claims
+[brand.phones.ascentClaims]. Always says that neither will sell you anything.
 
 ## 9. Legal footer
 
 Paper fill, padding 22px 32px 30px. 11px / 400 / line 1.65 legalText [type.legal]. Blocks in
 order, 10 to 12px apart: disclaimer paragraph, entity and postal line
-[brand.direct.entity, brand.direct.postal], Privacy · Terms · Unsubscribe links in
-legalText, then the contract and reference line. The disclaimer text is approved copy;
+[brand.entity, brand.postal], Privacy · Terms · YouTube · Unsubscribe links in
+legalText (YouTube carries UTMs: source email, medium the series name), then the contract and reference line. The disclaimer text is approved copy;
 change it only with sign off.
 
 ## 10. Preheader
@@ -130,5 +130,5 @@ characters. Complements the subject; never repeats it.
 | Dark help strip | no | yes | yes |
 | Legal footer | yes | yes | yes |
 
-When the next email surface is built, it reads `brand/driveone.tokens.json` and this file.
+When the next email surface is built, it reads `brand/driveone-direct.tokens.json` and this file.
 It does not copy hex values from another template.

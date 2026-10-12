@@ -4,6 +4,7 @@
 //
 //   node build.mjs            -> dist/*.html, dist/*.txt, dist/manifest.json, dist/preview.html
 //
+// Tokens: ../brand/driveone-direct.tokens.json (DTC only; the dealer program has its own).
 // Design mirrors the live driveonedirect.com welcome email and the dod-abandon
 // drip: #0E1B2C ink, #1FBFEC cyan, #EEF2F6 page, Helvetica, 600px white card,
 // table layout, inline styles, no webfonts, no JS.
@@ -17,8 +18,8 @@ const deck = JSON.parse(readFileSync(join(here, "copy/campaign.json"), "utf8"));
 const out = join(here, "dist");
 mkdirSync(out, { recursive: true });
 
-const T = JSON.parse(readFileSync(join(here, "../brand/driveone.tokens.json"), "utf8"));
-const B = T.brand.direct;
+const T = JSON.parse(readFileSync(join(here, "../brand/driveone-direct.tokens.json"), "utf8"));
+const B = T.brand;
 const F = `font-family:${T.font.body}`;
 const MONO = `font-family:${T.font.mono}`;
 // Every color below is a token. Add a token before adding a color.
@@ -86,8 +87,8 @@ function html(e) {
 <table role="presentation" width="${L.emailWidth}" cellpadding="0" cellspacing="0" border="0" style="width:${L.emailWidth}px;max-width:100%;background-color:${C.white};border-radius:${L.radiusOuter}px;overflow:hidden">
 
   <tr><td bgcolor="${C.ink}" align="center" style="background-color:${C.ink};padding:26px 32px">
-    <div style="${F};font-weight:800;font-size:22px;line-height:1;color:${C.white};letter-spacing:-0.01em">${B.wordmark[0]}<span style="color:${C.cyan}">${B.wordmark[1]}</span>${B.wordmark[2]}</div>
-    <div style="${F};font-weight:600;font-size:9px;line-height:1;color:${C.mute};letter-spacing:0.22em;padding-top:8px">${T.brand.productDescriptor}</div>
+    <div style="${F};font-weight:800;font-size:22px;line-height:1;color:${C.white};letter-spacing:-0.01em">${B.wordmark[0]}<span style="color:${C.cyan}">${B.wordmark[1]}</span>${B.wordmark[2]}<sup style="font-size:9px;font-weight:600;line-height:0;vertical-align:super;color:${C.inkMuted};padding-left:1px">${B.wordmarkMark}</sup></div>
+    <div style="${F};font-weight:600;font-size:9px;line-height:1;color:${C.mute};letter-spacing:0.22em;padding-top:8px">${B.productDescriptor}</div>
   </td></tr>
 
   ${pad(`<div style="${F};font-weight:700;font-size:10px;line-height:1;color:${C.link};letter-spacing:0.16em">${e.eyebrow}</div>`, 30)}
@@ -108,7 +109,7 @@ function html(e) {
   <tr><td bgcolor="${C.page}" style="background-color:${C.page};padding:22px 32px 30px">
     <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute}">${FOOTER_LEGAL}</div>
     <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute};padding-top:12px">${ADDRESS}</div>
-    <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute};padding-top:10px"><a href="https://www.driveonedirect.com/privacy" style="color:${C.mute}">Privacy</a> &middot; <a href="https://www.driveonedirect.com/terms" style="color:${C.mute}">Terms</a> &middot; <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${C.mute}">Unsubscribe</a></div>
+    <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute};padding-top:10px"><a href="https://www.driveonedirect.com/privacy" style="color:${C.mute}">Privacy</a> &middot; <a href="https://www.driveonedirect.com/terms" style="color:${C.mute}">Terms</a> &middot; <a href="${B.youtube}?utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment" style="color:${C.mute}">YouTube</a> &middot; <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${C.mute}">Unsubscribe</a></div>
     <div style="${F};font-weight:400;font-size:11px;line-height:1.65;color:${C.mute};padding-top:10px">Contract {{{CONTRACT}}} &middot; Reference {{{REF}}}</div>
   </td></tr>
 </table>

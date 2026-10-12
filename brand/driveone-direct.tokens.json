@@ -1,0 +1,134 @@
+{
+  "$comment": "DriveOne Direct (direct to consumer) email tokens. Separate from brand/driveone.tokens.json, which is the master for the dealer co-branded program (Bob Johnson etc). The two programs do not share neutrals, copy, or templates. Reference surfaces: the driveonedirect.com welcome email, the Resend dod-abandon drip, the Finish Your Payment series.",
+  "brand": {
+    "name": "DriveOne Direct",
+    "nameNote": "Always DriveOne Direct: one word DriveOne, then Direct. Never Drive One, never DriveOne alone when naming the product.",
+    "wordmark": [
+      "Drive",
+      "One",
+      "Direct"
+    ],
+    "wordmarkMark": "™",
+    "wordmarkNote": "Drive and Direct in white, One in cyan, no spaces, on ink, followed by a small superscript TM.",
+    "productDescriptor": "EXTENDED SERVICE CONTRACT",
+    "domain": "driveonedirect.com",
+    "youtube": "https://www.youtube.com/@driveonedirect",
+    "marketingSender": "DriveOne Direct <coverage@mail.driveonedirect.com>",
+    "replyTo": "support@driveonedirect.com",
+    "entity": "Insureify AI, Inc. DBA Kovara AI",
+    "postal": "304 South Jones Blvd, Las Vegas, NV 89107",
+    "administrator": "Ascent Administration Services, LLC",
+    "insurer": "Old Republic Insurance Company",
+    "phones": {
+      "ascentClaims": "866-660-7003",
+      "budcoPayments": "888-352-7901",
+      "roadside": "877-626-0880"
+    }
+  },
+  "color": {
+    "cyan": "#1FBFEC",
+    "cyanDark": "#1189B3",
+    "cyanSoft": "#EAF7FC",
+    "ink": "#0E1B2C",
+    "inkMuted": "#A9BACB",
+    "white": "#FFFFFF",
+    "paper": "#EEF2F6",
+    "cardFill": "#F4F6F9",
+    "rule": "#E3E8EF",
+    "bodyText": "#3D4A5C",
+    "mutedText": "#8A99B5",
+    "legalText": "#8A99B5"
+  },
+  "colorNotes": {
+    "cyanDark": "Links and eyebrows on white.",
+    "inkMuted": "Secondary text on ink (hero fine print, dark footer strip).",
+    "cyanSoft": "Tint fill for the callout card.",
+    "cardFill": "Fill for the label / value info card.",
+    "paper": "Page background behind the 600px card."
+  },
+  "font": {
+    "body": "Helvetica, Arial, sans-serif",
+    "mono": "'SF Mono', Menlo, Consolas, 'Courier New', monospace",
+    "fontNote": "Email clients do not load webfonts reliably. Helvetica is what the live emails render in."
+  },
+  "type": {
+    "$comment": "Email type scale in px. Line heights are unitless.",
+    "eyebrow": {
+      "size": 10,
+      "weight": 700,
+      "tracking": "0.16em",
+      "line": 1
+    },
+    "headline": {
+      "size": 27,
+      "weight": 700,
+      "tracking": "-0.02em",
+      "line": 1.25
+    },
+    "body": {
+      "size": 15,
+      "weight": 400,
+      "line": 1.65
+    },
+    "small": {
+      "size": 13,
+      "weight": 400,
+      "line": 1.6
+    },
+    "caption": {
+      "size": 12,
+      "weight": 400,
+      "line": 1.6
+    },
+    "legal": {
+      "size": 11,
+      "weight": 400,
+      "line": 1.65
+    },
+    "heroNumber": {
+      "size": 36,
+      "weight": 800,
+      "tracking": "-0.03em",
+      "line": 1.1
+    },
+    "cardLabel": {
+      "size": 14,
+      "weight": 400,
+      "line": 1.45
+    },
+    "cardValue": {
+      "size": 13,
+      "weight": 700,
+      "line": 1.45,
+      "font": "mono"
+    },
+    "wordmark": {
+      "size": 22,
+      "weight": 800,
+      "tracking": "-0.01em",
+      "line": 1
+    },
+    "descriptor": {
+      "size": 9,
+      "weight": 600,
+      "tracking": "0.22em",
+      "line": 1
+    },
+    "button": {
+      "size": 15,
+      "weight": 700,
+      "line": 1
+    }
+  },
+  "layout": {
+    "emailWidth": 600,
+    "gutter": 32,
+    "radius": 14,
+    "radiusOuter": 16,
+    "radiusPill": 999,
+    "pagePadding": 26,
+    "cardCellPadding": 13,
+    "heroPadding": 24,
+    "buttonPadding": "15px 30px"
+  }
+}

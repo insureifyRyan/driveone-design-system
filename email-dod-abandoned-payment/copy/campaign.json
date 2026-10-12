@@ -113,7 +113,17 @@
       "after": "Budco is the payment company behind the 0% plan. They are good on the phone and they will not try to sell you anything, because they do not have anything to sell you.",
       "cta": "Reopen the payment step &rarr;",
       "ctaNote": "Or call Budco at 888-352-7901, weekdays. Say the contract number.",
-      "ps": "If it was neither of those and you just changed your mind, that is allowed. Hit unsubscribe and we will go quietly."
+      "ps": "If it was neither of those and you just changed your mind, that is allowed. Hit unsubscribe and we will go quietly.",
+      "video": {
+        "url": "",
+        "thumb": "",
+        "eyebrow": "THE PART YOU STOPPED ON",
+        "title": "The payment step, in real time",
+        "line": "31 seconds on a phone. No cuts. This is the screen the link below opens.",
+        "cta": "Watch it first",
+        "utm": "utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment&utm_content=e02_video",
+        "note": "Card is hidden until url is set. See VIDEO-E2-PAYMENT.md."
+      }
     },
     {
       "step": 3,

@@ -9,6 +9,8 @@ By phone: Budco payments, 888-352-7901
 Have ready: Contract {{{CONTRACT}}}
 Cost to call: Nothing
 
+The payment step, in real time: ?utm_source=email&utm_medium=payment_series&utm_campaign=dod_finish_payment&utm_content=e02_video
+
 STILL THE SAME NUMBERS: {{{MONTHLY}}} a month, {{{DOWN}}} down, {{{TERM}}}, for your {{{VEHICLE}}}. 0% APR. Budco runs the payment plan. Ascent runs the coverage. We run the website. Everyone stays in their lane.
 
 Budco is the payment company behind the 0% plan. They are good on the phone and they will not try to sell you anything, because they do not have anything to sell you.

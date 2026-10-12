@@ -77,7 +77,7 @@ function heroHtml(h) {
 
 
 function videoHtml(v) {
-  if (!v) return "";
+  if (!v || !v.url) return "";
   const href = `${v.url}?${v.utm}`;
   return pad(`
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${C.line};border-radius:${L.radius}px">

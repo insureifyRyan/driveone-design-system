@@ -7,6 +7,32 @@
     "accentOpen": "[[",
     "accentClose": "]]"
   },
+  "smsNote": "SMS nurture for the UNSOLD: the same enrolled service customers the emails go to, who have not bought. Sent as the DEALERSHIP, never as DriveOne, matching the email channel.\n\nTHREE texts against ten emails, on purpose. Mirroring the email cadence would mean ten texts in sixty days, which earns STOPs, carrier filtering, and a dealer asking why their customers are complaining. Each one sits two or three days AFTER the email whose argument it reinforces, so it lands as a nudge on something already said rather than a new pitch: day 5 follows the day-3 repair-math email, day 21 follows the day-18 payment-plan email which is the strongest conversion lever we have, day 50 follows the day-48 eligibility-window email.\n\nEvery message opens with the store name because Sendblue sends from a plain number with no branded sender ID. Until each rooftop has its own number, naming the store in the first few words IS the branding, and it is also what stops a text from a strange number reading as spam.\n\nOpt-out language rides on the first and last message. CTIA guidance is the first message plus periodic reminders; three messages make the first and last the sensible pair.\n\nBodies are kept under about 160 characters so each is one segment. The quote_url is a short link, and the merge tags resolve to the same values the emails use.",
+  "sms": [
+    {
+      "step": 1,
+      "sendDay": 5,
+      "slug": "sms-01-no-contract-on-file",
+      "goal": "Introduce the channel, name the store, hand them their own price and link",
+      "media": "dealerLogo",
+      "mediaNote": "The only MMS in the sequence, and the only one that earns the cost. A first text from an unknown number is the one most likely to be read as spam, and the store's own logo rendering above the message is what makes it visibly the dealership. Later messages are plain SMS: by then the number is recognised, and a logo on every text is just a bigger bill.",
+      "body": "{{dealer_name}} Service: your {{vehicle_year}} {{vehicle_model}} has no service contract on file. {{monthly_payment}}/mo covers it. 4 min online: {{quote_url}} Reply STOP to opt out."
+    },
+    {
+      "step": 2,
+      "sendDay": 21,
+      "slug": "sms-02-zero-percent",
+      "goal": "Reinforce the day-18 payment-plan email, the strongest affordability lever",
+      "body": "{{dealer_name}} Service: {{monthly_payment}}/mo on your {{vehicle_model}}, 0% for {{payment_term}} months, no credit check. Same shop, same people: {{quote_url}}"
+    },
+    {
+      "step": 3,
+      "sendDay": 50,
+      "slug": "sms-03-the-window",
+      "goal": "Reinforce the day-48 eligibility email, then stop",
+      "body": "{{dealer_name}} Service: last note on your {{vehicle_model}}. Age and mileage limits mean it gets harder to add. {{quote_url}} Reply STOP to opt out."
+    }
+  ],
   "emails": [
     {
       "step": 1,

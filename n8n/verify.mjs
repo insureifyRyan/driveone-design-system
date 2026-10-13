@@ -43,6 +43,7 @@ const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_I
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
   '07-scorecard.json', '08-sales-alert.json', '09-sms-send.json',
+  '10-sms-nurture.json',
 ].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
@@ -689,6 +690,132 @@ check('a sale can never be announced twice', () => {
   const url = nodeNamed(load('08-sales-alert.json'), 'Post Sale To Slack').parameters.url;
   assert(/\$vars\.SLACK_ALERT_WEBHOOK/.test(url), 'sales alert does not post to the Slack webhook variable');
   return 'insert is the claim, guarded by the quote_id primary key';
+});
+
+check('an SMS body fits one segment and names the store', () => {
+  // WHY: a plain SMS over 160 GSM-7 characters is silently split and billed as
+  // two, and carriers treat multi-segment marketing traffic worse. The limit is
+  // easy to blow by one word while editing, and nothing downstream complains,
+  // so the first sign is the bill. Measured against the LONGEST vehicle model
+  // in the live cohort rather than a short one, because the merge tag is what
+  // pushes a body over: "Grand Cherokee" costs eight characters more than
+  // "Escape" and that was the difference on message 3.
+  const deck = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
+  assert(Array.isArray(deck.sms) && deck.sms.length, 'the deck carries no SMS copy');
+
+  // Worst case the live data can produce, not a convenient example.
+  const worst = { model: 'Grand Cherokee', payment: '$136.39', url: 'https://do1.co/a7x9k2' };
+  const render = (body, dealerName) => body
+    .replace(/\{\{dealer_name\}\}/g, dealerName)
+    .replace(/\{\{vehicle_year\}\}/g, '2019')
+    .replace(/\{\{vehicle_model\}\}/g, worst.model)
+    .replace(/\{\{monthly_payment\}\}/g, worst.payment)
+    .replace(/\{\{payment_term\}\}/g, '36')
+    .replace(/\{\{quote_url\}\}/g, worst.url);
+
+  const dealer = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
+  const dealerName = (dealer.dealer && (dealer.dealer.displayName || dealer.dealer.name)) || dealer.id;
+  const lengths = [];
+  for (const s of deck.sms) {
+    const text = render(s.body, dealerName);
+
+    // Unresolved merge tag: it would go out as literal braces.
+    const leftover = text.match(/\{\{[a-z_]+\}\}/g);
+    assert(!leftover, `SMS ${s.step} has unresolved merge tags: ${leftover && leftover.join(', ')}`);
+
+    // DEALER BRANDED. Sendblue sends from a bare number with no branded sender
+    // ID, so naming the store in the opening words IS the branding, and it is
+    // what stops a text from an unknown number reading as spam.
+    assert(text.slice(0, 40).includes(dealerName),
+      `SMS ${s.step} does not name the dealer up front: "${text.slice(0, 40)}"`);
+    // Never send as DriveOne on this channel: it is the dealer's customer.
+    assert(!/\bDriveOne\b/.test(text), `SMS ${s.step} says DriveOne; this channel is the dealership`);
+
+    // MMS carries a much larger text allowance, so the 160 rule is for SMS only.
+    if (!s.media) {
+      assert(text.length <= 160,
+        `SMS ${s.step} is ${text.length} chars with "${worst.model}", over one segment`);
+    }
+    lengths.push(`${s.step}:${text.length}${s.media ? 'mms' : ''}`);
+  }
+
+  // Opt-out on the first and last message. CTIA wants it on the first plus
+  // periodic reminders; with three messages that is the first and the last.
+  const first = deck.sms[0], last = deck.sms[deck.sms.length - 1];
+  for (const s of [first, last]) {
+    assert(/\bSTOP\b/.test(s.body), `SMS ${s.step} carries no STOP instruction`);
+  }
+
+  // The cadence must stay far sparser than the email one. Ten texts in sixty
+  // days earns opt-outs, carrier filtering, and an angry dealer.
+  assert(deck.sms.length <= 4,
+    `${deck.sms.length} texts is too many against a 60 day sequence`);
+  const days = deck.sms.map((s) => s.sendDay);
+  for (let i = 1; i < days.length; i++) {
+    assert(days[i] - days[i - 1] >= 10,
+      `SMS ${deck.sms[i].step} is only ${days[i] - days[i - 1]} days after the previous one`);
+  }
+
+  return `${deck.sms.length} texts, days ${days.join('/')}, chars ${lengths.join(' ')}`;
+});
+
+check('a late enrolment gets one text, not the whole backlog', () => {
+  // WHY: the schedule is a list of day offsets, so the obvious implementation
+  // picks "the next unsent step whose day has passed". For somebody enrolled
+  // late, or paused and resumed, that is step 1 today, step 2 tomorrow, step 3
+  // the day after: three texts in three days to a person who has had none. On
+  // email that is clumsy. On SMS it is an opt-out, a carrier complaint, and a
+  // dealer asking what we are doing to their customers. The rule is therefore
+  // the HIGHEST due step, so a late joiner lands where the sequence actually
+  // is. This runs the real node code rather than asserting on its text.
+  const code = nodeNamed(load('10-sms-nurture.json'), 'Render Text').parameters.jsCode;
+  const run = (rows) => new Function('$input', code)(
+    { all: () => rows.map((r) => ({ json: r })) });
+
+  const base = {
+    customer_id: 1, phone_e164: '+15551234567', quote_url: 'https://do1.co/a7x9k2',
+    monthly_payment: 136.39, payment_term: 36,
+    vehicle_year: 2019, vehicle_model: 'ESCAPE', sms_step_sent: 0,
+  };
+  const aged = (days) => new Date(Date.now() - days * 86400000).toISOString();
+
+  // Nothing is due on day 0: the first text is day 5.
+  assert(run([{ ...base, created_at: aged(0) }]).length === 0,
+    'a brand new enrolment is texted immediately');
+
+  // Day 6, nothing sent: step 1.
+  const day6 = run([{ ...base, created_at: aged(6) }]);
+  assert(day6.length === 1 && day6[0].json.step === 1, 'step 1 is not due on day 6');
+
+  // Day 6 with step 1 already sent: nothing until day 21.
+  assert(run([{ ...base, created_at: aged(6), sms_step_sent: 1 }]).length === 0,
+    'a step is re-sent after it has already gone');
+
+  // THE CASE THIS CHECK EXISTS FOR. Day 55, nothing ever sent. One text, and it
+  // is the one the sequence is actually at, not step 1 of 3.
+  const late = run([{ ...base, created_at: aged(55) }]);
+  assert(late.length === 1, `a late enrolment produced ${late.length} texts in one run`);
+  assert(late[0].json.step === 3,
+    `a late enrolment got step ${late[0].json.step}; it should join at the current step`);
+
+  // Merge tags resolve, and the shouting DMS model is recased.
+  const body = day6[0].json.body;
+  assert(!/\{\{[a-z_]+\}\}/.test(body), `unresolved merge tag went out: ${body}`);
+  assert(body.includes('Escape') && !body.includes('ESCAPE'), `model not recased: ${body}`);
+  assert(body.includes('$136.39'), `price not formatted as money: ${body}`);
+
+  // A row with no vehicle model is dropped rather than sent with a hole in it.
+  assert(run([{ ...base, created_at: aged(6), vehicle_model: '' }]).length === 0,
+    'a row with no vehicle model is still texted');
+  // A row with no quote link would leave the body ending in nothing.
+  assert(run([{ ...base, created_at: aged(6), quote_url: '' }]).length === 0,
+    'a row with no checkout link is still texted');
+
+  // MMS only where the deck asks. Step 1 carries the dealer logo; step 3 must not.
+  assert(day6[0].json.media_url, 'step 1 is meant to carry the dealer logo as MMS');
+  assert(!late[0].json.media_url, 'step 3 is sending as MMS; only the first text should');
+
+  return 'highest due step only, tags resolved, incomplete rows dropped';
 });
 
 check('no text can leave without passing every gate', () => {

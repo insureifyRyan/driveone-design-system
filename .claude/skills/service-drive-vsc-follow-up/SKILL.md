@@ -1340,7 +1340,75 @@ is ever rebuilt**, or the channel gets 280 messages at once.
   `count(*)` of unannounced completed quotes before running, or the sweep posts
   more than you intended.
 
-## The shared SMS layer (workflow 09)
+## SMS and MMS (workflows 09 and 10)
+
+Two pieces, and keeping them apart is the point. **09 is the shared send layer**
+and decides whether a message is allowed to leave. **10 is this campaign's
+nurture** and decides who gets what. 10 asks; 09 answers; 09's answer is the one
+that counts.
+
+### Workflow 10, the unsold nurture
+
+**The audience is the UNSOLD** — the same enrolled service customers the emails
+go to, who have not bought. The claim says so twice: `status = 'active'` is the
+normal exit, and `q.payment_status <> 'completed'` catches a purchase that has
+not yet been processed into an exit, which would otherwise text somebody to
+congratulate them on not buying.
+
+**It is sent as the DEALERSHIP, never as DriveOne.** These are Ferrario's
+customers; a text from "DriveOne" about a car they serviced at Ferrario reads as
+a leak, not a campaign. Sendblue sends from a plain number with no branded
+sender ID, so **naming the store in the opening words IS the branding** — and it
+is also what stops an unknown number from reading as spam. `verify.mjs` fails
+any body that does not name the dealer in its first 40 characters, or that says
+"DriveOne" at all. Until each rooftop has its own Sendblue number, that opening
+is all the branding there is; a number per rooftop is the real fix.
+
+**Three texts against ten emails, on purpose.** Mirroring the email cadence
+would mean ten texts in sixty days, which earns opt-outs, carrier filtering, and
+a dealer asking what we are doing to their customers. Copy lives in
+`email/copy/campaign.json` under `sms`, beside the emails:
+
+| Step | Day | Reinforces | Channel |
+|---|---|---|---|
+| 1 | 5 | the day-3 repair-math email | **MMS**, dealer logo |
+| 2 | 21 | the day-18 payment-plan email, the strongest lever | SMS |
+| 3 | 50 | the day-48 eligibility-window email, then stop | SMS |
+
+Each sits two or three days AFTER the email whose argument it reinforces, so it
+lands as a nudge on something already said rather than a new pitch.
+
+**Step 1 is the only MMS, and it earns the cost.** A first text from an unknown
+number is the one most likely to be read as spam, and the store's own logo
+rendering above the message is what makes it visibly the dealership. Later
+messages are plain SMS: the number is recognised by then, and a logo on every
+text is just a bigger bill.
+
+- **The due step is the HIGHEST one owed, never the next one.** The obvious
+  implementation picks "the next unsent step whose day has passed", which for
+  anyone enrolled late, or paused and resumed, means step 1 today, step 2
+  tomorrow, step 3 the day after: **three texts in three days to someone who has
+  had none.** On email that is clumsy; on SMS it is an opt-out and a carrier
+  complaint. Taking the highest makes a late joiner land where the sequence
+  actually is. `verify.mjs` runs the real node code over a 55-day-old enrolment
+  and fails if it produces more than one text or picks step 1.
+- **Bodies must fit one segment.** A plain SMS over 160 characters is silently
+  split and billed as two, and nothing downstream complains, so the first sign
+  is the bill. The check measures against **`Grand Cherokee`**, the longest model
+  in the live cohort, not a convenient short one: that eight-character
+  difference is exactly what pushed message 3 over. MMS is exempt.
+- **Opt-out rides on the first and last message.** CTIA wants it on the first
+  plus periodic reminders; with three messages that is the first and the last.
+- **Incomplete rows are dropped, not sent with a hole.** Every body names the
+  vehicle, quotes a price and ends in a link. The SQL filters nulls, but an
+  empty string passes `is not null`, and the renderer is what composes the
+  words, so it re-checks all three. This was a real gap caught by the check
+  rather than by reading the code.
+- **One daily pass**, not the hourly cadence the email scheduler runs. Three
+  messages over sixty days means a daily sweep is ample, and it keeps the
+  cohort's texts in one predictable slot instead of trickling all day.
+
+### Workflow 09, the shared send layer
 
 Added 13 Oct 2026. **Shared across campaigns on purpose**, which is why its
 tables are NOT prefixed `vsc_`: the service drive follow-up and the
@@ -1418,4 +1486,13 @@ comes from Ferrario.
    treats unknown as not mobile, so today the layer correctly sends nothing.
 3. The inbound webhook for STOP replies and status callbacks — **not yet built**.
    Until it exists, nothing writes `sms_suppression`, so do not enable sending:
-   an opt-out would have nowhere to land.
+   an opt-out would have nowhere to land. Treat this as the blocking one.
+4. Workflow 10's `Send Each` node carries `REPLACE_SMS_SEND_WF_ID`, which has to
+   become 09's real workflow id at deploy time, the same way `REPLACE_PG_CRED_ID`
+   does. 10 will run and find due texts without it and then fail at the handoff.
+5. Import and activate 09 and 10. Neither is deployed; both exist only in
+   `n8n/workflows/<dealer>/`.
+
+**Order matters here.** 09 before 10, because 10 calls it. The STOP webhook
+before either is enabled, because a campaign that can text but cannot be told to
+stop is the one failure mode with a statutory price on it.

@@ -2525,6 +2525,193 @@ writeFileSync(join(ROOT, `${WF_DIR}/09-sms-send.json`),
 console.log('built 09-sms-send.json');
 
 
+/* =============================================== 10. SMS NURTURE ========= */
+//
+// The UNSOLD nurture. Same people the emails go to: enrolled service customers
+// who have not bought. Sent AS THE DEALERSHIP, matching the email channel,
+// because these are Ferrario's customers and a text from "DriveOne" about a car
+// they serviced at Ferrario reads as a leak, not a campaign.
+//
+// This workflow decides WHO and WHAT. Workflow 09 decides whether the message
+// is allowed to leave. The gates are not repeated here beyond a first pass that
+// avoids pointless sub-workflow calls: 09 re-checks every one of them, and 09's
+// answer is the one that counts.
+const SMS_SCHEDULE = (DECK.sms || []).map((s) => ({
+  step: s.step, sendDay: s.sendDay, body: s.body, media: s.media || null,
+}));
+
+const SMS_DUE_SQL = [
+  '-- Candidates for a text: enrolled, still active, STILL UNSOLD, priced, and',
+  '-- reachable. The step that is actually due is worked out in code, because',
+  '-- the schedule is a list of day offsets rather than a fixed interval.',
+  'with people as (',
+  '  select',
+  '    e.id as enrollment_id, e.customer_key, e.first_name, e.created_at,',
+  '    e.quote_url, e.monthly_payment, e.payment_term,',
+  '    e.vehicle_year, e.vehicle_model,',
+  '    c.id as customer_id,',
+  '    case',
+  "      when length(regexp_replace(coalesce(c.phone,''),'[^0-9]','','g')) = 10",
+  "        then '+1' || regexp_replace(c.phone,'[^0-9]','','g')",
+  "      when length(regexp_replace(coalesce(c.phone,''),'[^0-9]','','g')) = 11",
+  "       and left(regexp_replace(c.phone,'[^0-9]','','g'),1) = '1'",
+  "        then '+'  || regexp_replace(c.phone,'[^0-9]','','g')",
+  '    end as phone_e164',
+  '  from vsc_enrollment e',
+  '  join quotes q    on q.id = e.quote_id',
+  '  join customers c on c.id = q.customer_id',
+  '  where e.dealer_id = $1',
+  '    and e.campaign_id = $2',
+  "    and e.status = 'active'",
+  '    -- UNSOLD, said twice on purpose. status going non-active is the usual',
+  '    -- exit, but a purchase that has not yet been processed into an exit',
+  '    -- would otherwise get a text congratulating them on not buying.',
+  "    and q.payment_status <> 'completed'",
+  '    -- A text with no price or no link is worth less than no text.',
+  '    and e.quote_url is not null',
+  '    and e.monthly_payment is not null',
+  ')',
+  'select p.*,',
+  '  coalesce((',
+  '    select max(l.step) from sms_send_log l',
+  '     where l.phone_e164 = p.phone_e164 and l.campaign = $3',
+  '  ), 0) as sms_step_sent',
+  '  from people p',
+  ' where p.phone_e164 is not null',
+  '   -- First pass only. 09 re-checks all of these and its answer is the one',
+  '   -- that counts; this just avoids calling it for people it would refuse.',
+  '   and not exists (select 1 from sms_suppression s where s.phone_e164 = p.phone_e164)',
+  '   and exists (select 1 from sms_consent k',
+  '                where k.phone_e164 = p.phone_e164 and k.revoked_at is null)',
+  "   and exists (select 1 from phone_line_type t",
+  "                where t.phone_e164 = p.phone_e164 and t.line_type = 'mobile')",
+  ' order by p.created_at',
+  ' limit 200;',
+].join('\n');
+
+const SMS_RENDER_CODE = `
+// Decide which text is due, and render it. Nothing here sends: every row that
+// comes out of this node is a REQUEST to workflow 09, which is free to refuse.
+const SCHEDULE = ${JSON.stringify(SMS_SCHEDULE, null, 2)};
+const DEALER_NAME = ${JSON.stringify((DEALER.dealer && (DEALER.dealer.displayName || DEALER.dealer.name)) || DEALER.id)};
+const DEALER_LOGO = ${JSON.stringify((DEALER.logo && (DEALER.logo.light || DEALER.logo.dark)) || null)};
+const TZ = ${JSON.stringify(DEALER.sending.timezone)};
+const CAMPAIGN = ${JSON.stringify(DEALER.campaign.id)};
+const DEALER_ID = ${JSON.stringify(DEALER.id)};
+
+const money = (v) => (v === null || v === undefined || v === '')
+  ? null
+  : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',
+      maximumFractionDigits: Number(v) % 1 === 0 ? 0 : 2 }).format(Number(v));
+
+// Same recasing rule as the email renderer and the sales alert: the DMS shouts.
+const properName = (s) => {
+  const t = String(s == null ? '' : s).trim();
+  if (!t || t !== t.toUpperCase()) return t;
+  return t.toLowerCase().replace(/(^|[\\s'\\-])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase());
+};
+
+const out = [];
+for (const item of $input.all()) {
+  const r = item.json;
+
+  // Days since enrolment, in whole days. The schedule is written in days since
+  // the service visit and enrolment follows it closely enough to use here.
+  const ageDays = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+
+  // The due step is the HIGHEST one whose day has passed and which has not been
+  // sent. Taking the highest rather than the next means somebody enrolled late,
+  // or paused and resumed, does not receive a backlog of stale texts one after
+  // another: they join the sequence where it actually is.
+  const due = SCHEDULE
+    .filter((s) => s.step > (r.sms_step_sent || 0) && ageDays >= s.sendDay)
+    .sort((a, b) => b.step - a.step)[0];
+  if (!due) continue;
+
+  // Every body names the vehicle, quotes a price and ends in a link. A row
+  // missing any of them renders a sentence with a hole in it, so drop it
+  // instead. The SQL filters nulls, but an empty string passes "is not null",
+  // and this node is what actually composes the words.
+  const model = properName(String(r.vehicle_model || '').trim());
+  if (!model) continue;
+  if (!String(r.quote_url || '').trim()) continue;
+  if (r.monthly_payment === null || r.monthly_payment === undefined || r.monthly_payment === '') continue;
+
+  const body = due.body
+    .replace(/\\{\\{dealer_name\\}\\}/g, DEALER_NAME)
+    .replace(/\\{\\{vehicle_year\\}\\}/g, r.vehicle_year || '')
+    .replace(/\\{\\{vehicle_model\\}\\}/g, model)
+    .replace(/\\{\\{monthly_payment\\}\\}/g, money(r.monthly_payment) || '')
+    .replace(/\\{\\{payment_term\\}\\}/g, r.payment_term || '')
+    .replace(/\\{\\{quote_url\\}\\}/g, r.quote_url || '')
+    .replace(/\\s+/g, ' ')
+    .trim();
+
+  // An unresolved tag would go out as literal braces in front of a customer.
+  // Drop the row rather than send that; verify.mjs covers the deck, this covers
+  // the data.
+  if (/\\{\\{[a-z_]+\\}\\}/.test(body)) continue;
+
+  out.push({ json: {
+    campaign: CAMPAIGN,
+    dealer_id: DEALER_ID,
+    customer_id: r.customer_id,
+    phone_e164: r.phone_e164,
+    step: due.step,
+    body,
+    // MMS only where the deck asks for it. The dealer's own logo is what makes
+    // a first text from an unknown number read as the dealership.
+    media_url: due.media === 'dealerLogo' ? (DEALER_LOGO || '') : '',
+    tz: TZ,
+  } });
+}
+
+return out;
+`.trim();
+
+const smsNurtureNodes = [
+  node('SMS Sweep', 'scheduleTrigger', 1.2, [-700, 0], {
+    // Once a day, inside the send window, on send days. Texts do not need the
+    // hourly cadence the email scheduler runs: three messages over sixty days
+    // means a daily pass is ample, and a single daily pass keeps the whole
+    // cohort's texts in one predictable slot rather than trickling all day.
+    rule: { interval: [{ field: 'cronExpression', expression: `25 ${SAFE_UTC_HOURS[0]} * * 2-5` }] },
+  }),
+
+  // The constants arrive as a Set node rather than being inlined in the
+  // replacement string, matching the scorecard. queryReplacement is parsed as
+  // a list of {{ }} expressions, so a bare literal supplies ZERO parameters and
+  // the query dies on "there is no parameter $1" at runtime, not at build.
+  setNode('Campaign', [-580, 0], [
+    ['dealer_id', DEALER.id],
+    ['campaign_id', DEALER.campaign.id],
+  ]),
+
+  pgNode('Find Due Texts', [-460, 0], SMS_DUE_SQL,
+    '={{ $json.dealer_id }}, {{ $json.campaign_id }}, {{ $json.campaign_id }}'),
+
+  codeNode('Render Text', [-220, 0], SMS_RENDER_CODE),
+
+  // One call per person. 09 gates each one independently, so a refusal for one
+  // customer never blocks the rest.
+  node('Send Each', 'executeWorkflow', 1.2, [40, 0], {
+    workflowId: { __rl: true, value: 'REPLACE_SMS_SEND_WF_ID', mode: 'id' },
+    mode: 'each',
+    options: { waitForSubWorkflow: true },
+  }),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/10-sms-nurture.json`),
+  JSON.stringify(workflow('DriveOne VSC 10 SMS Nurture', smsNurtureNodes, connect([
+    ['SMS Sweep', 'Campaign'],
+    ['Campaign', 'Find Due Texts'],
+    ['Find Due Texts', 'Render Text'],
+    ['Render Text', 'Send Each'],
+  ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
+
+console.log('built 10-sms-nurture.json');
+
+
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */
 
 // There was a sixth workflow here. It logged into the sending mailbox over

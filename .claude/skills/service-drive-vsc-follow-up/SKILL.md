@@ -1478,6 +1478,32 @@ comes from Ferrario.
   wrong mechanism anyway: an MCP is a tool *Claude* calls in a conversation, and
   the campaign has to send unattended from n8n. An MCP would only be useful for
   testing sends and reading replies by hand.
+- **There is no Sendblue NODE in n8n either, and the near-miss is dangerous.**
+  Searching n8n for "sendblue" returns **`n8n-nodes-base.sendInBlue`, which is
+  Brevo** — formerly SendinBlue, a French email platform, an entirely different
+  company. Wiring it up would authenticate against the wrong vendor and send
+  nothing. The other hits are Twilio and `seven`. HTTP Request is correct here:
+  n8n's own guidance is to use it when no dedicated node exists, which is the
+  case. **The hardening is not in a node** — it is the gate living inside the
+  INSERT, the checks in `verify.mjs`, and the HTTP node's error output wired to
+  a status correction. A dedicated node would add nothing to any of that.
+- **`docs.sendblue.com` is BLOCKED by this environment's network policy** (the
+  proxy answers 403 to CONNECT), so the API shape here came from the published
+  spec rather than the vendor's own docs, and **it is v1**. If you need the docs
+  read from inside a session, add that host under Allowed domains in the
+  environment's Network access settings.
+- **v2 is unconfirmed.** Ryan pointed at `docs.sendblue.com/api-v2` on 13 Oct
+  2026, which implies the v1 shape built here may be superseded. What actually
+  needs checking against v2, in order of how much it matters:
+  1. **The inbound webhook contract** — the payload for an inbound reply and for
+     a delivery-status callback. This is the compliance-critical one and the
+     reason the STOP handler is not built yet.
+  2. Whether Sendblue **auto-suppresses on STOP** at its end. Even if it does,
+     the event still has to write `sms_suppression` here, or workflow 10 keeps
+     selecting that person forever and the sold-customer nurture, which is a
+     different campaign on the same number, never learns they opted out.
+  3. The send endpoint path, auth header names, and whether `media_url` is still
+     how MMS is attached.
 
 **Still required before anything can send:**
 1. A Sendblue account, and `SENDBLUE_API_KEY_ID` / `SENDBLUE_API_SECRET` set as

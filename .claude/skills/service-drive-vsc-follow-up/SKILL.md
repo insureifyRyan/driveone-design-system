@@ -1339,3 +1339,83 @@ is ever rebuilt**, or the channel gets 280 messages at once.
   insert-outer rule; that table means something. Check
   `count(*)` of unannounced completed quotes before running, or the sweep posts
   more than you intended.
+
+## The shared SMS layer (workflow 09)
+
+Added 13 Oct 2026. **Shared across campaigns on purpose**, which is why its
+tables are NOT prefixed `vsc_`: the service drive follow-up and the
+sold-customer nurture both send through it, and the one property that matters
+most is that **a STOP from any message stops every campaign.** Two per-campaign
+suppression lists is a compliance accident waiting to happen.
+
+**It contains no cadence and no copy.** It decides whether a given message is
+allowed to leave, and sends it if so. What to say and when belongs to the
+campaign that calls it, as a sub-workflow.
+
+**Tables.** `sms_consent` (one live row per customer per phone; `revoked_at`
+keeps history), `sms_suppression` (keyed on the PHONE, not the customer, not
+the campaign), `phone_line_type`, `sms_send_log` (mirrors `vsc_send_log`;
+`media_url` present means MMS).
+
+> **`customers.id` is an INTEGER.** Only `partners.id` and `quotes.id` are uuid.
+> `quotes.customer_id` is the integer that joins to it. `customers` also carries
+> `customer_uuid` and `uuid`, and neither is what anything joins on. Assuming
+> uuid here cost a schema correction.
+
+**The gate is the INSERT, not a chain of If nodes.** A send happens only off a
+row the insert returned, the HTTP node is fed by the insert and nothing else, so
+there is no node ordering that sends first and checks second and no later branch
+that can skip a check. The conditions, in the order they outrank each other:
+
+1. **Suppression beats consent, always.** Someone who replied STOP is done
+   whatever any form says. Revoking consent needs no reason and no paperwork.
+2. **A live `sms_consent` row for that number.**
+3. **`phone_line_type = 'mobile'`.** Unknown counts as not mobile. A text to a
+   landline does not fail loudly, it just never arrives.
+4. **Quiet hours 8am–9pm** in the recipient's local time, passed in per rooftop.
+   We hold a state for 1 of 90 Ferrario customers, so the dealer timezone is the
+   proxy — sound, because these are a local store's own service customers.
+5. **One message per person per campaign per day**, enforced here rather than in
+   the calling campaign, because two campaigns each obeying their own cap is how
+   somebody gets two texts in a morning.
+
+**Consent basis on file (Ryan, 13 Oct 2026):** Ferrario obtains written consent
+on the forms the customer signs in sales and service; DriveOne sends as their
+agent under a written agreement with the dealer. 90 rows recorded with
+`basis = 'dealer_form'`. **`obtained_at` is deliberately NULL** — the dated
+signed form is held at the store, and inventing a date here would be worse than
+admitting we do not hold it. If a specific consent is ever challenged, the form
+comes from Ferrario.
+
+- **`verify.mjs` asserts the shape, not the vocabulary.** It fails if any gate
+  is removed, if the Sendblue node is fed by anything other than the gate, if
+  credentials are not read from `$vars`, or if a secret looks hardcoded.
+  **Anchor every table name with `\b`:** renaming the table to
+  `sms_suppression_DISABLED` originally left the check GREEN, because the
+  pattern matched the prefix. A check that passes on a disabled gate is worse
+  than no check, because it is what people trust instead of looking. All three
+  mutations were re-tested after the fix.
+- **A failed send updates the row the gate wrote.** Leaving it at `gated_ok`
+  would claim a send that never happened AND let the daily cap block the retry.
+  The HTTP error output is index 1; `connect()` only wires index 0, so it is
+  attached explicitly after the file is written.
+- **Sendblue API** (not reachable from the container — `docs.sendblue.com`
+  is blocked by the egress proxy, so this is from the published shape and the
+  first live send confirms it): `POST https://api.sendblue.com/api/send-message`,
+  headers `sb-api-key-id` and `sb-api-secret-key`, body `number` / `content` /
+  `media_url` / `status_callback`, response carries `message_handle` and
+  `status`. `media_url` is omitted entirely rather than sent null for a plain
+  SMS.
+- **There is no Sendblue MCP** in the connector directory, and it would be the
+  wrong mechanism anyway: an MCP is a tool *Claude* calls in a conversation, and
+  the campaign has to send unattended from n8n. An MCP would only be useful for
+  testing sends and reading replies by hand.
+
+**Still required before anything can send:**
+1. A Sendblue account, and `SENDBLUE_API_KEY_ID` / `SENDBLUE_API_SECRET` set as
+   n8n **`$vars`** (never `$env` — blocked inside nodes on Cloud).
+2. **Line-type lookup for all 90 numbers.** 0 are classified, and the gate
+   treats unknown as not mobile, so today the layer correctly sends nothing.
+3. The inbound webhook for STOP replies and status callbacks — **not yet built**.
+   Until it exists, nothing writes `sms_suppression`, so do not enable sending:
+   an opt-out would have nowhere to land.

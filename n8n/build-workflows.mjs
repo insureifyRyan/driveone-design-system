@@ -2358,6 +2358,173 @@ writeFileSync(join(ROOT, `${WF_DIR}/08-sales-alert.json`),
 console.log('built 08-sales-alert.json');
 
 
+/* ================================================= 9. SMS / MMS SEND ===== */
+//
+// The shared SMS layer. Called as a SUB-WORKFLOW by any campaign that wants to
+// text somebody: this one, and the sold-customer nurture, which has three
+// Budco texts waiting on exactly this.
+//
+// It deliberately contains no cadence and no copy. It is the thing that decides
+// whether a given message is allowed to leave, and sends it if so. What to say
+// and when to say it belongs to the campaign that calls it.
+//
+// WHY THE GATE IS SQL AND NOT A CHAIN OF IF NODES:
+// the insert IS the gate. A send happens only off a row that the insert
+// returned, and the insert only produces a row when every condition passed.
+// There is no ordering of nodes that sends first and checks second, and no way
+// to add a branch later that skips a check, because the HTTP node is fed by the
+// insert and nothing else. Same shape as the sale-announce claim, for the same
+// reason: the expensive mistakes here are the ones where a check is present but
+// not in the path.
+const SMS_SEND_SQL = [
+  '-- Gate and log in one statement. Order of the conditions is the order they',
+  '-- matter in, and the first one outranks everything below it.',
+  'with candidate as (',
+  '  select $1::text  as campaign,',
+  '         $2::text  as dealer_id,',
+  '         $3::int   as customer_id,',
+  '         $4::text  as phone_e164,',
+  '         $5::int   as step,',
+  '         $6::text  as body,',
+  "         nullif($7::text, '') as media_url,",
+  '         $8::text  as tz',
+  '),',
+  'allowed as (',
+  '  select c.* from candidate c',
+  '  -- 1. SUPPRESSION OUTRANKS CONSENT, ALWAYS. Someone who replied STOP is',
+  '  --    done, whatever any form says, and revoking consent needs no reason',
+  '  --    and no paperwork. Keyed on the phone rather than the customer, so a',
+  '  --    person who exists under two customer rows is still silenced once.',
+  '  where not exists (',
+  '    select 1 from sms_suppression s where s.phone_e164 = c.phone_e164',
+  '  )',
+  '  -- 2. A live consent row has to exist for THIS number. Ferrario obtains it',
+  '  --    on the forms the customer signs and we send as their agent, but the',
+  '  --    basis is only worth anything if a row can be produced for the one',
+  '  --    person who complains.',
+  '    and exists (',
+  '      select 1 from sms_consent k',
+  '       where k.phone_e164 = c.phone_e164 and k.revoked_at is null',
+  '    )',
+  '  -- 3. Texting a landline does not fail loudly, it just never arrives, and',
+  '  --    on some carriers it bills anyway. Unknown counts as not mobile: the',
+  '  --    lookup is cheap and a guess is not.',
+  '    and exists (',
+  '      select 1 from phone_line_type p',
+  "       where p.phone_e164 = c.phone_e164 and p.line_type = 'mobile'",
+  '    )',
+  '  -- 4. Quiet hours, 8am to 9pm in the RECIPIENT\'s local time. We hold a',
+  '  --    state for 1 of 90 Ferrario customers, so the dealer timezone is the',
+  '  --    proxy: these are a local store\'s own service customers, which makes',
+  '  --    it a sound one. Passed in rather than hardcoded so a rooftop in',
+  '  --    another zone cannot inherit New York by accident.',
+  '    and extract(hour from (now() at time zone c.tz)) between 8 and 20',
+  '  -- 5. One message per person per campaign per day, whatever the caller',
+  '  --    thinks it is doing. The cap belongs here rather than in the calling',
+  '  --    campaign, because two campaigns each obeying their own cap is how a',
+  '  --    customer gets two texts in a morning.',
+  '    and not exists (',
+  '      select 1 from sms_send_log l',
+  '       where l.phone_e164 = c.phone_e164',
+  '         and l.campaign   = c.campaign',
+  "         and l.sent_at   >= (now() at time zone c.tz)::date::timestamptz",
+  '    )',
+  ')',
+  'insert into sms_send_log',
+  '  (campaign, dealer_id, customer_id, phone_e164, step, body, media_url, status)',
+  "select campaign, dealer_id, customer_id, phone_e164, step, body, media_url, 'gated_ok'",
+  '  from allowed',
+  'returning id, campaign, dealer_id, phone_e164, body, media_url;',
+].join('\n');
+
+const smsNodes = [
+  node('When Called', 'executeWorkflowTrigger', 1.1, [-700, 0], {}),
+
+  pgNode('Gate And Log', [-460, 0], SMS_SEND_SQL,
+    '={{ $json.campaign }}, {{ $json.dealer_id }}, {{ $json.customer_id }}, '
+    + '{{ $json.phone_e164 }}, {{ $json.step }}, {{ $json.body }}, '
+    + '{{ $json.media_url }}, {{ $json.tz }}'),
+
+  // Nothing came back from the gate means the message was refused. That is a
+  // normal outcome, not an error: most refusals are "already texted today" or
+  // "not a mobile", and an error workflow firing on those would train everyone
+  // to ignore it.
+  ifNode('Allowed?', [-220, 0], [
+    { id: 'c1', leftValue: '={{ $json.id }}', rightValue: '', operator: { type: 'string', operation: 'exists' } },
+  ]),
+
+  node('Send Via Sendblue', 'httpRequest', 4.2, [40, -100], {
+    method: 'POST',
+    url: 'https://api.sendblue.com/api/send-message',
+    sendHeaders: true,
+    headerParameters: {
+      parameters: [
+        // $vars, never $env: n8n Cloud blocks env access inside nodes, which is
+        // how workflow 04 sat mute for days.
+        { name: 'sb-api-key-id', value: '={{ $vars.SENDBLUE_API_KEY_ID }}' },
+        { name: 'sb-api-secret-key', value: '={{ $vars.SENDBLUE_API_SECRET }}' },
+      ],
+    },
+    sendBody: true,
+    specifyBody: 'json',
+    // media_url present makes it an MMS; absent leaves it a plain SMS. Built in
+    // code rather than as fixed fields so the key can be omitted entirely
+    // rather than sent as null, which Sendblue treats differently.
+    jsonBody: '={{ JSON.stringify(Object.assign({ number: $json.phone_e164, content: $json.body },'
+      + ' $json.media_url ? { media_url: $json.media_url } : {})) }}',
+  }, {
+    retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
+    // A failed send must still land in the log with its error, so the row is
+    // never left claiming a message went out that did not.
+    onError: 'continueErrorOutput',
+  }),
+
+  // message_handle is Sendblue's id for the message and the key the status
+  // callback arrives on, so the log row is useless without it.
+  pgNode('Record Handle', [300, -200], [
+    'update sms_send_log',
+    '   set provider_message_id = $2,',
+    "       status = coalesce(nullif($3, ''), 'sent')",
+    ' where id = $1;',
+  ].join('\n'),
+    '={{ $(\'Allowed?\').itemMatching($itemIndex).json.id }}, '
+    + '{{ $json.message_handle }}, {{ $json.status }}'),
+
+  pgNode('Record Send Failure', [300, 0], [
+    '-- The gate already wrote the row, so a provider failure updates it rather',
+    '-- than inserting. Leaving it at gated_ok would claim a send that never',
+    '-- happened and let the daily cap block the retry.',
+    'update sms_send_log',
+    "   set status = 'provider_error',",
+    "       body = body || E'\\n[send failed: ' || left(coalesce($2, 'unknown'), 200) || ']'",
+    ' where id = $1;',
+  ].join('\n'),
+    '={{ $(\'Allowed?\').itemMatching($itemIndex).json.id }}, '
+    + '{{ JSON.stringify($json.error || $json.message || $json) }}'),
+
+  node('Refused', 'noOp', 1, [40, 110], {}),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/09-sms-send.json`),
+  JSON.stringify(workflow('DriveOne SMS Send (shared)', smsNodes, connect([
+    ['When Called', 'Gate And Log'],
+    ['Gate And Log', 'Allowed?'],
+    ['Allowed?', ['Send Via Sendblue', 'Refused']],
+    ['Send Via Sendblue', 'Record Handle'],
+  ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
+
+// The error output of the HTTP node is index 1 and connect() only wires index
+// 0, so it is attached here rather than silently dropped.
+{
+  const f = join(ROOT, `${WF_DIR}/09-sms-send.json`);
+  const wf = JSON.parse(readFileSync(f, 'utf8'));
+  wf.connections['Send Via Sendblue'].main[1] = [{ node: 'Record Send Failure', type: 'main', index: 0 }];
+  writeFileSync(f, JSON.stringify(wf, null, 2));
+}
+
+console.log('built 09-sms-send.json');
+
+
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */
 
 // There was a sixth workflow here. It logged into the sending mailbox over

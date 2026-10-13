@@ -42,7 +42,7 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
-  '07-scorecard.json', '08-sales-alert.json',
+  '07-scorecard.json', '08-sales-alert.json', '09-sms-send.json',
 ].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
@@ -689,6 +689,69 @@ check('a sale can never be announced twice', () => {
   const url = nodeNamed(load('08-sales-alert.json'), 'Post Sale To Slack').parameters.url;
   assert(/\$vars\.SLACK_ALERT_WEBHOOK/.test(url), 'sales alert does not post to the Slack webhook variable');
   return 'insert is the claim, guarded by the quote_id primary key';
+});
+
+check('no text can leave without passing every gate', () => {
+  // WHY: an email to the wrong person is an annoyance. A text to someone who
+  // never consented, or who already replied STOP, is a statutory claim at
+  // $500 to $1,500 PER MESSAGE, and because the list is Ferrario's, the
+  // dealer is exposed alongside us. The gates therefore cannot live in a
+  // chain of If nodes that a later edit can route around: the INSERT is the
+  // gate, the HTTP node is fed by the insert and nothing else, and this
+  // asserts that shape rather than the presence of the words.
+  const wf = load('09-sms-send.json');
+  const sql = nodeNamed(wf, 'Gate And Log').parameters.query;
+  const code = sql.replace(/--[^\n]*/g, '');
+
+  // The four conditions, each checked for what it actually does.
+  // \b on every table name, learned the hard way: without it, renaming the
+  // table to sms_suppression_DISABLED left this check green, because the
+  // pattern matched the prefix. A check that passes on a disabled gate is
+  // worse than no check, since it is the thing people trust instead of looking.
+  assert(/not exists\s*\(\s*select 1 from sms_suppression\b/i.test(code),
+    'a phone that replied STOP can still be texted');
+  assert(/exists\s*\(\s*select 1 from sms_consent\b[\s\S]*?revoked_at is null/i.test(code),
+    'does not require a live consent row for this number');
+  assert(/from phone_line_type\b[\s\S]*?line_type\s*=\s*'mobile'/i.test(code),
+    'does not require the number to be a mobile, so texts go to landlines');
+  assert(/extract\(hour from \(now\(\) at time zone/i.test(code),
+    'no quiet-hours check, so a text can land at 3am');
+  assert(/sms_send_log\b[\s\S]*?sent_at\s*>=/i.test(code),
+    'no per-day cap, so two campaigns can each text the same person');
+
+  // Suppression must be checked, and it must not be reachable only via some
+  // branch: it belongs in the same statement as the insert.
+  assert(/insert into sms_send_log\b/i.test(code), 'the gate does not write the log row');
+  assert(/returning/i.test(code), 'the gate returns nothing, so the send is not fed by it');
+  assert(/\bsms_suppression\b/.test(code) &&
+    code.search(/\bsms_suppression\b/) < code.search(/insert into sms_send_log\b/i),
+    'the insert is not gated by the suppression check');
+
+  // The send must be fed by the gate's output. If anything else feeds the HTTP
+  // node, the gate is decorative.
+  const feeds = Object.entries(wf.connections)
+    .filter(([, c]) => JSON.stringify(c).includes('Send Via Sendblue'))
+    .map(([from]) => from);
+  assert(feeds.length === 1, `the Sendblue node is fed by ${feeds.length} nodes: ${feeds.join(', ')}`);
+  assert(feeds[0] === 'Allowed?', `the Sendblue node is fed by ${feeds[0]}, not the gate`);
+
+  // Credentials through $vars. $env is blocked inside nodes on n8n Cloud and
+  // returns the string "access to env vars denied" rather than failing.
+  const http = nodeNamed(wf, 'Send Via Sendblue').parameters;
+  const headers = JSON.stringify(http.headerParameters);
+  assert(/\$vars\.SENDBLUE_API_KEY_ID/.test(headers) && /\$vars\.SENDBLUE_API_SECRET/.test(headers),
+    'Sendblue credentials are not read from $vars');
+  assert(!/sb-api-secret-key["\s:]+[A-Za-z0-9_-]{12,}/.test(headers),
+    'an API secret looks hardcoded into the workflow');
+
+  // A provider failure has to correct the row the gate already wrote, or the
+  // log claims a send that never happened and the daily cap blocks the retry.
+  assert(nodeNamed(wf, 'Record Send Failure'), 'no failure path, so a failed send still reads as sent');
+  assert((wf.connections['Send Via Sendblue'].main[1] || [])
+    .some((t) => t.node === 'Record Send Failure'),
+    'the failure path is not wired to the HTTP error output');
+
+  return 'suppression, consent, mobile, quiet hours and daily cap, all inside the insert';
 });
 
 check('only a service drive account reaches the service drive channel', () => {

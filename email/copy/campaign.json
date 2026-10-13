@@ -30,7 +30,7 @@
       "sendDay": 50,
       "slug": "sms-03-the-window",
       "goal": "Reinforce the day-48 eligibility email, then stop",
-      "body": "{{dealer_name}} Service: last note on your {{vehicle_model}}. Age and mileage limits mean it gets harder to add. {{quote_url}} Reply STOP to opt out."
+      "body": "{{dealer_name}} Service: last note on your {{vehicle_model}}. Coverage gets harder to add as the car ages. {{quote_url}} Reply STOP to opt out."
     }
   ],
   "emails": [

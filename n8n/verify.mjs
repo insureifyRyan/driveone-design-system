@@ -713,8 +713,21 @@ check('an SMS body fits one segment and names the store', () => {
     .replace(/\{\{payment_term\}\}/g, '36')
     .replace(/\{\{quote_url\}\}/g, worst.url);
 
-  const dealer = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
-  const dealerName = (dealer.dealer && (dealer.dealer.displayName || dealer.dealer.name)) || dealer.id;
+  // The deck is SHARED across rooftops, so the body has to fit the longest
+  // dealer name any of them has, not the one being verified. "Bob Johnson Auto
+  // Group" is nine characters longer than "Ferrario Ford", which was the whole
+  // difference: message 3 passed on Ferrario and came out one character over on
+  // Bob Johnson. Verifying one rooftop now catches an overflow on any of them.
+  const allDealers = readdirSync(join(ROOT, 'brand/dealers'))
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')));
+  const names = allDealers.map((d) => (d.dealer && (d.dealer.displayName || d.dealer.name)) || d.id);
+  const dealerName = names.reduce((a, b) => (b.length > a.length ? b : a));
+
+  // The dealer whose name is actually used for the branding assertions is the
+  // one being verified; the length test uses the longest above.
+  const thisDealer = allDealers.find((d) => d.id === DEALER_ID) || {};
+  const thisName = (thisDealer.dealer && (thisDealer.dealer.displayName || thisDealer.dealer.name)) || DEALER_ID;
   const lengths = [];
   for (const s of deck.sms) {
     const text = render(s.body, dealerName);
@@ -726,8 +739,8 @@ check('an SMS body fits one segment and names the store', () => {
     // DEALER BRANDED. Sendblue sends from a bare number with no branded sender
     // ID, so naming the store in the opening words IS the branding, and it is
     // what stops a text from an unknown number reading as spam.
-    assert(text.slice(0, 40).includes(dealerName),
-      `SMS ${s.step} does not name the dealer up front: "${text.slice(0, 40)}"`);
+    assert(render(s.body, thisName).slice(0, 40).includes(thisName),
+      `SMS ${s.step} does not name the dealer up front: "${render(s.body, thisName).slice(0, 40)}"`);
     // Never send as DriveOne on this channel: it is the dealer's customer.
     assert(!/\bDriveOne\b/.test(text), `SMS ${s.step} says DriveOne; this channel is the dealership`);
 

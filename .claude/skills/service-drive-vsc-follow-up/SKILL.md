@@ -1574,6 +1574,60 @@ comes from Ferrario.
 
 **Order matters.** 09 before 10, because 10 calls it. **11 live and confirmed
 working before either is enabled**, because a campaign that can text but cannot
-be told to stop is the one failure mode with a statutory price on it. Send
-yourself a text and reply STOP as the first real test; the row should appear in
-`sms_suppression` within ten minutes and the consent row should read revoked.
+be told to stop is the one failure mode with a statutory price on it.
+
+### The first live test, in four steps
+
+The text goes **to your own mobile**, from the Sendblue number. You then reply
+**from your mobile**. The reply is the part under test; the send is just how you
+get something to reply to. Needs the account, a provisioned number, and the keys
+in `$vars` first.
+
+**1. Prove the gate refuses you.** Run 09 manually with your own mobile in the
+input. It must do nothing: you have no consent row and your number is not
+classified. A text arriving at this step means the gate is not in the path, and
+nothing else should be enabled until that is understood.
+
+**2. Add yourself, deliberately.** `customer_id` has no foreign key, so `0` is
+the sentinel for an internal test row — it is not a real customer and should not
+look like one.
+
+```sql
+insert into sms_consent (customer_id, phone_e164, basis, basis_detail, recorded_by)
+values (0, '+1YOURMOBILE', 'web_optin',
+        'INTERNAL TEST ROW, not a customer. Delete after the STOP test.',
+        'ryan@insureify.ai')
+on conflict do nothing;
+
+insert into phone_line_type (phone_e164, line_type, source)
+values ('+1YOURMOBILE', 'mobile', 'manual, internal test')
+on conflict (phone_e164) do update set line_type = 'mobile';
+```
+
+Run 09 again. The text should arrive, and `sms_send_log` should hold a row with
+a `provider_message_id`.
+
+**3. Reply STOP from your mobile.** Within ten minutes the 11 sweep should
+produce a row in `sms_suppression` with `reason = 'stop'`, and the `sms_consent`
+row should read `revoked_at` set with `revoked_reason = 'replied STOP'`. If
+`sms_send_log` also shows an updated `status`, the delivery-status path works
+too.
+
+**4. Prove the STOP is honoured — this is the step that actually matters.**
+Run 09 a third time with the same number. It must refuse. Steps 1 to 3 only show
+the parts work; step 4 shows the loop is closed, which is the whole point.
+
+Then clean up. A bare `DELETE` through the Supabase MCP stalls, so wrap it with
+an INSERT that inserts nothing:
+
+```sql
+with gone as (
+  delete from sms_suppression where phone_e164 = '+1YOURMOBILE' returning phone_e164
+)
+insert into sms_suppression (phone_e164, reason)
+select phone_e164, 'x' from gone where false returning phone_e164;
+```
+
+Leave the consent row revoked rather than deleting it: it is an accurate record
+of what happened, and re-running the test later should start from a revoked
+state anyway.

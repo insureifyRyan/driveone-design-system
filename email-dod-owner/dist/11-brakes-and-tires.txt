@@ -1,0 +1,26 @@
+The parts that wear out are the parts shops pad the bill on.
+
+Brakes, tires, wipers, batteries. Nobody covers them, because they are supposed to wear out. They are also where a walk-in customer pays the most, because the price is decided after the car is on the lift.
+Openbay+ flips the order. You see the shop's price for the job before you book, the member discount is applied, and the appointment is set. If a shop adds something at the counter, you knew the baseline.
+
+BEFORE YOU WALK IN
+Price: Known before booking
+Shop: ASE-certified, your pick
+Discount: Openbay+ member rate
+Surprise: Not a line item
+
+Five months in, the {{{VEHICLE}}} is probably due for something. Book it where the price is written down.
+
+See prices on Openbay+ -> {{{OPENBAY_URL}}}
+Log in with the email on your contract.
+
+A shop that will not quote before the lift is telling you how the bill gets made.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

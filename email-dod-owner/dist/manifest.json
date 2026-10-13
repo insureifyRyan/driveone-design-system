@@ -1,0 +1,443 @@
+{
+  "campaign": {
+    "id": "dod_owner_2026",
+    "name": "DriveOne Direct: Owner series",
+    "audience": "driveonedirect.com customers with a paid, Budco confirmed contract",
+    "keyedTo": "days since contract_date",
+    "defaultLoanMonths": 30,
+    "sender": "DriveOne Direct <coverage@mail.driveonedirect.com>",
+    "replyTo": "support@driveonedirect.com",
+    "variables": {
+      "VEHICLE": "your car",
+      "CONTRACT": "on file",
+      "DV_CONTRACT": "on your welcome email",
+      "PLAN": "your plan",
+      "COVERAGE_MONTHS": "the term you chose",
+      "LOAN_MONTHS": "your plan term",
+      "MONTHLY": "your monthly",
+      "START_DATE": "your start date",
+      "DV_END_DATE": "one year from your start date",
+      "MILEAGE": "your odometer at purchase",
+      "REF": "on file",
+      "REFERRAL_URL": "https://www.driveonedirect.com/",
+      "REVIEW_URL": "https://www.driveonedirect.com/",
+      "PLATE_URL": "https://www.driveonedirect.com/",
+      "OPENBAY_URL": "https://app.openbay.com/"
+    },
+    "variablesNote": "FIRST_NAME and RESEND_UNSUBSCRIBE_URL are Resend built-ins. REVIEW_URL is the Google Business Profile short link, to be supplied by Ryan. REFERRAL_URL = https://www.driveonedirect.com/?ref=<contract_number>&utm_source=email&utm_medium=owner_series&utm_campaign=referral. PLATE_URL = https://www.driveonedirect.com/?utm_source=email&utm_medium=owner_series&utm_campaign=second_car#quote. Fallbacks never look numeric."
+  },
+  "emails": [
+    {
+      "step": 1,
+      "phase": "activate",
+      "sendDay": 0,
+      "slug": "01-two-numbers",
+      "alias": "dod-owner-e01",
+      "name": "DOD Owner E1 - Two numbers to save before you forge",
+      "subject": "Two numbers to save before you forget this email",
+      "subjectAlt": "{{{FIRST_NAME}}}, your {{{VEHICLE}}} is covered. Here is the part to keep.",
+      "preheader": "Claims and roadside. Save both now, use them never, hopefully.",
+      "goal": "Put the two numbers in their phone. Set expectations for the series.",
+      "bytes": 12018
+    },
+    {
+      "step": 2,
+      "phase": "activate",
+      "sendDay": 3,
+      "slug": "02-openbay-check-your-inbox",
+      "alias": "dod-owner-e02",
+      "name": "DOD Owner E2 - You own an Openbay+ membership. It e",
+      "subject": "You own an Openbay+ membership. It emailed you.",
+      "subjectAlt": "The part of your plan that saves money before anything breaks",
+      "preheader": "Openbay+ came with your plan. Find its email, set a password, book cheaper service.",
+      "goal": "Openbay+ account exists. Tell them where the login email is and what the membership does.",
+      "bytes": 11577
+    },
+    {
+      "step": 3,
+      "phase": "activate",
+      "sendDay": 7,
+      "slug": "03-diminished-value-explained",
+      "alias": "dod-owner-e03",
+      "name": "DOD Owner E3 - The benefit on your contract nobody ",
+      "subject": "The benefit on your contract nobody explains",
+      "subjectAlt": "What VASDVP on your welcome email means",
+      "preheader": "Diminished Value Protection, up to $5,000, included for one year. Here is what it is.",
+      "goal": "Explain Diminished Value Protection, the contract number, the one year term, how to use it.",
+      "bytes": 12482
+    },
+    {
+      "step": 4,
+      "phase": "activate",
+      "sendDay": 14,
+      "slug": "04-was-that-easy",
+      "alias": "dod-owner-e04",
+      "name": "DOD Owner E4 - Was that easy? Tell someone who is n",
+      "subject": "Was that easy? Tell someone who is not us.",
+      "subjectAlt": "Two weeks in. One favor, thirty seconds.",
+      "preheader": "If buying this was easier than you expected, a review helps the next person skip the dealership desk.",
+      "goal": "Review ask while it is fresh. Google Business Profile link.",
+      "bytes": 8998
+    },
+    {
+      "step": 5,
+      "phase": "activate",
+      "sendDay": 21,
+      "slug": "05-how-a-claim-actually-goes",
+      "alias": "dod-owner-e05",
+      "name": "DOD Owner E5 - How a claim actually goes, so you ne",
+      "subject": "How a claim actually goes, so you never guess",
+      "subjectAlt": "The three sentence version of your contract",
+      "preheader": "Shop calls Ascent first. Ascent pays the shop. You pay $100. That is the process.",
+      "goal": "The claims playbook. Shop calls before work. Direct pay. $100.",
+      "bytes": 11343
+    },
+    {
+      "step": 6,
+      "phase": "activate",
+      "sendDay": 30,
+      "slug": "06-the-card-on-file",
+      "alias": "dod-owner-e06",
+      "name": "DOD Owner E6 - The one boring thing that keeps your",
+      "subject": "The one boring thing that keeps your coverage alive",
+      "subjectAlt": "Month one. Check the card.",
+      "preheader": "Your plan is paid monthly to Budco. If the card changes, the coverage can lapse. One number fixes it.",
+      "goal": "Budco payment plan: autopay card, what happens if it fails, the number to update it.",
+      "bytes": 11453
+    },
+    {
+      "step": 7,
+      "phase": "habit",
+      "sendDay": 45,
+      "slug": "07-first-service-on-openbay",
+      "alias": "dod-owner-e07",
+      "name": "DOD Owner E7 - Your first cheaper oil change",
+      "subject": "Your first cheaper oil change",
+      "subjectAlt": "Book it on Openbay. Pay less. Keep the receipt.",
+      "preheader": "Routine service through Openbay+ costs less and keeps your coverage records clean.",
+      "goal": "First actual Openbay booking. Oil change interval based on mileage at purchase.",
+      "bytes": 11526
+    },
+    {
+      "step": 8,
+      "phase": "habit",
+      "sendDay": 60,
+      "slug": "08-tell-a-friend",
+      "alias": "dod-owner-e08",
+      "name": "DOD Owner E8 - $100 if a friend buys one of these",
+      "subject": "$100 if a friend buys one of these",
+      "subjectAlt": "Your referral link, and what it pays",
+      "preheader": "Send your link. If they buy a plan, you get a $100 gift card. They get the same deal you got.",
+      "goal": "Referral: $100 gift card when a friend buys through their link.",
+      "bytes": 11194
+    },
+    {
+      "step": 9,
+      "phase": "habit",
+      "sendDay": 90,
+      "slug": "09-the-other-car",
+      "alias": "dod-owner-e09",
+      "name": "DOD Owner E9 - The other car in the driveway",
+      "subject": "The other car in the driveway",
+      "subjectAlt": "Scan a plate, get a price, cover the second one",
+      "preheader": "Point your phone at a plate. Get a quote for the other car in about a minute.",
+      "goal": "Second vehicle: plate scan, free quote, add a plan to the household.",
+      "bytes": 11296
+    },
+    {
+      "step": 10,
+      "phase": "habit",
+      "sendDay": 120,
+      "slug": "10-after-a-fender-bender",
+      "alias": "dod-owner-e10",
+      "name": "DOD Owner E10 - If someone hits you this month, read",
+      "subject": "If someone hits you this month, read this first",
+      "subjectAlt": "The checklist for a minor accident",
+      "preheader": "Five things to do at the scene. Diminished Value Protection is why the fifth one matters.",
+      "goal": "DV refresher framed as a how-to after an accident.",
+      "bytes": 11778
+    },
+    {
+      "step": 11,
+      "phase": "habit",
+      "sendDay": 150,
+      "slug": "11-brakes-and-tires",
+      "alias": "dod-owner-e11",
+      "name": "DOD Owner E11 - Brakes and tires are not covered. He",
+      "subject": "Brakes and tires are not covered. Here is the cheaper way.",
+      "subjectAlt": "The wear items, priced before you arrive",
+      "preheader": "Openbay+ shows the price before you book. That is the whole difference.",
+      "goal": "Openbay for wear items. Price transparency.",
+      "bytes": 11270
+    },
+    {
+      "step": 12,
+      "phase": "keep",
+      "sendDay": 180,
+      "slug": "12-six-months",
+      "alias": "dod-owner-e12",
+      "name": "DOD Owner E12 - Six months. One thing to check.",
+      "subject": "Six months. One thing to check.",
+      "subjectAlt": "Halfway to a year. Is the card still good?",
+      "preheader": "Six months in. Confirm the payment card, keep the two numbers, carry on.",
+      "goal": "Six month check: card on file, a short recap, the numbers again.",
+      "bytes": 11322
+    },
+    {
+      "step": 13,
+      "phase": "keep",
+      "sendDay": 210,
+      "slug": "13-seasonal-prep",
+      "alias": "dod-owner-e13",
+      "name": "DOD Owner E13 - The season that kills batteries is c",
+      "subject": "The season that kills batteries is coming",
+      "subjectAlt": "A pre-season check, booked where the price is posted",
+      "preheader": "Batteries, tires, wipers. Check them before the weather does.",
+      "goal": "Seasonal readiness via Openbay: battery, tires, wipers, coolant. Roadside number.",
+      "bytes": 11379
+    },
+    {
+      "step": 14,
+      "phase": "keep",
+      "sendDay": 240,
+      "slug": "14-referral-two",
+      "alias": "dod-owner-e14",
+      "name": "DOD Owner E14 - Know anyone who just bought a used c",
+      "subject": "Know anyone who just bought a used car?",
+      "subjectAlt": "The thirty day window after a used car purchase",
+      "preheader": "The best time to cover a used car is right after buying it. Your link, their $100 savings for you.",
+      "goal": "Second referral ask with a different angle: the person who just bought a used car.",
+      "bytes": 9923
+    },
+    {
+      "step": 15,
+      "phase": "keep",
+      "sendDay": 270,
+      "slug": "15-the-bad-day-kit",
+      "alias": "dod-owner-e15",
+      "name": "DOD Owner E15 - The bad day kit, nine months in",
+      "subject": "The bad day kit, nine months in",
+      "subjectAlt": "Roadside, rental, hotel. What the plan does on the shoulder.",
+      "preheader": "Three events a year of roadside. Rental up to $250 per claim. Trip interruption up to $450.",
+      "goal": "Roadside, rental, trip interruption. Put the roadside number in the phone, again.",
+      "bytes": 11503
+    },
+    {
+      "step": 16,
+      "phase": "keep",
+      "sendDay": 300,
+      "slug": "16-dv-ends-soon",
+      "alias": "dod-owner-e16",
+      "name": "DOD Owner E16 - Your Diminished Value Protection end",
+      "subject": "Your Diminished Value Protection ends in two months",
+      "subjectAlt": "A date to know: {{{DV_END_DATE}}}",
+      "preheader": "Up to $5,000 of diminished value protection, included for year one. It ends {{{DV_END_DATE}}}.",
+      "goal": "Diminished Value Protection lapses at 12 months. Warn at month 10 and tell them what to do.",
+      "bytes": 11472
+    },
+    {
+      "step": 17,
+      "phase": "keep",
+      "sendDay": 330,
+      "slug": "17-the-family-fleet",
+      "alias": "dod-owner-e17",
+      "name": "DOD Owner E17 - The teenager has a car now. So does ",
+      "subject": "The teenager has a car now. So does the risk.",
+      "subjectAlt": "Cover the car that worries you most",
+      "preheader": "The car that scares you is the one to quote. Scan the plate, see the number.",
+      "goal": "Second car, framed around family members (kid driver, parent).",
+      "bytes": 11482
+    },
+    {
+      "step": 18,
+      "phase": "keep",
+      "sendDay": 365,
+      "slug": "18-one-year",
+      "alias": "dod-owner-e18",
+      "name": "DOD Owner E18 - One year covered. Here is the recap.",
+      "subject": "One year covered. Here is the recap.",
+      "subjectAlt": "Happy anniversary to your {{{VEHICLE}}}",
+      "preheader": "A year in. What the plan did, what to check, what changed.",
+      "goal": "Anniversary. Recap. Card check. DV lapsed. Review ask again, softly.",
+      "bytes": 11356
+    },
+    {
+      "step": 19,
+      "phase": "keep",
+      "sendDay": 420,
+      "slug": "19-the-noise",
+      "alias": "dod-owner-e19",
+      "name": "DOD Owner E19 - That new noise. Do not wait it out.",
+      "subject": "That new noise. Do not wait it out.",
+      "subjectAlt": "Noises get more expensive with time",
+      "preheader": "A new noise is a free phone call away from an answer. Waiting turns it into a bill.",
+      "goal": "What to do when the car makes a new noise: do not wait, call, covered diagnostics via claim.",
+      "bytes": 11382
+    },
+    {
+      "step": 20,
+      "phase": "keep",
+      "sendDay": 480,
+      "slug": "20-referral-three",
+      "alias": "dod-owner-e20",
+      "name": "DOD Owner E20 - The coworker with the check engine l",
+      "subject": "The coworker with the check engine light",
+      "subjectAlt": "$100 for you if they finally deal with it",
+      "preheader": "Everyone has one. Your link gets them a quote in a minute and you a $100 gift card.",
+      "goal": "Third referral ask: the coworker angle, quick.",
+      "bytes": 9989
+    },
+    {
+      "step": 21,
+      "phase": "renew",
+      "sendDay": 540,
+      "slug": "21-eighteen-months",
+      "alias": "dod-owner-e21",
+      "name": "DOD Owner E21 - Eighteen months. Twelve payments lef",
+      "subject": "Eighteen months. Twelve payments left.",
+      "subjectAlt": "The card check, and what happens when the payments stop",
+      "preheader": "A year and a half in. Confirm the card. Then a note about the end of the payment plan.",
+      "goal": "18 month card check and a reminder the loan ends before coverage does.",
+      "bytes": 11334
+    },
+    {
+      "step": 22,
+      "phase": "renew",
+      "sendDay": 600,
+      "slug": "22-selling-the-car",
+      "alias": "dod-owner-e22",
+      "name": "DOD Owner E22 - Selling the car? The plan goes with ",
+      "subject": "Selling the car? The plan goes with it.",
+      "subjectAlt": "A car with a service contract sells faster",
+      "preheader": "Coverage transfers to the buyer. That is a selling point, not a loose end.",
+      "goal": "Coverage transfers to a buyer. Makes the car easier to sell. Call Ascent.",
+      "bytes": 11365
+    },
+    {
+      "step": 23,
+      "phase": "renew",
+      "sendDay": 660,
+      "slug": "23-the-big-service",
+      "alias": "dod-owner-e23",
+      "name": "DOD Owner E23 - The big service interval, priced bef",
+      "subject": "The big service interval, priced before you go",
+      "subjectAlt": "Timing belt, fluids, plugs: book it where the price is posted",
+      "preheader": "The expensive scheduled service is cheaper with a posted price and a member discount.",
+      "goal": "Major mileage service interval via Openbay. Records matter for the back half of the term.",
+      "bytes": 11526
+    },
+    {
+      "step": 24,
+      "phase": "renew",
+      "sendDay": 720,
+      "slug": "24-two-years",
+      "alias": "dod-owner-e24",
+      "name": "DOD Owner E24 - Two years covered. Short recap.",
+      "subject": "Two years covered. Short recap.",
+      "subjectAlt": "Year two of the {{{VEHICLE}}}, in one card",
+      "preheader": "Two years in. The card, the numbers, and six payments to go.",
+      "goal": "Two year recap, card check, referral line, review line. Short.",
+      "bytes": 11262
+    },
+    {
+      "step": 25,
+      "phase": "renew",
+      "sendDay": 810,
+      "slug": "25-the-last-payments",
+      "alias": "dod-owner-e25",
+      "name": "DOD Owner E25 - Three payments left. Do not trip at ",
+      "subject": "Three payments left. Do not trip at the finish.",
+      "subjectAlt": "The end of the payment plan, and what happens next",
+      "preheader": "Almost paid off. The card has to survive three more months. Then the plan runs on its own.",
+      "goal": "Final stretch of payments. Do not let the card lapse at the end. What happens after.",
+      "bytes": 11401
+    },
+    {
+      "step": 26,
+      "phase": "renew",
+      "sendDay": 900,
+      "slug": "26-paid-off",
+      "alias": "dod-owner-e26",
+      "name": "DOD Owner E26 - Paid off. Covered until {{{COVERAGE_",
+      "subject": "Paid off. Covered until {{{COVERAGE_MONTHS}}} is up.",
+      "subjectAlt": "The last payment cleared. Here is what that means.",
+      "preheader": "The Budco plan is done. The coverage is not. One last note from us.",
+      "goal": "Loan paid off. Coverage continues. Final thanks, referral, review, second car. Series ends.",
+      "bytes": 11948
+    }
+  ],
+  "sms": [
+    {
+      "step": 1,
+      "sendDay": 1,
+      "key": "two_numbers",
+      "text": "DriveOne Direct: {{{FIRST_NAME}}}, your {{{VEHICLE}}} is covered. Save these two: Claims 866-660-7003 (the shop calls this before work). Roadside 877-626-0880 (24/7). That is the whole system. Reply STOP to opt out."
+    },
+    {
+      "step": 2,
+      "sendDay": 8,
+      "key": "openbay_inbox",
+      "text": "DriveOne Direct: Openbay+ came with your plan and emailed you a login. Search your inbox for Openbay (check promotions). Book ASE shops with the price posted and the member discount on. {{{OPENBAY_URL}}}"
+    },
+    {
+      "step": 3,
+      "sendDay": 15,
+      "key": "review",
+      "text": "DriveOne Direct: two weeks in. If buying this on your phone was easier than a dealership desk, a 30 second Google review helps the next person find the door: {{{REVIEW_URL}}}"
+    },
+    {
+      "step": 4,
+      "sendDay": 35,
+      "key": "budco_card",
+      "text": "DriveOne Direct: your {{{MONTHLY}}} goes to Budco, who run the 0% plan. If your card ever changes, call Budco at 888-352-7901 that day. A missed payment is a phone call. A lapsed plan is a repair bill."
+    },
+    {
+      "step": 5,
+      "sendDay": 61,
+      "key": "referral",
+      "text": "DriveOne Direct: know someone with a car and a bad feeling about the transmission? Your link: {{{REFERRAL_URL}}} If they buy, you get a $100 gift card after 30 days. No limit."
+    },
+    {
+      "step": 6,
+      "sendDay": 91,
+      "key": "plate_scan",
+      "text": "DriveOne Direct: the other car in the driveway is watching, uncovered. Point your phone at its plate and get a price in about a minute: {{{PLATE_URL}}}"
+    },
+    {
+      "step": 7,
+      "sendDay": 181,
+      "key": "six_months",
+      "text": "DriveOne Direct: six months covered. One check: is the payment card still valid? If it changed, Budco 888-352-7901. Claims 866-660-7003. Roadside 877-626-0880. Done for another six."
+    },
+    {
+      "step": 8,
+      "sendDay": 300,
+      "key": "dv_ending",
+      "text": "DriveOne Direct: your Diminished Value Protection (up to $5,000) ends {{{DV_END_DATE}}}. Had an accident on record this year and not filed? Call Ascent 866-660-7003 before that date, contract {{{DV_CONTRACT}}}. Mechanical coverage continues."
+    },
+    {
+      "step": 9,
+      "sendDay": 365,
+      "key": "one_year",
+      "text": "DriveOne Direct: one year covered on the {{{VEHICLE}}}. Card still good? 888-352-7901 if not. Year one DV protection has ended; reply if you want options. The plan keeps going. Thanks for skipping the desk."
+    },
+    {
+      "step": 10,
+      "sendDay": 541,
+      "key": "eighteen_months",
+      "text": "DriveOne Direct: 18 months in, about 12 payments left. The payments end before the coverage does. Only a failed card can break that. Budco 888-352-7901 if yours changed."
+    },
+    {
+      "step": 11,
+      "sendDay": 811,
+      "key": "last_payments",
+      "text": "DriveOne Direct: about three payments left on the {{{VEHICLE}}}. Keep the card good through the last one and the plan runs to the end of its term with nothing more owed. Budco 888-352-7901."
+    },
+    {
+      "step": 12,
+      "sendDay": 901,
+      "key": "paid_off",
+      "text": "DriveOne Direct: paid off. Coverage on the {{{VEHICLE}}} continues to the end of its term. Claims 866-660-7003. Roadside 877-626-0880. Referral still pays $100: {{{REFERRAL_URL}}} This is our last scheduled text."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+The payments are done. The coverage is not. This is the last one.
+
+Your Budco plan on the {{{VEHICLE}}} is paid. Nothing else is owed. The vehicle service contract, {{{CONTRACT}}}, keeps running until the end of its {{{COVERAGE_MONTHS}}} term, with the same $100 deductible, the same roadside, the same Openbay+ access.
+This is the last scheduled email in the series. The two numbers stay in your phone. If something breaks, the shop calls Ascent. If you sell, the plan transfers. If you buy another car, the plate tool is still there.
+
+FOR THE RECORD
+Contract: {{{CONTRACT}}}
+Claims: 866-660-7003
+Roadside: 877-626-0880
+Another car: {{{PLATE_URL}}}
+Referral, still $100: {{{REFERRAL_URL}}}
+
+Thank you for buying this the way it was meant to be bought: on your own terms, in a few minutes, without anyone across a desk. If you tell one person that was possible, you have done more for us than any ad.
+
+Tell one person -> {{{REFERRAL_URL}}}
+Your link still pays $100 for every friend whose plan activates.
+
+We said we would stop at the end of the plan. This is us stopping. The numbers do not expire.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

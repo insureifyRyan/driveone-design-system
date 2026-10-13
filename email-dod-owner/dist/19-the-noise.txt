@@ -1,0 +1,26 @@
+Every expensive repair was a cheap noise three weeks earlier.
+
+Fourteen months in, the {{{VEHICLE}}} will eventually make a sound it did not make before. The instinct is to turn the radio up. The instinct is wrong, and with a plan, it is also unnecessary.
+Take it to an ASE-certified shop, book it through Openbay+ if you want the price posted first, and have the shop call Ascent before they do anything. If the cause is a covered failure, the repair is covered. If it is not, you paid for a diagnosis instead of a tow.
+
+WHEN IT MAKES A NOISE
+1: Note when it happens: cold, turning, braking, speed
+2: Book a shop on Openbay+
+3: Shop calls Ascent, 866-660-7003, before work
+4: Covered failure: $100. Not covered: you still caught it early.
+
+The plan pays for covered parts that fail. It does not pay for the extra damage caused by driving on a failed part for a month. Early is cheaper in every version of this story.
+
+Book a look on Openbay+ -> {{{OPENBAY_URL}}}
+Tell the shop there is a service contract before they start.
+
+The radio trick has never once fixed a wheel bearing. We have looked into it.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

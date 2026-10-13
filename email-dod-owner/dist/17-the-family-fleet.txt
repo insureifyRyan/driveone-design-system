@@ -1,0 +1,26 @@
+Every family has one car that worries everyone else.
+
+The kid's first car. The parent's old sedan. The one that gets driven hard and serviced never. Almost a year in with the {{{VEHICLE}}}, you know what a plan feels like: the noise is just a noise, not a bill.
+Point your phone at that car's plate. The tool prices a plan in about a minute. If it rates, you can put it on a 0% plan like yours and give the person who drives it the same two phone numbers you have.
+
+WORTH QUOTING
+The first car: Driven by someone learning what a car costs
+The old one: Past 80,000 miles and still daily driven
+The spare: Sits a lot, which is how batteries and seals die
+Yours, again: Not needed. You are covered.
+
+Separate contract, separate payment, same shop network, same claims line. The person driving it never has to learn how a claim works. They hand the shop the number.
+
+Scan the other plate -> {{{PLATE_URL}}}
+About a minute. No call. Close the tab if the price is not right.
+
+Teaching a new driver to say have the shop call this number first is the most useful thing in this email.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

@@ -1,0 +1,26 @@
+Year one of Diminished Value Protection ends {{{DV_END_DATE}}}.
+
+When you bought the plan, Diminished Value Protection came with it for one year, up to $5,000. Contract {{{DV_CONTRACT}}}. That year ends on {{{DV_END_DATE}}}.
+Two things to know. One: if you have had an accident on record since {{{START_DATE}}} and have not filed, call Ascent now, not after the date. Two: your vehicle service contract on the {{{VEHICLE}}} keeps running for the full {{{COVERAGE_MONTHS}}}. Only the DV piece has a one year term.
+
+WHAT CHANGES AND WHAT DOES NOT
+Diminished Value: Ends {{{DV_END_DATE}}}
+Mechanical coverage: Continues, {{{COVERAGE_MONTHS}}} total
+Roadside, rental: Continue
+Openbay+: Continues
+
+If you want to keep Diminished Value Protection past year one, reply to this email and we will tell you what is available. We are not going to pretend it renews itself.
+
+Had an accident this year? Call Ascent -> tel:18666607003
+Contract {{{DV_CONTRACT}}}. Before {{{DV_END_DATE}}}.
+
+Most people will never use this. The ones who do are glad someone wrote it down.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

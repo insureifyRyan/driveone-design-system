@@ -1,0 +1,26 @@
+You covered one car. The other one is watching, uncovered.
+
+Three months in and the {{{VEHICLE}}} is handled. Most driveways have a second car, and it is usually the older one, which is the one that breaks.
+The quote tool reads a license plate from your phone camera, decodes the vehicle, and prices a plan. Same deal: $100 deductible, 0% plan, any ASE shop, Openbay+ and Diminished Value Protection included. About a minute, no call.
+
+SCAN A PLATE
+1: Open the link on your phone
+2: Point the camera at any plate in your driveway
+3: See the price. Buy it or close the tab.
+Covers: Spouse, kid, the truck you keep for reasons
+
+A second plan does not change the first. Separate contract, separate payment, same two phone numbers you already saved.
+
+Scan a plate -> {{{PLATE_URL}}}
+Works on any car in the household. The plate does not have to be yours; the car does.
+
+If your second car is a 2004 something with a cassette deck, we respect that, and it may not rate. The tool will tell you.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

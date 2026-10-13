@@ -1,0 +1,26 @@
+Weather does not break cars. It finds the ones already weak.
+
+Every season has a part it picks on. Cold kills batteries. Heat kills them too, slower. Rain finds the wipers you meant to replace. None of that is a covered failure, all of it is a Tuesday ruined.
+A pre-season check through Openbay+ is cheap and the price is posted before you book. If something is marginal, you fix it on your schedule instead of the weather's.
+
+PRE-SEASON LIST
+Battery: Load test, especially past year three
+Tires: Tread and pressure, all four
+Wipers: If they streak, they are done
+Roadside: 877-626-0880, in case the list was late
+
+If the list is late and the {{{VEHICLE}}} does not start, roadside is included: up to three events a year, any hour. That number is under the logo on every email we send.
+
+Book a pre-season check -> {{{OPENBAY_URL}}}
+Openbay+, member pricing, ASE-certified shop of your choosing.
+
+A jump start at 6am in a parking garage is a roadside event. It is also a sign. Book the battery test.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

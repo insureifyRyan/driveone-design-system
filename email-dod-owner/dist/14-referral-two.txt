@@ -1,0 +1,22 @@
+Someone you know just bought a used car and said no to the desk.
+
+Good. The desk markup was real. But they walked out with no coverage and a car that has already had one owner, and the first big repair is usually inside the first two years.
+Send your link. They get a quote in a minute with no desk and no markup. If they buy, we send you a $100 gift card after their plan is active for 30 days. Same as last time, no limit.
+
+YOUR REFERRAL LINK: $100 gift card, per friend whose plan activates through your link. {{{REFERRAL_URL}}}
+
+Facebook Marketplace, a private sale, a cousin: anyone who bought without a finance office is exactly who this was built for.
+
+Send my link -> {{{REFERRAL_URL}}}
+Text it, email it, put it in the group chat.
+
+The group chat move works more often than you would think.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

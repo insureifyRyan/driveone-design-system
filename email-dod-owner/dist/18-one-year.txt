@@ -1,0 +1,26 @@
+A year ago you skipped the desk. Here is what that bought.
+
+Twelve months of a plan on the {{{VEHICLE}}}: a fixed $100 deductible on covered repairs, roadside on call, a rental if a claim needed one, Openbay+ for everything else, and a year of Diminished Value Protection that ended this week.
+The mechanical coverage keeps going. {{{COVERAGE_MONTHS}}} total, which means the plan outlasts the payments. Two things to do today, and then nothing for another year.
+
+YEAR ONE CHECK
+Payment card: Still valid? 888-352-7901 if not
+Diminished Value: Year one ended. Reply if you want options.
+Openbay+: Receipts filed, discounts used
+Review: If year one was fine, say so below
+
+If the only thing this plan did all year was sit there, that was the point. You bought boring. Boring is what it looks like when it works.
+
+Leave a one year review -> {{{REVIEW_URL}}}
+Skip it if you already did. We will not ask twice in the same year.
+
+We would send a cake. Email cannot carry cake. We checked.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

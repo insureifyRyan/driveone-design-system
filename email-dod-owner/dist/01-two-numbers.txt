@@ -1,0 +1,27 @@
+Save two numbers. Then go live your life.
+
+Your {{{VEHICLE}}} is covered as of {{{START_DATE}}}. The contract is {{{CONTRACT}}}. You will not need to remember that number, because it is at the top and bottom of every email we send you.
+The two numbers you do want in your phone are the ones under the logo above. Claims, which the shop calls before touching anything. Roadside, which you call from a shoulder at 11pm. Save them now while this is open and you will never search for them while stressed.
+
+YOUR PLAN AT A GLANCE
+Vehicle: {{{VEHICLE}}}
+Plan: {{{PLAN}}}
+Coverage: {{{COVERAGE_MONTHS}}}
+Deductible: $100 per visit
+Also included: Openbay+, Diminished Value Protection
+
+Over the length of your plan we will send one short note at a time: how to use Openbay+ to pay less for service, what Diminished Value Protection actually does, and the one thing to check on your payment plan so it never lapses. No fluff. Unsubscribe on every one.
+
+Save the claims number -> tel:18666607003
+Tapping it on a phone opens the dialer so you can save it as a contact. Call it only when something breaks.
+
+If you were expecting a confetti cannon: budget cuts. The coverage is the confetti.
+
+Stuck on the payment step? Budco Financial Services: 888-352-7901. Coverage or claims: Ascent, 866-660-7003.
+
+---
+This is an advertisement. A vehicle service contract is not insurance and is not a manufacturer's warranty. Coverage is administered by Ascent Administration Services, LLC and insured by Old Republic Insurance Company (A+ rated by AM Best). Not available in California. Coverage, price and terms vary by state and are subject to limits and exclusions; see your contract for the complete list of covered components and exclusions. A $100 deductible applies per covered visit. Diminished Value Protection is a separate contract with a one year term and a benefit of up to $5,000; see that contract for terms. Openbay+ is a third party service; discounts and availability are set by Openbay and participating shops. Referral gift cards are paid after the referred plan has been active 30 days; limits and eligibility at driveonedirect.com/terms. Cancel anytime: full refund within 30 days if no claim has been paid; prorated after, less any paid claims and a cancellation fee where permitted by your state. Questions about coverage or claims? Call the administrator, Ascent, at 866-660-7003.
+
+Insureify AI, Inc. DBA Kovara AI - 304 South Jones Blvd, Las Vegas, NV 89107
+Contract {{{CONTRACT}}} - DV {{{DV_CONTRACT}}} - Reference {{{REF}}}
+Unsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}

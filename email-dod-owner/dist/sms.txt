@@ -1,0 +1,35 @@
+[1] day 1 (two_numbers, 215 chars)
+DriveOne Direct: {{{FIRST_NAME}}}, your {{{VEHICLE}}} is covered. Save these two: Claims 866-660-7003 (the shop calls this before work). Roadside 877-626-0880 (24/7). That is the whole system. Reply STOP to opt out.
+
+[2] day 8 (openbay_inbox, 203 chars)
+DriveOne Direct: Openbay+ came with your plan and emailed you a login. Search your inbox for Openbay (check promotions). Book ASE shops with the price posted and the member discount on. {{{OPENBAY_URL}}}
+
+[3] day 15 (review, 174 chars)
+DriveOne Direct: two weeks in. If buying this on your phone was easier than a dealership desk, a 30 second Google review helps the next person find the door: {{{REVIEW_URL}}}
+
+[4] day 35 (budco_card, 201 chars)
+DriveOne Direct: your {{{MONTHLY}}} goes to Budco, who run the 0% plan. If your card ever changes, call Budco at 888-352-7901 that day. A missed payment is a phone call. A lapsed plan is a repair bill.
+
+[5] day 61 (referral, 175 chars)
+DriveOne Direct: know someone with a car and a bad feeling about the transmission? Your link: {{{REFERRAL_URL}}} If they buy, you get a $100 gift card after 30 days. No limit.
+
+[6] day 91 (plate_scan, 151 chars)
+DriveOne Direct: the other car in the driveway is watching, uncovered. Point your phone at its plate and get a price in about a minute: {{{PLATE_URL}}}
+
+[7] day 181 (six_months, 181 chars)
+DriveOne Direct: six months covered. One check: is the payment card still valid? If it changed, Budco 888-352-7901. Claims 866-660-7003. Roadside 877-626-0880. Done for another six.
+
+[8] day 300 (dv_ending, 241 chars)
+DriveOne Direct: your Diminished Value Protection (up to $5,000) ends {{{DV_END_DATE}}}. Had an accident on record this year and not filed? Call Ascent 866-660-7003 before that date, contract {{{DV_CONTRACT}}}. Mechanical coverage continues.
+
+[9] day 365 (one_year, 206 chars)
+DriveOne Direct: one year covered on the {{{VEHICLE}}}. Card still good? 888-352-7901 if not. Year one DV protection has ended; reply if you want options. The plan keeps going. Thanks for skipping the desk.
+
+[10] day 541 (eighteen_months, 169 chars)
+DriveOne Direct: 18 months in, about 12 payments left. The payments end before the coverage does. Only a failed card can break that. Budco 888-352-7901 if yours changed.
+
+[11] day 811 (last_payments, 189 chars)
+DriveOne Direct: about three payments left on the {{{VEHICLE}}}. Keep the card good through the last one and the plan runs to the end of its term with nothing more owed. Budco 888-352-7901.
+
+[12] day 901 (paid_off, 212 chars)
+DriveOne Direct: paid off. Coverage on the {{{VEHICLE}}} continues to the end of its term. Claims 866-660-7003. Roadside 877-626-0880. Referral still pays $100: {{{REFERRAL_URL}}} This is our last scheduled text.

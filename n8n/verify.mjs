@@ -43,7 +43,7 @@ const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_I
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
   '07-scorecard.json', '08-sales-alert.json', '09-sms-send.json',
-  '10-sms-nurture.json',
+  '10-sms-nurture.json', '11-sms-inbound.json',
 ].map((f) => ({ file: f, wf: load(f) }));
 
 const results = [];
@@ -286,9 +286,17 @@ check('no Code node reads $json', () => {
   // WHY: Classify Event read $json.params, which is bound only in
   // run-once-per-item mode. Every event would have died on a ReferenceError
   // before reaching the database - valid ones included.
+  //
+  // Strip comments before testing. A node that correctly uses $input.all() and
+  // explains WHY in a comment mentioning $json was failing this, which is the
+  // same trap as matching a SQL comment: the check must read what the code
+  // does, not what it says about itself.
+  const stripped = (js) => js
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
   const bad = codeNodes()
     .filter(({ node }) => node.parameters.mode !== 'runOnceForEachItem')
-    .filter(({ node }) => /(^|[^.\w])\$json\b/.test(node.parameters.jsCode))
+    .filter(({ node }) => /(^|[^.\w])\$json\b/.test(stripped(node.parameters.jsCode)))
     .map(({ file, node }) => `${file} / ${node.name}`);
   assert(bad.length === 0, `$json is undefined in these: ${bad.join('; ')}`);
   return `${codeNodes().length} nodes clean`;
@@ -829,6 +837,83 @@ check('a late enrolment gets one text, not the whole backlog', () => {
   assert(!late[0].json.media_url, 'step 3 is sending as MMS; only the first text should');
 
   return 'highest due step only, tags resolved, incomplete rows dropped';
+});
+
+check('a STOP reply is recognised and silences every campaign', () => {
+  // WHY: this is the highest-consequence code in the SMS layer. A STOP that is
+  // not recognised keeps texting someone who told us to stop, at $500 to $1,500
+  // a message, on the dealer's own customer list. And the failure is INVISIBLE:
+  // a handler that matches nothing looks exactly like a week where nobody opted
+  // out. An earlier version of this classifier derived the customer's number by
+  // taking "whichever number is not ours", which with no rooftop number yet
+  // configured made every opt-out ambiguous and suppressed NOBODY. Runs the
+  // real node code against Sendblue's documented message shape.
+  const wf = load('11-sms-inbound.json');
+  const code = nodeNamed(wf, 'Classify Inbound').parameters.jsCode;
+  // Feed it the way n8n does: one item per message, each wrapped in .json.
+  // Returns the unwrapped payloads: the node emits n8n's { json: ... } envelope.
+  const run = (messages) => new Function('$input', code)(
+    { all: () => messages.map((m) => ({ json: m })) }).map((o) => o.json);
+
+  const inbound = (content, extra = {}) => ({
+    is_outbound: false, content,
+    from_number: '+15551234567', number: '+19998887777',
+    message_handle: 'msg_in_1', date_created: '2026-10-13T12:00:00Z', ...extra,
+  });
+
+  // The words people actually send, in the casings they actually use.
+  for (const word of ['STOP', 'stop', 'Stop', 'STOP.', 'unsubscribe', 'CANCEL',
+    'end', 'quit', 'opt out', 'remove me', 'stopall']) {
+    const [r] = run([inbound(word)]);
+    assert(r && r.kind === 'stop', `"${word}" was classified as ${r && r.kind}, not stop`);
+    assert(r.phone_e164 === '+15551234567',
+      `"${word}" resolved the wrong number: ${r.phone_e164}`);
+  }
+
+  // A sentence CONTAINING stop is not an opt-out. Matching as a substring would
+  // opt out the person who wrote the second one, which is the opposite of what
+  // they asked for.
+  for (const phrase of ['please do not stop sending these, they are useful',
+    'can you stop by the shop tomorrow', 'I will stop in on Friday']) {
+    const [r] = run([inbound(phrase)]);
+    assert(r && r.kind === 'reply', `"${phrase}" was treated as an opt-out`);
+  }
+
+  // An ordinary reply is kept, not silently dropped: somebody has to read it.
+  const [reply] = run([inbound('how much for two years?')]);
+  assert(reply.kind === 'reply' && reply.body, 'a real reply is discarded');
+
+  // Outbound traffic becomes a status update, never a suppression.
+  const [st] = run([{ is_outbound: true, message_handle: 'msg_out_9', status: 'DELIVERED' }]);
+  assert(st.kind === 'status' && st.message_handle === 'msg_out_9',
+    'an outbound message is not turned into a status update');
+  const outStop = run([{ is_outbound: true, content: 'STOP', message_handle: 'x', status: 'SENT' }]);
+  assert(outStop.every((r) => r.kind !== 'stop'),
+    'a message WE sent containing the word STOP suppressed the customer');
+
+  // Unknown direction is left alone rather than guessed at.
+  assert(run([{ content: 'STOP', message_handle: 'y' }]).length === 0,
+    'a message with no direction flag is acted on');
+
+  // Where the number genuinely cannot be resolved, it is flagged for a human
+  // instead of silently dropped.
+  const [amb] = run([inbound('STOP', { from_number: null, number: null })]);
+  assert(amb.kind === 'stop_ambiguous', 'an unresolvable opt-out is not flagged');
+
+  // The write must be idempotent, because the sweep re-reads after a failed run.
+  const sql = nodeNamed(wf, 'Suppress And Record').parameters.query;
+  assert(/on conflict \(phone_e164\) do nothing/i.test(sql),
+    'suppression is not idempotent, so a re-read errors instead of no-opping');
+  assert(/update sms_consent[\s\S]*revoked_at = now\(\)/i.test(sql),
+    'a STOP does not revoke the consent row, leaving live consent beside a suppression');
+  // Suppression must not sit behind a branch that a status update can divert.
+  const feeds = Object.entries(wf.connections)
+    .filter(([, c]) => JSON.stringify(c).includes('Suppress And Record'))
+    .map(([from]) => from);
+  assert(feeds.length === 1 && feeds[0] === 'Classify Inbound',
+    `suppression is fed by ${feeds.join(', ')}, not directly by the classifier`);
+
+  return 'stop words matched whole-string, number resolved, writes idempotent';
 });
 
 check('no text can leave without passing every gate', () => {

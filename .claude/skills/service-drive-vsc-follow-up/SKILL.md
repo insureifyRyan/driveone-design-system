@@ -1340,7 +1340,7 @@ is ever rebuilt**, or the channel gets 280 messages at once.
   `count(*)` of unannounced completed quotes before running, or the sweep posts
   more than you intended.
 
-## SMS and MMS (workflows 09 and 10)
+## SMS and MMS (workflows 09, 10 and 11)
 
 Two pieces, and keeping them apart is the point. **09 is the shared send layer**
 and decides whether a message is allowed to leave. **10 is this campaign's
@@ -1408,6 +1408,43 @@ text is just a bigger bill.
   messages over sixty days means a daily sweep is ample, and it keeps the
   cohort's texts in one predictable slot instead of trickling all day.
 
+### Workflow 11, the inbound and STOP sweep
+
+Shared like 09. **POLLS `GET /api/v2/messages` every ten minutes rather than
+waiting on a webhook, and that is an upgrade, not a workaround.**
+
+A missed webhook is a missed STOP, and a missed STOP is the one failure here
+with a statutory price on it. Deliveries get dropped, retried badly, or quietly
+pointed at a stale URL, and nothing tells you. A sweep is self-healing: a failed
+run is re-read by the next one, and because `sms_suppression` is keyed on the
+phone with `on conflict do nothing`, re-processing is a no-op by construction.
+At three texts per person over sixty days the cost is nothing.
+
+It runs **around the clock**, unlike every other workflow here. Opt-outs do not
+respect the send window.
+
+- **`is_outbound` is the only direction flag.** `true` becomes a delivery-status
+  update matched on `message_handle`; `false` is a customer message. Anything
+  else — absent, null — is left alone rather than guessed at.
+- **Resolving WHOSE number sent an inbound is the subtle part, and the first
+  version was wrong.** It took "whichever number is not one of ours", built from
+  `smsFromNumber` across the dealer files. That set is EMPTY until a rooftop has
+  its own number, which made every opt-out ambiguous and would have suppressed
+  **nobody** — a STOP handler that silently honours nothing, which looks exactly
+  like a quiet week. It now reads `from_number` as the sender, which is the
+  ordinary reading of the schema, falling back to `number` when `from_number` is
+  one of ours. Where it genuinely cannot tell, the row is emitted as
+  `stop_ambiguous` for a human rather than acted on: being noisy about an
+  unclear opt-out is cheap, mishandling one is not.
+- **Opt-out keywords match the WHOLE trimmed message, never as a substring.**
+  "please do not stop sending these, they are useful" must not opt that person
+  out, and "can you stop by the shop tomorrow" is a service enquiry. `verify.mjs`
+  removes the regex anchors and fails if either slips through.
+- **A STOP revokes the consent row as well as suppressing**, so the record says
+  why rather than leaving a live consent sitting beside a suppression.
+- **Real replies are kept, not dropped.** Somebody has to read "how much for two
+  years?".
+
 ### Workflow 09, the shared send layer
 
 Added 13 Oct 2026. **Shared across campaigns on purpose**, which is why its
@@ -1467,13 +1504,27 @@ comes from Ferrario.
   would claim a send that never happened AND let the daily cap block the retry.
   The HTTP error output is index 1; `connect()` only wires index 0, so it is
   attached explicitly after the file is written.
-- **Sendblue API** (not reachable from the container — `docs.sendblue.com`
-  is blocked by the egress proxy, so this is from the published shape and the
-  first live send confirms it): `POST https://api.sendblue.com/api/send-message`,
-  headers `sb-api-key-id` and `sb-api-secret-key`, body `number` / `content` /
-  `media_url` / `status_callback`, response carries `message_handle` and
-  `status`. `media_url` is omitted entirely rather than sent null for a plain
-  SMS.
+- **Sendblue API, confirmed from the vendor's own examples 13 Oct 2026.**
+  `POST https://api.sendblue.co/api/send-message`, headers `sb-api-key-id` and
+  `sb-api-secret-key`.
+  > **The host is `api.sendblue.CO`, not `.com`.** This was built against `.com`
+  > from a web search that had it wrong, which would have failed every send
+  > against a host we do not control. Do not "correct" it back.
+
+  Send body: `number` (the recipient), `from_number`, `content`, `media_url`,
+  `status_callback`, plus `send_style` / `seat_id` / `pre_reply_override` which
+  this campaign does not use. Empty keys are OMITTED rather than sent as null.
+
+  **`from_number` is the dealer-branding lever**, and it is why
+  `sending.smsFromNumber` exists per rooftop. Sendblue has no branded sender ID,
+  so on one shared number every store texts from the same unknown digits. A
+  number per rooftop makes the text genuinely come from the dealership, and it
+  is what a customer saves to their contacts and replies to. Null today.
+
+  The message object carries `is_outbound`, `content`, `from_number`, `number`,
+  `message_handle`, `status`, `error_code` / `error_message`, `date_created`,
+  `media_url`. `message_handle` is what `sms_send_log.provider_message_id`
+  stores.
 - **There is no Sendblue MCP** in the connector directory, and it would be the
   wrong mechanism anyway: an MCP is a tool *Claude* calls in a conversation, and
   the campaign has to send unattended from n8n. An MCP would only be useful for
@@ -1510,15 +1561,19 @@ comes from Ferrario.
    n8n **`$vars`** (never `$env` — blocked inside nodes on Cloud).
 2. **Line-type lookup for all 90 numbers.** 0 are classified, and the gate
    treats unknown as not mobile, so today the layer correctly sends nothing.
-3. The inbound webhook for STOP replies and status callbacks — **not yet built**.
-   Until it exists, nothing writes `sms_suppression`, so do not enable sending:
-   an opt-out would have nowhere to land. Treat this as the blocking one.
-4. Workflow 10's `Send Each` node carries `REPLACE_SMS_SEND_WF_ID`, which has to
+3. Workflow 10's `Send Each` node carries `REPLACE_SMS_SEND_WF_ID`, which has to
    become 09's real workflow id at deploy time, the same way `REPLACE_PG_CRED_ID`
-   does. 10 will run and find due texts without it and then fail at the handoff.
-5. Import and activate 09 and 10. Neither is deployed; both exist only in
-   `n8n/workflows/<dealer>/`.
+   does. 10 will run, find due texts, and then fail at the handoff without it.
+4. Import and activate **09, 10 and 11**. None is deployed; all three exist only
+   in `n8n/workflows/<dealer>/`.
+5. Confirm the two **unverified** assumptions in 11 on its first live run: that
+   `GET /api/v2/messages` takes the same auth headers as the send endpoint, and
+   what its query parameters are. It currently reads the recent page and filters
+   in code, with no cursor, because the pagination parameters are not documented
+   anywhere we can reach. Fine at one rooftop; add the cursor before several.
 
-**Order matters here.** 09 before 10, because 10 calls it. The STOP webhook
-before either is enabled, because a campaign that can text but cannot be told to
-stop is the one failure mode with a statutory price on it.
+**Order matters.** 09 before 10, because 10 calls it. **11 live and confirmed
+working before either is enabled**, because a campaign that can text but cannot
+be told to stop is the one failure mode with a statutory price on it. Send
+yourself a text and reply STOP as the first real test; the row should appear in
+`sms_suppression` within ten minutes and the consent row should read revoked.

@@ -2455,7 +2455,11 @@ const smsNodes = [
 
   node('Send Via Sendblue', 'httpRequest', 4.2, [40, -100], {
     method: 'POST',
-    url: 'https://api.sendblue.com/api/send-message',
+    // api.sendblue.CO, not .com. Confirmed from Sendblue's own curl example on
+    // 13 Oct 2026. This was built against .com from a web search that had it
+    // wrong, which would have failed every send against either a dead host or
+    // somebody else's domain. Do not "correct" it back.
+    url: 'https://api.sendblue.co/api/send-message',
     sendHeaders: true,
     headerParameters: {
       parameters: [
@@ -2467,10 +2471,19 @@ const smsNodes = [
     },
     sendBody: true,
     specifyBody: 'json',
-    // media_url present makes it an MMS; absent leaves it a plain SMS. Built in
-    // code rather than as fixed fields so the key can be omitted entirely
-    // rather than sent as null, which Sendblue treats differently.
+    // Keys are OMITTED rather than sent as null when empty, which is why this
+    // is assembled in code rather than declared as fixed fields.
+    //
+    // from_number is the dealer branding lever. Sendblue accepts a per-message
+    // sending number, so each rooftop can text from its own number instead of
+    // every store sharing one, which is the real fix for "a text from an
+    // unknown number". Omitted when the rooftop has none configured, in which
+    // case the account default is used and the store name in the opening words
+    // is all the branding there is.
+    //
+    // media_url present makes it an MMS; absent leaves it a plain SMS.
     jsonBody: '={{ JSON.stringify(Object.assign({ number: $json.phone_e164, content: $json.body },'
+      + ' $json.from_number ? { from_number: $json.from_number } : {},'
       + ' $json.media_url ? { media_url: $json.media_url } : {})) }}',
   }, {
     retryOnFail: true, maxTries: 3, waitBetweenTries: 5000,
@@ -2593,6 +2606,10 @@ const SMS_RENDER_CODE = `
 // Decide which text is due, and render it. Nothing here sends: every row that
 // comes out of this node is a REQUEST to workflow 09, which is free to refuse.
 const SCHEDULE = ${JSON.stringify(SMS_SCHEDULE, null, 2)};
+// The rooftop's own Sendblue number, so the text comes FROM the dealership
+// rather than from a shared number. Null until the account exists, in which
+// case 09 omits the field and the account default sends.
+const FROM_NUMBER = ${JSON.stringify((DEALER.sending && DEALER.sending.smsFromNumber) || null)};
 const DEALER_NAME = ${JSON.stringify((DEALER.dealer && (DEALER.dealer.displayName || DEALER.dealer.name)) || DEALER.id)};
 const DEALER_LOGO = ${JSON.stringify((DEALER.logo && (DEALER.logo.light || DEALER.logo.dark)) || null)};
 const TZ = ${JSON.stringify(DEALER.sending.timezone)};
@@ -2657,6 +2674,7 @@ for (const item of $input.all()) {
     dealer_id: DEALER_ID,
     customer_id: r.customer_id,
     phone_e164: r.phone_e164,
+    from_number: FROM_NUMBER || '',
     step: due.step,
     body,
     // MMS only where the deck asks for it. The dealer's own logo is what makes
@@ -2710,6 +2728,211 @@ writeFileSync(join(ROOT, `${WF_DIR}/10-sms-nurture.json`),
   ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
 
 console.log('built 10-sms-nurture.json');
+
+
+/* ====================================== 11. SMS INBOUND / STOP SWEEP ===== */
+//
+// Shared, like 09. POLLS rather than waits for a webhook, and that is a
+// deliberate upgrade rather than a workaround.
+//
+// A missed webhook is a missed STOP, and a missed STOP is the one failure in
+// this whole system with a statutory price on it. Deliveries get dropped,
+// retried badly, or silently pointed at a stale URL, and nothing tells you.
+// A sweep is self-healing: if a run fails, the next one sees the same messages
+// again and writes the same suppression row. sms_suppression is keyed on the
+// phone, so re-processing is a no-op by construction.
+//
+// Volume makes it free: three texts over sixty days to at most ninety people.
+const SMS_INBOUND_CODE = `
+// Sendblue's message object, confirmed from their schema 13 Oct 2026:
+//   is_outbound   boolean   the ONLY reliable direction flag
+//   content       string    the message text
+//   from_number   string    our sending number on an outbound
+//   number        string    the contact on an outbound
+//   message_handle string   matches sms_send_log.provider_message_id
+//   status        string    QUEUED, etc
+//   error_code / error_message
+//   date_created / date_updated
+// $input.all(), never $json: a Code node runs once for ALL items here, and
+// $json is only defined in run-once-per-item mode.
+//
+// The HTTP node yields either a single item holding the whole response body, or
+// one item per message when the API returns a bare array. Both shapes are
+// flattened rather than assuming one, because which you get depends on the
+// response and finding out in production means a sweep that silently reads
+// nothing.
+const rows = [];
+for (const it of $input.all().map((i) => i.json)) {
+  if (Array.isArray(it)) rows.push(...it);
+  else if (Array.isArray(it.data)) rows.push(...it.data);
+  else if (Array.isArray(it.messages)) rows.push(...it.messages);
+  else if (it && typeof it === 'object') rows.push(it);
+}
+
+// WHICH FIELD HOLDS THE CUSTOMER ON AN INBOUND IS NOT DOCUMENTED.
+// On an outbound, from_number is ours and number is theirs. On an inbound it is
+// either swapped, or number stays "the contact" throughout. Guessing wrong
+// means suppressing OUR OWN sending number, which would mute the entire
+// campaign for everybody, or writing a suppression row that matches nobody.
+//
+// So do not guess: take whichever number is NOT one of ours. If both or neither
+// look like ours, emit it for review instead of acting on it. Being noisy about
+// an ambiguous opt-out is cheap; silently mishandling one is not.
+const OURS = new Set(${JSON.stringify(
+  [...new Set(ALL_DEALERS.map((d) => (d.sending && d.sending.smsFromNumber) || null).filter(Boolean))],
+)});
+
+const digits = (s) => String(s == null ? '' : s).replace(/[^0-9]/g, '');
+const e164 = (s) => {
+  const d = digits(s);
+  if (d.length === 10) return '+1' + d;
+  if (d.length === 11 && d[0] === '1') return '+' + d;
+  return d ? '+' + d : null;
+};
+const isOurs = (n) => {
+  const t = e164(n);
+  if (!t) return false;
+  for (const o of OURS) if (e164(o) === t) return true;
+  return false;
+};
+
+// CTIA standard opt-out keywords plus the ones people actually type. Matched on
+// the WHOLE trimmed message, not as a substring: "please do not stop sending
+// these, they are useful" must not opt somebody out.
+const STOP_WORDS = /^(stop|stopall|unsubscribe|cancel|end|quit|revoke|optout|opt-out|opt out|remove me|take me off)[.!]*$/i;
+
+const out = [];
+for (const m of rows) {
+  if (m.is_outbound === true) {
+    // Outbound: a status update for a message we sent.
+    if (m.message_handle) {
+      out.push({ json: {
+        kind: 'status',
+        message_handle: m.message_handle,
+        status: m.status || null,
+        error_message: m.error_code ? (m.error_message || ('error ' + m.error_code)) : null,
+      } });
+    }
+    continue;
+  }
+  if (m.is_outbound !== false) continue;   // unknown direction: leave it alone
+
+  const body = String(m.content || '').trim();
+
+  // On an INBOUND, the sender is the customer, so from_number is the answer
+  // under the ordinary reading of the schema. The fallback covers the other
+  // reading, where number always means "the contact" regardless of direction.
+  //
+  // Deriving it this way rather than from the OURS set matters: OURS is empty
+  // until a rooftop has its own Sendblue number configured, and an earlier
+  // version of this picked "whichever number is not ours", which with an empty
+  // set made EVERY opt-out ambiguous and suppressed nobody. A STOP handler that
+  // silently honours nothing is worse than no STOP handler, because it looks
+  // like it is working.
+  let phone = null;
+  if (m.from_number && !isOurs(m.from_number))      phone = e164(m.from_number);
+  else if (m.number && !isOurs(m.number))           phone = e164(m.number);
+  // Both numbers ours, or neither present: do not guess which human to silence.
+
+  out.push({ json: {
+    kind: STOP_WORDS.test(body) ? (phone ? 'stop' : 'stop_ambiguous') : 'reply',
+    phone_e164: phone,
+    body,
+    raw_from: m.from_number || null,
+    raw_number: m.number || null,
+    message_handle: m.message_handle || null,
+    occurred_at: m.date_created || null,
+  } });
+}
+
+return out;
+`.trim();
+
+const smsInboundNodes = [
+  node('Inbound Sweep', 'scheduleTrigger', 1.2, [-760, 0], {
+    // Every ten minutes, around the clock. Opt-outs do not respect the send
+    // window, and the cost of honouring one late is the only cost here.
+    rule: { interval: [{ field: 'cronExpression', expression: '3,13,23,33,43,53 * * * *' }] },
+  }),
+
+  node('Fetch Messages', 'httpRequest', 4.2, [-520, 0], {
+    method: 'GET',
+    // GET /api/v2/messages, per Ryan 13 Oct 2026. Auth headers are assumed to
+    // match the send endpoint; the first live run confirms. Query parameters
+    // for a cursor or date filter are NOT yet known, so this reads the recent
+    // page and filters in code. Add the cursor once documented: at three texts
+    // per person over sixty days this is cheap, but it does not stay cheap at
+    // several rooftops.
+    url: 'https://api.sendblue.co/api/v2/messages',
+    sendHeaders: true,
+    headerParameters: {
+      parameters: [
+        { name: 'sb-api-key-id', value: '={{ $vars.SENDBLUE_API_KEY_ID }}' },
+        { name: 'sb-api-secret-key', value: '={{ $vars.SENDBLUE_API_SECRET }}' },
+      ],
+    },
+  }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 }),
+
+  codeNode('Classify Inbound', [-280, 0], SMS_INBOUND_CODE),
+
+  // Suppression first and unconditionally. This runs for every classified row
+  // and no-ops on the ones that are not opt-outs, so there is no branch that
+  // can route a STOP past it.
+  pgNode('Suppress And Record', [-40, 0], [
+    '-- Idempotent on purpose: the sweep re-reads the same messages after a',
+    '-- failed run, and re-suppressing an already-suppressed phone must be a',
+    '-- no-op rather than an error. That is what makes polling safe.',
+    'with inbound as (',
+    '  select $1::text as kind, nullif($2::text, \'\') as phone, $3::text as body,',
+    '         nullif($4::text, \'\') as handle, $5::text as status, $6::text as err',
+    '),',
+    '-- 1. An opt-out stops every campaign on that number, immediately.',
+    'suppressed as (',
+    '  insert into sms_suppression (phone_e164, reason, source)',
+    "  select phone, 'stop', 'sendblue inbound: ' || left(body, 100)",
+    '    from inbound',
+    "   where kind = 'stop' and phone is not null",
+    '  on conflict (phone_e164) do nothing',
+    '  returning phone_e164',
+    '),',
+    '-- 2. And revoke the consent row, so the record says WHY they are suppressed',
+    '--    rather than leaving a live consent beside a suppression.',
+    'revoked as (',
+    '  update sms_consent k',
+    "     set revoked_at = now(), revoked_reason = 'replied STOP'",
+    '   where k.phone_e164 = (select phone from inbound)',
+    "     and (select kind from inbound) = 'stop'",
+    '     and k.revoked_at is null',
+    '  returning k.id',
+    '),',
+    '-- 3. A delivery status for something we sent.',
+    'statused as (',
+    '  update sms_send_log l',
+    "     set status = coalesce((select status from inbound), l.status),",
+    "         body = case when (select err from inbound) is not null",
+    "                     then l.body || E'\\n[' || (select err from inbound) || ']'",
+    '                     else l.body end',
+    '   where l.provider_message_id = (select handle from inbound)',
+    "     and (select kind from inbound) = 'status'",
+    '  returning l.id',
+    ')',
+    'select',
+    '  (select count(*) from suppressed) as suppressed,',
+    '  (select count(*) from revoked)    as revoked,',
+    '  (select count(*) from statused)   as statused;',
+  ].join('\n'),
+    '={{ $json.kind }}, {{ $json.phone_e164 }}, {{ $json.body }}, '
+    + '{{ $json.message_handle }}, {{ $json.status }}, {{ $json.error_message }}'),
+];
+
+writeFileSync(join(ROOT, `${WF_DIR}/11-sms-inbound.json`),
+  JSON.stringify(workflow('DriveOne SMS Inbound (shared)', smsInboundNodes, connect([
+    ['Inbound Sweep', 'Fetch Messages'],
+    ['Fetch Messages', 'Classify Inbound'],
+    ['Classify Inbound', 'Suppress And Record'],
+  ]), { settings: { timezone: DEALER.sending.timezone } }), null, 2));
+
+console.log('built 11-sms-inbound.json');
 
 
 /* =========================================== 6. BOUNCE WATCHER (RETIRED) == */

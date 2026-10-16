@@ -455,7 +455,26 @@ check('SQL placeholders match the replacement count', () => {
     const sql = node.parameters.query || '';
     const repl = node.parameters?.options?.queryReplacement || '';
     const highest = Math.max(0, ...[...sql.matchAll(/\$(\d+)/g)].map((m) => Number(m[1])));
-    const supplied = (repl.match(/\{\{/g) || []).length;
+
+    // Parameters are passed as an ARRAY expression, `={{ [a, b, c] }}`, because
+    // the comma-separated string form splits values that contain commas and
+    // silently writes the wrong columns. So count array elements at depth zero,
+    // not `{{` occurrences: the array is one `{{`, and counting those would
+    // report every multi-parameter node as supplying exactly one.
+    const arr = /^=\{\{\s*\[([\s\S]*)\]\s*\}\}$/.exec(repl.trim());
+    let supplied = 0;
+    if (arr) {
+      let depth = 0, started = false;
+      for (const ch of arr[1]) {
+        if ('([{'.includes(ch)) depth++;
+        else if (')]}'.includes(ch)) depth--;
+        else if (ch === ',' && depth === 0) supplied++;
+        if (!/\s/.test(ch)) started = true;
+      }
+      if (started) supplied += 1;      // n commas separate n+1 elements
+    } else {
+      supplied = (repl.match(/\{\{/g) || []).length;
+    }
     if (highest === 0 && supplied === 0) continue;
     if (highest !== supplied) {
       problems.push(`${file} / ${node.name}: SQL wants $${highest}, replacement supplies ${supplied}`);
@@ -463,6 +482,32 @@ check('SQL placeholders match the replacement count', () => {
   }
   assert(problems.length === 0, problems.join('; '));
   return `${pgNodes().length} nodes`;
+});
+
+check('query parameters survive a comma in their value', () => {
+  // WHY: this one reached production and corrupted 35 of 114 live send rows.
+  // The Postgres node splits queryReplacement on commas INCLUDING commas inside
+  // a value (n8n issue #40022, node versions 2.5 to 2.7), and pg-promise then
+  // drops the surplus because nothing binds to it, so the query SUCCEEDS and
+  // writes the wrong columns. A subject of "Allyn, one thing was missing from
+  // your file" became subject="Allyn", variant="one thing was missing from your
+  // file", provider_message_id="a", and the real Resend id fell off the end,
+  // which silently broke click attribution for every affected send.
+  //
+  // It lay dormant for six days because it only fires when a value contains a
+  // comma, and the only subject that does is the variant that greets somebody
+  // by name. Passing an array expression avoids the split entirely; verified
+  // against the live instance rather than assumed.
+  const problems = [];
+  for (const { file, node } of pgNodes()) {
+    const repl = node.parameters?.options?.queryReplacement || '';
+    if (!repl) continue;
+    if (!/^=\{\{\s*\[[\s\S]*\]\s*\}\}$/.test(repl.trim())) {
+      problems.push(`${file} / ${node.name}: not an array expression, so a comma in any value shifts every parameter after it`);
+    }
+  }
+  assert(problems.length === 0, problems.join('; '));
+  return `${pgNodes().filter((p) => p.node.parameters?.options?.queryReplacement).length} parameterised nodes, all array form`;
 });
 
 check('no webhook path collides with another dealership', () => {

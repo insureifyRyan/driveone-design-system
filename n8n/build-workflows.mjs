@@ -202,12 +202,48 @@ function workflow(name, nodes, connections, extra = {}) {
   };
 }
 
+/**
+ * Turn `'={{ a }}, {{ b }}'` into `'={{ [a, b] }}'`.
+ *
+ * THE POSTGRES NODE SPLITS QUERY PARAMETERS ON COMMAS, INCLUDING COMMAS INSIDE
+ * A VALUE. It is a known n8n bug (issue #40022, node versions 2.5 to 2.7) and
+ * it is SILENT: pg-promise drops the surplus values because nothing binds to
+ * them, so the query succeeds and writes the wrong columns.
+ *
+ * It cost us 35 of 114 live rows. A subject of "Allyn, one thing was missing
+ * from your file" became subject="Allyn", variant="one thing was missing from
+ * your file", provider_message_id="a", and the real Resend message id fell off
+ * the end entirely, which broke click and delivery attribution for every one of
+ * those sends. It only showed up when variant A started going out, because
+ * variant A is the one whose subject greets somebody by name and therefore
+ * carries a comma.
+ *
+ * An array expression is passed through as raw values with no splitting.
+ * Verified empirically against the live instance on 16 Oct 2026, not assumed:
+ * ["Allyn, one thing was missing from your file", "a", "msg_real_id_123"] came
+ * back as exactly three parameters with the comma intact.
+ *
+ * Every parameter goes through here, not just the ones that look like free
+ * text, because "this field can never contain a comma" is exactly the kind of
+ * assumption that was wrong about an email subject.
+ */
+function arrayReplacement(replacement) {
+  if (!replacement) return replacement;
+  const exprs = [...String(replacement).matchAll(/\{\{([\s\S]*?)\}\}/g)].map((m) => m[1].trim());
+  if (!exprs.length) {
+    // A bare literal supplies ZERO parameters, which dies at runtime on "there
+    // is no parameter $1". Fail the build instead of shipping it.
+    throw new Error(`queryReplacement has no {{ }} expressions, so it supplies no parameters: ${replacement}`);
+  }
+  return `={{ [${exprs.join(', ')}] }}`;
+}
+
 function pgNode(name, position, query, replacement, options = {}) {
   return node(name, 'postgres', 2.5, position, {
     operation: 'executeQuery',
     query,
     options: {
-      queryReplacement: replacement,
+      queryReplacement: arrayReplacement(replacement),
       // n8n defaults queryBatching to "single": one execution for ALL incoming
       // items, using only the first item's replacements. Every other item is
       // silently discarded. On a node fed one item that is invisible; on a node

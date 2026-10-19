@@ -58,6 +58,35 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 19 Oct 2026: still dark at 10 days. Lead-relabel claim withdrawn.**
+
+**Dark since 9 Oct**, the day spend hit exactly $1,000.00. The cap has not been raised and nothing
+in the account has changed. Fourteen-day spend $494.63, all of it 4 to 9 Oct.
+
+**CORRECTION, and a lesson worth keeping.** On 5 and 12 Oct I concluded the `Lead` event had been
+relabelled to `InitiateCheckout`, on the strength of three consecutive zero-Lead samples and IC
+firing at the rate Leads used to. **A single Lead on 18 Oct disproved it.** Lead is not dead, it is
+rare. Better reading: both events exist and IC fires at a looser or earlier step than Lead. The
+recommendation to keep the Leads campaign paused is unchanged but **reverts to the original volume
+argument** (roughly 7 Leads/day needed to leave learning, actual is about one per ten hours), not
+"it has no signal at all." Do not re-escalate. A claim of "never" is falsified by one observation,
+so state inferences as inferences and name what would falsify them.
+
+**Organic traffic converts far better than the paid Reels traffic did.** Three consecutive Sundays,
+same 08:00 to 18:00 window, so directly comparable:
+
+| Sunday | Ads | PageViews | InitiateCheckout | Rate |
+|---|---|---|---|---|
+| 4 Oct | running | 434 | 5 | 1.15% |
+| 11 Oct | off 2 days | 382 | 3 | 0.79% |
+| 18 Oct | off 9 days | 326 | **7** | **2.15%** |
+
+PageViews fell about a quarter as the paid tail faded, so the ads did add volume, but the remaining
+visitors convert at nearly three times the rate. This is the most direct evidence that the Reels
+traffic diluted the funnel rather than merely being cheap. **If delivery resumes, watch whether the
+IC rate falls back toward 1%**: that would confirm the dilution outright. Prefer same-weekday
+comparisons for pixel samples; the windows are otherwise not comparable.
+
 **State as of 12 Oct 2026: the blackouts are a $1,000 account spending cap.**
 
 **This explains the repeated blackouts.** After delivery resumed on 1 Oct the daily spend ran
@@ -204,7 +233,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), **8,400 (12 Oct)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), **9,000 (19 Oct)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

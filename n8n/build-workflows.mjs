@@ -1991,6 +1991,25 @@ const head = (title) =>
   "<tr><td colspan='3' style='padding:16px 12px 5px;font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold'>"
   + esc(title.toUpperCase()) + "</td></tr>";
 
+// Rates, not bare counts. "3 clicked" tells a broker nothing; "3 of 70, 4%"
+// tells them whether to be pleased. Defined above the flags because the
+// deliverability thresholds below are themselves rates.
+const pct = (part, whole) => num(whole) === 0 ? null
+  : Math.round(1000 * num(part) / num(whole)) / 10;
+const withPct = (part, whole, unit) => {
+  const p = pct(part, whole);
+  return p === null ? n(part) : n(part) + "  (" + p + "% of " + n(whole) + " " + unit + ")";
+};
+// Movement, stated plainly rather than as an arrow nobody can read.
+const move = (now_, before) => {
+  if (num(before) === 0 && num(now_) === 0) return "";
+  if (num(before) === 0) return "first week with any";
+  const d = num(now_) - num(before);
+  if (d === 0) return "same as last week";
+  return (d > 0 ? "up " : "down ") + n(Math.abs(d)) + " on last week";
+};
+const money = (v) => "$" + num(v).toLocaleString("en-US", { maximumFractionDigits: 0 });
+
 // Anything that wants a human. Each line names the thing and what it means, so
 // the scorecard is actionable on its own rather than a prompt to go and look.
 const flags = [];
@@ -2002,8 +2021,35 @@ if (num(r.held_commercial) > 0) flags.push(n(r.held_commercial) + " vehicle(s) h
 // Sent but nothing delivered is the shape of a broken webhook rather than a
 // bad week, and without this line it would read as a quiet week forever.
 if (num(r.sent_7d) > 0 && num(r.delivered_7d) === 0) flags.push("Mail was sent but nothing was recorded as delivered. Check that the Resend webhook is still reaching workflow 03.");
+
+// DELIVERABILITY, THE ONLY THING HERE THAT CAN DO LASTING DAMAGE. A late sale
+// costs patience; a burned sending domain costs months. These two thresholds
+// are the ones mailbox providers act on, so they are stated as a number to
+// beat rather than left for somebody to notice.
+const bounceRate = pct(r.bounced_total, r.sent_total);
+if (bounceRate !== null && bounceRate > 3) {
+  flags.push("Bounce rate is " + bounceRate + "% of all mail sent. Above about 3% starts to cost sender reputation, so the address list wants cleaning before volume goes up.");
+}
+if (num(r.complained_total) > 0) {
+  const cRate = pct(r.complained_total, r.sent_total);
+  flags.push(n(r.complained_total) + " spam complaint(s) to date"
+    + (cRate !== null ? ", " + cRate + "% of mail sent" : "")
+    + ". Mailbox providers start throttling around 0.3%.");
+}
+
+// Measurement honesty. If part of the week cannot be measured, the report says
+// so rather than quietly reporting a worse number.
+if (num(r.untrackable_7d) > 0) {
+  flags.push(n(r.untrackable_7d) + " send(s) this week carry no provider record, so they are left out of the delivery rate rather than counted as failures.");
+}
+
+// The ramp, phrased as a plan rather than as a shortfall. "1,008 not enrolled"
+// reads to a dealer like 1,008 customers being ignored; it is a deliberate
+// warm-up on a new sending domain.
 const remaining = COHORT_TARGET - num(r.enrolled_total);
-if (COHORT_TARGET > 0 && remaining > 0) flags.push(n(remaining) + " of the " + n(COHORT_TARGET) + " person bucket are not enrolled yet. The ramp adds them in steps.");
+if (COHORT_TARGET > 0 && remaining > 0) {
+  flags.push("Another " + n(remaining) + " eligible customers are waiting to be added. Volume increases in planned steps so the sending domain keeps a clean reputation.");
+}
 
 const flagHtml = flags.length
   ? "<div style='margin-top:20px;border-left:3px solid #D81E24;background:#FDECEE;padding:11px 14px'>"
@@ -2013,36 +2059,75 @@ const flagHtml = flags.length
     + "</ul></div>"
   : "<p style='margin-top:20px;font:13px Arial;color:#6b7c90'>Nothing needs attention this week.</p>";
 
+// DELIVERY IS A SHARE OF WHAT COULD BE TRACKED. A send with no provider id can
+// never match a delivery event, so including it reports working mail as lost.
+const trackable = num(r.trackable_7d);
+const deliveredPct = pct(r.delivered_7d, trackable);
+
+// WHERE THE SEQUENCE IS, in a sentence. This is the context that turns
+// "0 purchases" from a verdict into a timestamp. The run of ten emails argues
+// hardest at 4 and 5; before those land, the creative is untested.
+const sequenceLine =
+  num(r.reached_email_5) > 0
+    ? n(r.reached_email_5) + " of " + n(r.active_now) + " active customers have now seen the 0% financing email, the strongest offer in the run."
+    : num(r.reached_email_4) > 0
+      ? n(r.reached_email_4) + " of " + n(r.active_now) + " active customers have reached the $0 deductible email. The 0% financing email is still ahead of them."
+      : "Most customers are still in the first two emails of ten. The two strongest arguments, the $0 deductible and 0% financing, land on days 12 and 18 and have not reached anyone yet.";
+
+const soldHtml = num(r.purchased_total) > 0
+  ? "<div style='margin:0 0 18px;border-left:3px solid #0B1B3F;background:#F4F7FB;padding:12px 15px'>"
+    + "<p style='margin:0;font:bold 15px Arial;color:#0B1B3F'>"
+    + n(r.purchased_total) + " contract" + (num(r.purchased_total) === 1 ? "" : "s") + " sold, "
+    + money(r.revenue_total) + " written</p></div>"
+  : "";
+
 const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:680px'>"
   + "<p style='font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold;margin:0 0 4px'>WEEKLY SCORECARD</p>"
   + "<p style='margin:0 0 2px;font:bold 19px Arial;color:#0B1B3F'>" + esc(DEALER_NAME) + "</p>"
   + "<p style='margin:0 0 16px;font:13px Arial;color:#6b7c90'>" + esc(period) + "</p>"
+  + soldHtml
+  + "<p style='margin:0 0 16px;font:14px Arial;color:#1c1d1f;line-height:1.5'>" + esc(sequenceLine) + "</p>"
   + "<table style='border-collapse:collapse;width:100%'>"
-  + head("This week")
-  + row("Emails sent", n(r.sent_7d), r.sent_by_step_7d ? "by step: " + r.sent_by_step_7d : "")
-  + row("Delivered", n(r.delivered_7d), "")
-  + row("Clicked through", n(r.clicked_7d), "distinct emails, not total clicks")
-  + row("Customers newly enrolled", n(r.enrolled_7d), "")
-  + row("Purchases", n(r.purchased_7d), "")
-  + row("Unsubscribes, bounces, complaints", n(r.suppressed_7d), "")
-  + head("Campaign to date")
-  + row("Enrolled", n(r.enrolled_total), COHORT_TARGET > 0 ? "of " + n(COHORT_TARGET) + " eligible" : "")
-  + row("Still receiving emails", n(r.active_now), "")
-  + row("Emails sent", n(r.sent_total), "")
-  + row("Priced and ready", n(r.priced), num(r.unpriced) > 0 ? n(r.unpriced) + " not yet priced" : "")
-  + row("Clicked through", n(r.clicked_total), "")
-  + row("Purchases", n(r.purchased_total), "")
-  + row("Left the campaign", n(r.exited_total), r.exit_by_reason || "")
+  + head("Reaching customers")
+  + row("Emails sent", n(r.sent_7d), move(r.sent_7d, r.sent_prev_7d))
+  + row("Delivered", deliveredPct === null ? n(r.delivered_7d) : deliveredPct + "%",
+        trackable > 0 ? n(r.delivered_7d) + " of " + n(trackable) + " tracked" : "")
+  + row("Clicked the quote", withPct(r.clicked_7d, r.delivered_7d, "delivered"),
+        move(r.clicked_7d, r.clicked_prev_7d))
+  + head("Customer response")
+  + row("Contracts sold", n(r.purchased_7d), num(r.purchased_7d) > 0 ? money(r.revenue_total) + " to date" : "none yet")
+  + row("Asked to stop", n(r.unsubscribed_7d), "unsubscribed, a normal outcome")
+  + row("Marked as spam", n(r.complained_7d), num(r.complained_total) > 0 ? n(r.complained_total) + " to date" : "")
+  + row("Bad addresses", n(r.bounced_7d), num(r.bounced_total) > 0 ? n(r.bounced_total) + " to date, removed automatically" : "")
+  + head("The programme so far")
+  + row("Customers in the sequence", n(r.active_now),
+        COHORT_TARGET > 0 ? "of " + n(COHORT_TARGET) + " eligible at this store" : "")
+  + row("Average emails received", num(r.avg_step).toFixed(1), "of 10 over 60 days")
+  + row("Priced with a live quote", n(r.priced), num(r.unpriced) > 0 ? n(r.unpriced) + " awaiting a price" : "every one")
+  + row("Emails sent in total", n(r.sent_total), "")
+  + row("Clicked the quote", n(r.clicked_total), "")
+  + row("Contracts sold", n(r.purchased_total), num(r.purchased_total) > 0 ? money(r.revenue_total) : "")
   + "</table>"
   + flagHtml
   + "<p style='margin-top:22px;font:11px Arial;color:#9aa6b5;line-height:1.5'>"
-  + "Opens are deliberately not reported. Open tracking stays off, because Apple Mail pre-fetches images and an open figure "
-  + "measures that as much as it measures a reader. Clicks are counted as distinct emails clicked, and only for mail sent after "
-  + "click tracking was enabled on 8 October 2026, so earlier sends show none."
+  + "Delivery is measured against emails we can trace to a provider record"
+  + (num(r.untrackable_7d) > 0
+      ? ", and " + n(r.untrackable_7d) + " send(s) this week cannot be traced, so they are excluded rather than counted as undelivered"
+      : "")
+  + ". Opens are deliberately not reported: open tracking stays off, because Apple Mail pre-fetches images and an open figure "
+  + "measures that as much as it measures a reader. Clicks count distinct emails clicked, not total clicks, and only for mail "
+  + "sent after click tracking was enabled on 8 October 2026."
   + "</p></div>";
 
-const subject = "[" + DEALER_NAME + "] Weekly scorecard: " + n(r.sent_7d) + " sent, "
-  + n(r.purchased_7d) + " purchased";
+// NEVER LEAD WITH THE ABSENCE OF A SALE. "109 sent, 0 purchased" is accurate
+// and is the worst possible thing to put in front of a dealer or a broker: it
+// frames a programme that is twelve days old and two emails deep as a failure.
+// Lead with the sale when there is one, and with reach when there is not.
+const subject = num(r.purchased_7d) > 0
+  ? "[" + DEALER_NAME + "] " + n(r.purchased_7d) + " contract"
+    + (num(r.purchased_7d) === 1 ? "" : "s") + " sold this week"
+  : "[" + DEALER_NAME + "] Weekly scorecard: " + n(r.sent_7d) + " emails to "
+    + n(r.active_now) + " customers";
 
 return [{ json: { subject, html } }];
 `.trim();
@@ -2078,9 +2163,67 @@ const scorecardNodes = [
     "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and status = 'held_commercial') as held_commercial,",
     '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and monthly_payment is not null) as priced,',
     '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and monthly_payment is null) as unpriced,',
-    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason = 'purchased') as purchased_total,",
-    "  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason = 'purchased'",
-    "     and updated_at >= now() - interval '7 days') as purchased_7d,",
+    '-- PURCHASES COME FROM quotes.payment_status, NEVER FROM exit_reason.',
+    '--',
+    "-- exit_reason = 'purchased' is only ever written by workflow 03, on a",
+    '-- vsc.purchased event that has NEVER ARRIVED: zero such rows exist across',
+    '-- the whole platform against 284 completed quotes. Reading purchases from',
+    '-- it meant the scorecard could not report a sale even after one happened,',
+    '-- and would have told the dealer and the broker "0 purchased" forever.',
+    '-- A quote flipping to completed is where money is actually recorded, which',
+    '-- is the same source the Slack sales alert uses.',
+    '  (select count(*) from vsc_enrollment e join quotes q on q.id = e.quote_id',
+    "    where e.dealer_id = $1 and e.campaign_id = $2 and q.payment_status = 'completed') as purchased_total,",
+    '  (select count(*) from vsc_enrollment e join quotes q on q.id = e.quote_id',
+    "    where e.dealer_id = $1 and e.campaign_id = $2 and q.payment_status = 'completed'",
+    "      and q.payment_completed_at >= now() - interval '7 days') as purchased_7d,",
+    '  (select coalesce(sum(q.contract_price), 0) from vsc_enrollment e join quotes q on q.id = e.quote_id',
+    "    where e.dealer_id = $1 and e.campaign_id = $2 and q.payment_status = 'completed') as revenue_total,",
+    '',
+    '-- TRACKABILITY. Delivery has to be a share of what COULD be tracked, not',
+    '-- of everything sent. A send whose provider_message_id is missing can',
+    '-- never match a delivery event, so counting it in the denominator reports',
+    '-- mail as undelivered when it arrived perfectly. 35 rows lost their id to',
+    '-- the comma bug and dragged the measured rate from 89% down to 64%, which',
+    '-- read as a third of the email vanishing.',
+    '  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2',
+    "     and sent_at >= now() - interval '7 days'",
+    '     and provider_message_id is not null) as trackable_7d,',
+    '  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2',
+    "     and sent_at >= now() - interval '7 days'",
+    '     and provider_message_id is null) as untrackable_7d,',
+    '',
+    '-- Last week, for movement. A single week in isolation cannot say whether',
+    '-- anything is getting better.',
+    '  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2',
+    "     and sent_at >= now() - interval '14 days'",
+    "     and sent_at <  now() - interval '7 days') as sent_prev_7d,",
+    '',
+    '-- WHERE THE COHORT ACTUALLY IS. Without this, "0 purchases" reads as',
+    '-- failure rather than as early. The sequence argues hardest at email 4',
+    '-- (the deductible) and email 5 (0% financing); until a meaningful number',
+    '-- of people have seen those, the creative has not been tested.',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2',
+    '     and current_step >= 2) as reached_email_2,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2',
+    '     and current_step >= 4) as reached_email_4,',
+    '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2',
+    '     and current_step >= 5) as reached_email_5,',
+    '  (select coalesce(round(avg(current_step)::numeric, 1), 0) from vsc_enrollment',
+    "    where dealer_id = $1 and campaign_id = $2 and status = 'active') as avg_step,",
+    '',
+    '-- THE THREE EXITS, SEPARATED. A bounce is stale data, a complaint is a',
+    '-- reputation event, an unsubscribe is a healthy outcome. Reporting them',
+    '-- as one number hides the only one that can hurt the sending domain.',
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'bounced'",
+    "     and created_at >= now() - interval '7 days') as bounced_7d,",
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'complained'",
+    "     and created_at >= now() - interval '7 days') as complained_7d,",
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'unsubscribed'",
+    "     and created_at >= now() - interval '7 days') as unsubscribed_7d,",
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'bounced') as bounced_total,",
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'complained') as complained_total,",
+    "  (select count(*) from vsc_suppression where dealer_id = $1 and reason = 'unsubscribed') as unsubscribed_total,",
     '  (select count(*) from vsc_enrollment where dealer_id = $1 and campaign_id = $2 and exit_reason is not null) as exited_total,',
     "  (select coalesce(string_agg(r || ': ' || c, ',  ' order by r), '')",
     '     from (select exit_reason r, count(*)::text c from vsc_enrollment',
@@ -2114,6 +2257,13 @@ const scorecardNodes = [
     '       and l.dealer_id = $1 and l.campaign_id = $2',
     "    where e.event = 'email.clicked'",
     "      and e.occurred_at >= now() - interval '7 days') as clicked_7d,",
+    '  (select count(distinct e.provider_message_id)',
+    '     from vsc_email_event e',
+    '     join vsc_send_log l on l.provider_message_id = e.provider_message_id',
+    '       and l.dealer_id = $1 and l.campaign_id = $2',
+    "    where e.event = 'email.clicked'",
+    "      and e.occurred_at >= now() - interval '14 days'",
+    "      and e.occurred_at <  now() - interval '7 days') as clicked_prev_7d,",
     '  (select count(distinct e.provider_message_id)',
     '     from vsc_email_event e',
     '     join vsc_send_log l on l.provider_message_id = e.provider_message_id',

@@ -1061,7 +1061,10 @@ check('only a service drive account reaches the service drive channel', () => {
     .filter((f) => f.endsWith('.json'))
     .map((f) => JSON.parse(readFileSync(join(ROOT, 'brand/dealers', f), 'utf8')));
   const live = dealers.filter((d) => d.campaign && d.campaign.live === true);
-  assert(live.length > 0, 'no rooftop is marked campaign.live, so the channel can never speak');
+  // Zero live rooftops is a legitimate state between programmes (Ferrario was
+  // cancelled 23 Oct 2026, Bob Johnson is not yet live). It is reported, not
+  // failed, so a cancellation does not break the build.
+  if (live.length === 0) return 'no rooftop is live; the channel is intentionally silent';
   for (const d of live) {
     const pid = d.supabase && d.supabase.partner_id;
     assert(pid, `${d.id} is live but has no supabase.partner_id`);

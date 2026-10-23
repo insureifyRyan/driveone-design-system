@@ -42,6 +42,31 @@ Buckets.
 **Scope.** Dealer channel only. Not DriveOne Direct (DTC), not the abandoned-quote engine,
 not sold-customer nurture. The dealership is the sender; DriveOne is the provider.
 
+## STATUS: FERRARIO CANCELLED 23 Oct 2026
+
+The dealer cancelled the programme and requested cancellation. Actioned the
+same morning:
+
+- Workflows **01, 02, 05, 06 and 07 unpublished** in n8n. 02 is the one that
+  sends; it is `active: false` with no active version.
+- **Every active enrolment exited** with `exit_reason = 'program_cancelled'`:
+  81 rows, leaving 0 active and 0 held. The scheduler claims only
+  `status = 'active'`, so nothing can send even if a workflow is re-activated
+  by mistake. `next_send_at` is NOT NULL and was left as is.
+- **03 Events left active on purpose.** A customer who received the last email
+  (21 Oct) can still unsubscribe or bounce, and that must be honoured.
+- `campaign.live` set to **false** in the dealer file; 08 rebuilt and
+  redeployed with an empty roster, so Ferrario showroom sales no longer post.
+  The enrolment clause remains, so a late sale from someone who received the
+  emails is still announced with attribution.
+- The SMS layer (09, 10, 11) was never deployed; nothing to stop there.
+
+Final numbers, 7 to 22 Oct: 90 enrolled, 220 emails, 98.4% delivered on
+tracked sends, 6 clicks, 7 bounces, 1 complaint, 1 unsubscribe, **0 sales**.
+
+**Do not re-enable anything for this rooftop without a new agreement.** The
+`$status` field in the dealer file says the same.
+
 ## Where everything lives
 
 | Thing | Value |

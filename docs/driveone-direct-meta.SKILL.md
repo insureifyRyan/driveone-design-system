@@ -58,6 +58,38 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 26 Oct 2026: 17 days dark, traffic eroding, pixel reading settled.**
+
+**Still no delivery since 9 Oct.** Zero spend and zero impressions across the whole 14-day window.
+Campaign state unchanged for three weeks. The cap has not been raised.
+
+**PIXEL READING, SETTLED. Do not re-open it.** Final account after two corrections:
+`InitiateCheckout` was genuinely **added** around 20 Sep (never fired before, fires every week
+since, a real improvement). **`Lead` was never broken.** It runs at roughly 0.31% to 0.37%, the
+bottom of its historical 0.38% to 3.8% band, so three consecutive zero samples on 200 to 400
+PageViews was bad luck, not breakage. Treat a zero-Lead sample as normal variance at this rate,
+never as a finding.
+
+**The Sunday series is the most valuable thing in the weekly check.** Same weekday, same 08:00 to
+18:00 window, or the numbers are not comparable:
+
+| Sunday | Ads | PageViews | IC | IC rate | Leads |
+|---|---|---|---|---|---|
+| 4 Oct | running | 434 | 5 | 1.15% | 0 |
+| 11 Oct | off 2 days | 382 | 3 | 0.79% | 0 |
+| 18 Oct | off 9 days | 326 | 7 | 2.15% | 1 |
+| 25 Oct | off 16 days | 268 | 6 | **2.24%** | 1 |
+
+**Dilution confirmed on two stable readings:** ~2.2% quote-start rate with ads off against 1.15%
+with them on. The paid Reels traffic roughly halved the rate at which visitors started a quote, so
+the objection to it was never only that it was cheap. **Falsifiable test: if delivery resumes and
+the IC rate falls back toward 1%, that confirms it outright.**
+
+**Traffic erosion, and a revision.** PageViews fell 434, 382, 326, 268 across the four Sundays,
+down 38% in three weeks on a steady slope. On 5 Oct I had told Ryan that spending nothing was not
+the worst outcome given what the money bought; on 26 Oct I revised that: the ads were adding real
+volume even while converting badly, and the blackout has stopped being free.
+
 **State as of 19 Oct 2026: still dark at 10 days. Lead-relabel claim withdrawn.**
 
 **Dark since 9 Oct**, the day spend hit exactly $1,000.00. The cap has not been raised and nothing
@@ -233,7 +265,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), **9,000 (19 Oct)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), **10,200 (26 Oct)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

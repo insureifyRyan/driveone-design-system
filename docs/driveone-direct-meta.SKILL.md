@@ -58,6 +58,40 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 2 Nov 2026: delivery resumed for one day, on budget, straight back into Reels.**
+
+**Dark 10 to 31 Oct (22 days), resumed 1 Nov** for exactly one day: $100.05, 31,907 impressions,
+372 clicks, 1.17% CTR, zero conversions. **Dead on the $100/day budget**, against $152/day average
+through the Oct run, so the overspend may have resolved itself; one day proves nothing. The new
+cap ceiling cannot be read from one day either: **sum the spend from 1 Nov onward and see whether
+it stops on a round number.**
+
+**Placement split, fifth confirmation.** Of $98.63 on that one day: Facebook Reels $61.72 (**63%**),
+Facebook Feed $9.96, Reels Overlay $7.79 (0.79% CTR), Right Hand Column $7.61 (0.19% CTR),
+Instagram Reels $6.15, Instream Video $3.76. **82% to the same four placements, Instagram Feed $0
+and absent from the list again.** Five windows across three months, identical every time.
+
+**The dilution test ran, and was deliberately NOT called.** The Sunday series:
+
+| Sunday | Ads | PageViews | IC | IC rate | Leads |
+|---|---|---|---|---|---|
+| 4 Oct | running | 434 | 5 | 1.15% | 0 |
+| 11 Oct | off 2 days | 382 | 3 | 0.79% | 0 |
+| 18 Oct | off 9 days | 326 | 7 | 2.15% | 1 |
+| 25 Oct | off 16 days | 268 | 6 | 2.24% | 1 |
+| 1 Nov | running, day 1 | 332 | **0** | **0%** | 0 |
+
+Traffic rebounded 268 to 332, so **the ads do add volume: that part is settled.** The rate went not
+to the predicted ~1% but to zero. At the paid-era 1.15% you would expect ~4 on 332 PageViews, so
+zero is about a 1-in-50 outcome: directionally a strong confirmation, but **one sample with nothing
+in it.** Having over-read thin data three times already on this account, the call was held for
+another Sunday rather than declared. **Next Sunday decides it: near or below 1% with ads running
+confirms the finding; ~2% with ads running means the earlier pattern was confounded.** Give the
+verdict rather than deferring a third time.
+
+**Note on the window:** clocks went back 1 Nov. Hold pixel samples to the same LOCAL hours (07:00
+to 17:00 now) and say which window was used, or the series stops being comparable.
+
 **State as of 26 Oct 2026: 17 days dark, traffic eroding, pixel reading settled.**
 
 **Still no delivery since 9 Oct.** Zero spend and zero impressions across the whole 14-day window.
@@ -265,7 +299,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), **10,200 (26 Oct)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), **11,300 (2 Nov)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

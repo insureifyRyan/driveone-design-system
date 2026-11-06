@@ -919,6 +919,42 @@ their customer relationship.
 
 ## Gotchas worth knowing before you rediscover them
 
+- **ENABLING RLS ON A TABLE WITH NO POLICY SILENTLY BLOCKS EVERY WORKFLOW
+  WRITE, AND THE FAILURE MODE IS A SLACK FLOOD.** On 6 Nov 2026 `vsc_email_event`
+  was found with RLS on and zero policies. Last successful write was 4 Nov, so
+  somebody or something (most likely a Supabase security recommendation) turned
+  RLS on in between. Workflow 03 then failed on EVERY Resend webhook with
+  "new row violates row-level security policy", and because Resend webhooks are
+  account-wide, that was one failure, and one Slack post from 04, per email the
+  whole account sent: every 5 to 20 seconds. Fixed from the database side with
+  no n8n access by creating the policy:
+  `create policy vsc_campaign_rw on <table> for all to vsc_campaign using (true) with check (true);`
+  Posts stopped within seconds and inserts resumed. `vsc_sale_announced` was in
+  the same state and would have turned the first real sale into an error post;
+  fixed at the same time. **Before accepting any "enable RLS" recommendation on
+  a table the workflows write to, add the policy first.** The sweep that finds
+  this condition across every campaign table:
+  ```sql
+  select c.relname, c.relrowsecurity,
+         (select count(*) from pg_policies p where p.tablename = c.relname and 'vsc_campaign' = any(p.roles)) as policies
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and (c.relname like 'vsc\_%' or c.relname like 'sms\_%');
+  ```
+  Any row with `relrowsecurity = true` and `policies = 0` that a workflow writes
+  to is the next flood.
+- **When the n8n connector is down, the database is still a kill switch.** Every
+  workflow that posts to Slack does so because something it tried failed, or
+  because a query returned rows. Both are controllable from Supabase: fix the
+  policy and the failures stop; make the query return nothing and the posts
+  stop. Do not wait on a connector re-auth to stop a flood.
+- **A rebuilt container clones `main` and branches from it, not from the
+  remote branch.** After a container rebuild, `git log` showed the repo 54
+  commits behind its own branch and `.claude/skills` missing entirely. Nothing
+  was lost, but it looked lost. `git fetch origin <branch>` then
+  `git reset --hard origin/<branch>` restores it. Check `git log` against
+  `origin/<branch>` before concluding work is gone.
+
+
 - **MFA on the sending mailbox means SMTP can never work, and no password will fix it.**
   An SMTP session has nowhere to carry a second factor: no prompt, no callback, nothing.
   A correct password gets you `535 5.7.3 Authentication unsuccessful`, which reads exactly

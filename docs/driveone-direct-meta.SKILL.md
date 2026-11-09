@@ -58,6 +58,55 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 9 Nov 2026: dilution finding WITHDRAWN. Read raw counts, not rates.**
+
+**Eight days of continuous delivery, 1 to 8 Nov: $798.69, averaging $99.84 against the $100
+budget.** The **$152/day overspend is resolved**; do not re-raise it unless it returns.
+
+**THE DILUTION FINDING IS DEAD.** The prediction was that with ads back on the quote-start rate
+would fall from ~2.2% toward 1%. Sunday 8 Nov, eight days into full spend, came in at **4.00%**,
+the highest in the series. Opposite of the prediction, so the finding does not hold.
+
+**Why it was wrong, which is the lesson.** The Sunday series, raw counts first:
+
+| Sunday | Ads | PageViews | Quote starts | Rate |
+|---|---|---|---|---|
+| 4 Oct | running | 434 | 5 | 1.15% |
+| 11 Oct | off 2 days | 382 | 3 | 0.79% |
+| 18 Oct | off 9 days | 326 | 7 | 2.15% |
+| 25 Oct | off 16 days | 268 | 6 | 2.24% |
+| 1 Nov | running, day 1 | 332 | 0 | 0% |
+| 8 Nov | running, day 8 | 150 | 6 | 4.00% |
+
+**Quote starts barely move: 5, 3, 7, 6, 0, 6, across every condition.** All the rate movement came
+from the PageView denominator swinging 434 to 150. A moving denominator invented the pattern.
+**Read the raw counts before the rate, every time.**
+
+**The honest finding that replaces it:** eight days and $798.69 of continuous spend did not move
+quote starts at all. About six a Sunday whether spend is $100/day or zero.
+
+**OPEN QUESTION, possibly the important one: are the clicks reaching the site?** PageViews
+collapsed while billed clicks held roughly steady:
+
+| Day | Clicks billed | PageViews in window | Ratio |
+|---|---|---|---|
+| 4 Oct | 387 | 434 | 1.12 |
+| 1 Nov | 377 | 332 | 0.88 |
+| 8 Nov | 336 | 150 | **0.45** |
+
+Either (a) the clicks are not arriving (accidental Reels swipe-clicks billed but never landing,
+which fits Facebook Reels CTR rising to 2.23% at $0.24), or (b) the pixel is missing landings,
+which would make every rate in these reports unreliable. **Not chosen on this evidence.** The test
+that separates them: landing page views against clicks, or server/analytics sessions against Meta's
+clicks. Caveat to keep repeating: clicks are whole-day, PageViews a ten-hour window, so only the
+ratio's direction is meaningful.
+
+**ALWAYS CHECK WHAT A "CONVERSION" ACTUALLY IS.** Meta logged one conversion across 1 to 8 Nov:
+`onsite_conversion.messaging_conversation_started_7d`, someone opening a Messenger thread. Not a
+quote, not a sale. Because it landed in the Reels bucket, `optimize_meta_placements` then
+recommended **scaling Facebook Reels 30%** and excluding eight other placements with a $254.60
+reallocation plan. Confident-looking advice built on one Messenger message. Never relay it.
+
 **State as of 2 Nov 2026: delivery resumed for one day, on budget, straight back into Reels.**
 
 **Dark 10 to 31 Oct (22 days), resumed 1 Nov** for exactly one day: $100.05, 31,907 impressions,
@@ -299,7 +348,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), **11,300 (2 Nov)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), 11,300 (2 Nov), **12,300 (9 Nov)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

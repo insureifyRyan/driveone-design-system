@@ -42,7 +42,42 @@ Buckets.
 **Scope.** Dealer channel only. Not DriveOne Direct (DTC), not the abandoned-quote engine,
 not sold-customer nurture. The dealership is the sender; DriveOne is the provider.
 
-## STATUS: FERRARIO CANCELLED 23 Oct 2026
+## STATUS: FERRARIO RESTARTED 9 Nov 2026
+
+The dealer asked to restart the programme and re-quote their customers with
+the same structure as before. Ferrario had also repriced their VSCs about 25%
+lower in the meantime, so the fresh quote is the cheaper one. Actioned the
+same afternoon (a Monday, so the first send was Tuesday 10 Nov, 9am ET):
+
+- The **81 enrolments exited as `program_cancelled` were reset** to
+  `status = 'active'`, `exit_reason = null`, `current_step = 0`, with
+  `send_attempts`, `pricing_attempts`, `send_error` and `pricing_error`
+  zeroed and `priced_at = null`. Step 0 rather than resume: every October
+  quote link had expired on 27-28 Oct so re-quoting was mandatory, and a
+  fresh Email 1 is the honest way to introduce a new, lower number.
+  `next_send_at` was spread across Tue 10 to Fri 13 Nov at the safe UTC
+  hours (14, 15, 18, 19, 20), about 20 a day, 17 slots in all.
+- The **7 bounced, 1 complained and 1 unsubscribed stay exited**. The reset
+  selected on `exit_reason = 'program_cancelled'` only, excluded anyone in
+  `vsc_suppression`, and excluded any quote with `payment_status = 'completed'`.
+- **05 Pricing published first**, so the expired rows reprice before 02 can
+  claim them (02 refuses a link expiring inside 30 minutes, so nothing could
+  send with an October price). Then **02, 01, 06 and 07**. 03 had stayed
+  active throughout.
+- `campaign.live` set back to **true**; 08 rebuilt, the claim query redeployed
+  by `setNodeParameter` on `Claim New Sales`, and published. Only the roster
+  line changed.
+- Intake (01) resumes enrolling the rest of the 1,098 cohort at 20 a day,
+  exactly as before. Nothing in copy, cadence or templates was changed.
+- The SMS layer (09, 10, 11) is still not deployed.
+
+How to check it took: `select count(*) from vsc_enrollment where dealer_id =
+'ferrario-ford' and status = 'active' and priced_at is not null and
+quote_expires_at > now()` should climb to 81 within the first two runs of 05
+(cron `41 * * * *`), and `vsc_send_log` should show rows from 14:00 UTC on
+Tuesday 10 Nov.
+
+### Previously: CANCELLED 23 Oct 2026
 
 The dealer cancelled the programme and requested cancellation. Actioned the
 same morning:
@@ -64,8 +99,8 @@ same morning:
 Final numbers, 7 to 22 Oct: 90 enrolled, 220 emails, 98.4% delivered on
 tracked sends, 6 clicks, 7 bounces, 1 complaint, 1 unsubscribe, **0 sales**.
 
-**Do not re-enable anything for this rooftop without a new agreement.** The
-`$status` field in the dealer file says the same.
+The "do not re-enable without a new agreement" rule from this period was
+satisfied by the dealer's restart request of 9 Nov 2026, above.
 
 ## Where everything lives
 

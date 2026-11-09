@@ -44,6 +44,26 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**HOLD, same evening: 02 is unpublished again until the price question is settled.**
+Ryan said Ferrario had repriced their VSCs about 25% lower. The re-quote did not
+show it. 05 repriced all 81 rows at 17:25 UTC with zero errors and fresh links to
+16 Nov, and every monthly figure came back identical to October (the average was
+$127.27 before and after; a sampled F-150 read $3,907 / $123.72 a month / $195.35
+down in its 20 Oct email and again on 9 Nov). A throwaway n8n probe (archived) then
+called `POST /api/partners/rating` directly with the VIN, mileage and
+`partner_slug: ferrario-ford` for two vehicles and got the same figures as the stored
+quotes, so the partner rating API has not changed for this rooftop. The cut lives
+somewhere this campaign does not read. What unblocks it: the new rates land in the
+rating the partner API serves for ferrario-ford, then run 05 once by hand
+(`execute_workflow` on UEaYKvcHnQCL2rEZ), check the monthly figures moved, and publish
+02 (wcFRhWQ6LnJEVVhP). Or Ryan says go at the old prices, and publishing 02 is the
+whole restart: everything else is already active and the 81 rows are due from Tue 10
+Nov 14:00 UTC. Do not touch the templates for this; the price is a merge tag.
+
+Two of the 81 carry Resend bounce events from October without having been exited.
+03 only exits on a Permanent bounce, so these were transient; they are a thing to
+watch on the first scorecard, not a bug.
+
 The dealer asked to restart the programme and re-quote their customers with
 the same structure as before. Ferrario had also repriced their VSCs about 25%
 lower in the meantime, so the fresh quote is the cheaper one. Actioned the

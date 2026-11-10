@@ -44,7 +44,12 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
-**HOLD, same evening: 02 is unpublished again until the price question is settled.**
+**HOLD LIFTED 10 Nov 2026, 13:35 UTC.** Ryan: "The pricing is in the api, nothing for
+you to do." 02 was published ahead of the first 14:00 UTC slot. A forced reprice that
+morning (monthly_payment and priced_at nulled, 05 run by hand) still returned the
+October figures for all 81, so the emails carry whatever the quote endpoint serves.
+
+**HOLD, 9 Nov evening (lifted): 02 was unpublished until the price question was settled.**
 Ryan said Ferrario had repriced their VSCs about 25% lower. The re-quote did not
 show it. 05 repriced all 81 rows at 17:25 UTC with zero errors and fresh links to
 16 Nov, and every monthly figure came back identical to October (the average was

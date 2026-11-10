@@ -369,6 +369,38 @@ paste into a ticket.
 
 ## Buckets
 
+### Candidate buckets from the reconciliation workbook (10 Nov 2026, not yet built)
+
+Ryan supplied `Ferrario_Campaign_Reconciliation.xlsx`: two earlier dealership email
+campaigns (Ford 10,256 and Jeep 9,956 recipients, sent Jun to Aug 2026, overlapping;
+10,256 unique emails) reconciled against the dealership's licence plate cameras
+(627/628/630/631 at location 304). 164 distinct emails had a linked VIN seen on camera
+after their send date; 0 had a repair order. He wants two new quoting populations with
+their own copy, "drove by" and "actually came in", deduped against the people we are
+already quoting. Which workbook population is which was not settled; the file only
+distinguishes camera-seen from not-seen.
+
+Deduped against every Ferrario quote in Elevate on 10 Nov (match on lower-cased email
+OR upper-cased VIN), the workbook splits into:
+
+| Population | People | Note |
+|---|---|---|
+| Camera matched, new | 141 | has a VIN, no quote anywhere in Elevate |
+| Camera matched, already quoting | 23 | 2 enrolled and active, 21 quoted awaiting intake |
+| Not on camera, has a VIN, new | 1,893 | |
+| Not on camera, already quoting | 545 | the existing cohort overlaps this list heavily |
+| No VIN anywhere | 7,654 | cannot be rated: the rating API is keyed on VIN |
+
+Hard constraint: nothing here can be emailed until each person has a `quotes` row for
+the Ferrario partner. Intake (01) only ever reads `quotes`, and the original 1,260 were
+created upstream in bulk on 28 Jul to 5 Aug 2026 with VIN, mileage and email. The
+workbook carries VINs for 2,090 people and a mileage for none, and the rating endpoint
+needs both. So the "new" rows need quotes created on the Elevate side, with a mileage
+from the DMS, before this campaign can touch them. The deduped workbook was handed to
+Ryan on 10 Nov; a copy of the logic is in the session scratchpad, not in this repo,
+because it carries customer PII.
+
+
 The audience is cut into buckets, launched one at a time. Each bucket is a distinct
 population with its own reason to hear from the dealer, so each gets its own eligibility
 predicate and eventually its own copy. Do not blur two buckets into one send.

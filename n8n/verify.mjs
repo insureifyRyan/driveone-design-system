@@ -759,6 +759,10 @@ check('an SMS body fits one segment and names the store', () => {
   // pushes a body over: "Grand Cherokee" costs eight characters more than
   // "Escape" and that was the difference on message 3.
   const deck = DECK;
+  // A deck may carry NO texts on purpose: the Ferrario drive-by bucket is a
+  // cold plate-match list with no texting consent, so its sms array is empty
+  // and workflow 09 has nothing to send. That is reported, not failed.
+  if (Array.isArray(deck.sms) && deck.sms.length === 0) return 'the deck carries no SMS on purpose; nothing to measure';
   assert(Array.isArray(deck.sms) && deck.sms.length, 'the deck carries no SMS copy');
 
   // Worst case the live data can produce, not a convenient example.
@@ -849,6 +853,16 @@ check('a late enrolment gets one text, not the whole backlog', () => {
     vehicle_year: 2019, vehicle_model: 'ESCAPE', sms_step_sent: 0,
   };
   const aged = (days) => new Date(Date.now() - days * 86400000).toISOString();
+
+  // An SMS-free deck (no consent, see the segment check) must render nothing
+  // at ANY age: an empty array must not fall through to "step 1 is due".
+  if (Array.isArray(DECK.sms) && DECK.sms.length === 0) {
+    for (const d of [0, 6, 22, 51, 400]) {
+      assert(run([{ ...base, created_at: aged(d) }]).length === 0,
+        `the deck has no texts but a row aged ${d} days was rendered`);
+    }
+    return 'SMS-free deck: no text is ever due at any age';
+  }
 
   // Nothing is due on day 0: the first text is day 5.
   assert(run([{ ...base, created_at: aged(0) }]).length === 0,

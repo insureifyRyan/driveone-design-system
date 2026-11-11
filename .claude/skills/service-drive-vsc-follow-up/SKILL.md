@@ -44,6 +44,11 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**LIVE 11 Nov 2026, 20:15 UTC.** Ryan: "Ready to send now go ahead." 02 Scheduler
+published. The 81 are spread Thu 12, Fri 13, Tue 17, Wed 18 Nov at about 20 a day,
+first slot Thu 12 Nov 14:00 UTC (9am ET), all at the new prices. A check-in is set
+for 12 Nov 16:16 UTC to confirm the first sends landed.
+
 **REPRICED 11 Nov 2026, 18:41 UTC: the API pricing is live and it worked.** Ryan said
 the API repricing was live; a forced reprice (monthly_payment and priced_at nulled,
 05 run by hand) brought 77 of 81 back at an average of $81.15 a month against
@@ -449,6 +454,18 @@ MX or SPF, so a subdomain inherits no DMARC at all; add
 (or the same rua the other roots use) before the first real send. Gmail and Yahoo
 bulk-sender rules want it, and it costs nothing at p=none. The cold list ramps from
 about 25 a day, not 200.
+
+**DONE 11 Nov 2026, 20:15 UTC.** Ryan confirmed by name that `bobjohnsonauto.com`
+(failed, never verified) could go; it was removed from Resend, which freed the slot,
+and `ferrario.driveoneservice.com` was created (Resend id
+0bf3a300-d0c5-4c45-9acf-db25ee4cda35, click tracking on, open tracking off) with
+its four records on Vercel DNS: `resend._domainkey.ferrario` TXT, `send.ferrario`
+MX 10 and TXT, `rsend.ferrario` CNAME. Verification was triggered the same minute;
+confirm it reads `verified` before wiring a dealer file to it, and add
+`links.ferrario` CNAME `links2.resend-dns.com` if a branded tracking host is wanted
+like the Ferrario Ford subdomain has. `bobjohnson.driveoneprogram.com` (also failed)
+was left in place: it is the intended Bob Johnson subdomain and needs its DNS
+records, not deletion. Earlier notes follow.
 
 **Progress 11 Nov 2026, after Ryan said yes to the subdomain.** DMARC is now in place:
 `_dmarc.driveoneservice.com TXT "v=DMARC1; p=none; rua=mailto:dmarc@driveoneprogram.com; pct=100; adkim=r; aspf=r"`

@@ -44,6 +44,22 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**REPRICED 11 Nov 2026, 18:41 UTC: the API pricing is live and it worked.** Ryan said
+the API repricing was live; a forced reprice (monthly_payment and priced_at nulled,
+05 run by hand) brought 77 of 81 back at an average of $81.15 a month against
+$127.27 in October, about 36% lower. The sampled F-150 went from $3,907 / $123.72 to
+$2,510.58 / $79.50. Four vehicles came back "no financed quote_options (0 returned)"
+and stay unpriced; 02 never claims them and 05 retries them hourly up to five
+attempts. The first run (execution 9496) ABORTED at item 24 with "invalid input
+syntax for type numeric: null": the live 05 still carried the comma-form
+queryReplacement, so a failed rating's null monthly reached Postgres as the string
+"null" and killed Store Price for the whole batch, 57 rows unstored. Fixed by
+deploying the generator's array-form queryReplacement on Store Price and the claim
+node (05 now matches 02), republished, rerun clean. Lesson: every pgNode in a live
+workflow must be on the array form before anything with nullable parameters runs.
+next_send_at for the 81 was re-spread over Thu 12, Fri 13, Tue 17 and Wed 18 Nov so
+the backlog does not land as one spike. 02 stays unpublished until Ryan says go.
+
 **HOLD LIFTED 10 Nov 2026, 13:35 UTC.** Ryan: "The pricing is in the api, nothing for
 you to do." 02 was published ahead of the first 14:00 UTC slot. A forced reprice that
 morning (monthly_payment and priced_at nulled, 05 run by hand) still returned the

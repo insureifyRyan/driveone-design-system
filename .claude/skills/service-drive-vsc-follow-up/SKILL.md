@@ -400,6 +400,40 @@ from the DMS, before this campaign can touch them. The deduped workbook was hand
 Ryan on 10 Nov; a copy of the logic is in the session scratchpad, not in this repo,
 because it carries customer PII.
 
+**The populations now live in `public.vsc_audience`** (created 11 Nov 2026, RLS on,
+`vsc_campaign_rw` policy, grants to service_role and vsc_campaign). One row per
+(dealer_id, bucket, email, vin): `bucket` is `visited` (165 rows, 164 emails) or `list`
+(1,926 rows, 1,893 + 33 emails), with `customer_names`, `source_campaigns`,
+`camera_visit_days` and `status_at_load` (NEW / QUOTED / ACTIVE / EXITED, as of the
+load). The 7,654 no-VIN people were NOT loaded: nothing can rate them. When Elevate
+creates the quotes, a bucket's intake is `vsc_audience join quotes on
+lower(email) or upper(vin)` filtered to that bucket, then the ordinary eligibility
+rules. Indexes exist on (dealer_id, lower(email)) and (dealer_id, upper(vin)).
+
+**Sending domains, decided 11 Nov 2026.** Ryan's instinct was right and was checked:
+the `visited` bucket sends as the dealership from `ferrario.driveoneprogram.com`
+(what the live programme uses), and the `list` bucket must NOT touch that subdomain,
+because a 9,000-person list the dealership mailed in June would take the live
+programme's reputation down with it (the subdomain already runs 4.8% bounce and one
+complaint on 189 sends). Of the DriveOne domains in Resend, `driveoneservice.com` is
+the one: on Vercel DNS under the Kovara team, already verified as
+`mail.driveoneservice.com`, 10 sends in 30 days, DriveOne Service brand. Not
+driveonedirect.com (DTC money site), not driveonenow.com (carries the sold-customer
+nurture, 448 sends a month), not driveoneprogram.com (keep the two lists apart).
+
+Recommended shape: a dealer subdomain `ferrario.driveoneservice.com`, so Bob Johnson
+gets its own later. Two things could not be done from this session because the
+auto-mode permission classifier refused DNS, domain and shared-resource changes:
+creating that Resend domain (plus its four Vercel records: `resend._domainkey.ferrario`
+TXT, `send.ferrario` MX and TXT, `rsend.ferrario` CNAME), and even flipping click
+tracking on for `mail.driveoneservice.com`. Either is a two minute job with the
+permission. Also found: `driveoneservice.com` has NO `_dmarc` record and no root
+MX or SPF, so a subdomain inherits no DMARC at all; add
+`_dmarc.driveoneservice.com TXT "v=DMARC1; p=none; rua=mailto:dmarc@driveoneservice.com"`
+(or the same rua the other roots use) before the first real send. Gmail and Yahoo
+bulk-sender rules want it, and it costs nothing at p=none. The cold list ramps from
+about 25 a day, not 200.
+
 
 The audience is cut into buckets, launched one at a time. Each bucket is a distinct
 population with its own reason to hear from the dealer, so each gets its own eligibility

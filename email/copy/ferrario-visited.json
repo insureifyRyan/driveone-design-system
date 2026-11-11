@@ -1,9 +1,9 @@
 {
-  "$comment": "Copy deck for Ferrario Ford customers whose VEHICLE HAS BEEN ON THE LOT (dealership plate cameras) but who have no service drive record and no coverage on file. Voice: DriveOne Red Bull register. Deadpan, cheeky, confident. No exclamation points. No em dashes or en dashes. Never call the DriveOne product a warranty. NEVER quote the camera date or mention cameras: 'you have been in to see us' is as specific as it gets. The odometer is an ESTIMATE (15,000 miles a year of age) unless Elevate recorded a real one, so every mileage mention says estimated and points at checkout to confirm.",
+  "$comment": "Copy deck for Ferrario Ford customers who CAME IN FOR RECALL WORK (the small tab of the reconciliation workbook): they have a service record for the recall and no vehicle service contract on file. Voice: DriveOne Red Bull register. Deadpan, cheeky, confident. No exclamation points. No em dashes or en dashes. Never call the DriveOne product a warranty. The hook is the recall itself: Ford paid to fix one named thing, and nothing else on the car is covered. Do not name the recall or the component; we do not have it per row. The odometer is an ESTIMATE (15,000 miles a year of age) unless Elevate recorded a real one, so every mileage mention says estimated and points at checkout to confirm.",
   "campaign": {
     "id": "ff_visited_vsc_2026",
-    "name": "Been in to see us: VSC offer to Ferrario customers seen on the lot",
-    "audience": "Ferrario Ford customers whose vehicle was on the dealership lot, no vehicle service contract on file, deduped against the service drive campaign",
+    "name": "The recall was the free part: VSC offer to Ferrario recall customers",
+    "audience": "Ferrario Ford customers who came in for recall service, no vehicle service contract on file, deduped against the service drive campaign",
     "accentOpen": "[[",
     "accentClose": "]]"
   },
@@ -37,18 +37,18 @@
     {
       "step": 1,
       "sendDay": 0,
-      "slug": "01-you-have-been-in",
-      "goal": "Acknowledge the relationship without the ticket, name the gap, hand them a real quote",
-      "subject": "{{first_name}}, one thing is missing from your file",
-      "subjectAlt": "Your {{vehicle_model}} has been here. Its coverage has not.",
-      "preheader": "You have been in to see us. Your {{vehicle_year}} {{vehicle_model}} has no service contract on file. That is fixable in about four minutes, online.",
-      "eyebrow": "FROM THE STORE YOU ALREADY USE",
-      "headline": "You have been in to see us. [[One line is still blank.]]",
-      "subhead": "Your file at {{dealer_name}} shows no vehicle service contract on the {{vehicle_model}}. You can get one, and you can get it from us.",
+      "slug": "01-the-recall-was-the-free-part",
+      "goal": "Use the recall visit as the honest opener: one thing was fixed for free, nothing else is covered, here is a real quote",
+      "subject": "{{first_name}}, the recall was the free part",
+      "subjectAlt": "Your {{vehicle_model}} got one thing fixed. The rest is on you.",
+      "preheader": "Ford paid for the recall. It covered exactly one thing. Your {{vehicle_year}} {{vehicle_model}} has no coverage for anything else. Fixable in four minutes, online.",
+      "eyebrow": "FROM THE STORE THAT DID YOUR RECALL",
+      "headline": "The recall fixed one thing. [[The rest of the car is on you.]]",
+      "subhead": "You came in to {{dealer_name}} for recall work. Nothing else on the {{vehicle_model}} is covered, and your file says so. You can fix that from the store that already knows the car.",
       "body": [
-        "You have been in to see us with your {{vehicle_year}} {{vehicle_model}}. We are glad of it, and we are not writing to ask for anything about that.",
-        "We are writing because of the one line in your file that is empty. There is no vehicle service contract attached to the car, which means the next repair that is not routine is priced at whatever that repair happens to cost.",
-        "You do not have to buy that off a television commercial. You can buy it from the store that already knows the car, at the price at the top of this email, which was worked out for your vehicle at an estimated {{vehicle_mileage}} miles. If the odometer says something different, you confirm it at checkout and the price updates."
+        "You brought your {{vehicle_year}} {{vehicle_model}} in to us for a recall. Ford paid for that, as it should, and the work covered exactly one thing: the part the recall named.",
+        "What it did not cover is everything else. Your file at {{dealer_name}} shows no vehicle service contract on the car, which means the next repair that is not a recall and is not routine is priced at whatever that repair happens to cost.",
+        "You do not have to buy that off a television commercial. You can buy it from the store that just had the car on a lift, at the price at the top of this email, worked out for your vehicle at an estimated {{vehicle_mileage}} miles. If the odometer says something different, you confirm it at checkout and the price updates."
       ],
       "featureRows": [
         {
@@ -84,9 +84,9 @@
       "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
       "eyebrow": "THE ARITHMETIC",
       "headline": "There is a bill coming. [[We can make it zero.]]",
-      "subhead": "Covered repair, brought back to us, deductible zero. That is the whole idea.",
+      "subhead": "The recall was free because Ford owed it. The next repair is not owed by anyone, unless you arrange that now.",
       "body": [
-        "Your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
+        "A recall fixes what the manufacturer admits to. The alternator does not come with an admission. Your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine and is not a recall. Alternators. Transmissions. Infotainment units that cost more than your first car.",
         "Routine maintenance is not covered by any vehicle service contract, ours included, so we are not going to pretend the oil changes become free.",
         "The bill this is for is the other one. A covered repair, brought back to {{dealer_name}}, costs you nothing at all. The only decision is whether to price that now, while the car is healthy, or later, when it is not."
       ],
@@ -183,8 +183,8 @@
         },
         {
           "icon": "H",
-          "title": "A shop that already knows the car",
-          "subtitle": "You have been here. We would rather you came back on your terms than on a tow truck."
+          "title": "The shop that just did your recall",
+          "subtitle": "Same lift, same technicians. We would rather you came back on your terms than on a tow truck."
         }
       ],
       "benefitStrip": "Same building. Same people. Smaller invoice.",
@@ -286,7 +286,7 @@
       "headline": "We are not [[the people from the commercial.]]",
       "subhead": "You have had the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice. You have also seen the ads offering coverage by monthly subscription.",
       "body": [
-        "Here is the difference, and it is not subtle. Those callers do not know your car. We have your {{vehicle_year}} {{vehicle_model}} in our system, and you have been in our building.",
+        "Here is the difference, and it is not subtle. Those callers do not know your car. We had your {{vehicle_year}} {{vehicle_model}} on a lift for its recall, and you have stood in our building.",
         "The subscription pitch is its own thing. A subscription covers you for as long as you keep paying it, at whatever the price becomes. What we sell is a contract: a term, a mileage allowance and a price, all fixed on the day you buy, transferable if you sell the car, refundable in full for 30 days.",
         "So we are not a call center that bought your number, and we are not an app with a monthly charge. We are a Ford store with a service drive and a street address. Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize, which makes it a real contract with a real obligor, sold by a store you can drive to."
       ],
@@ -408,7 +408,7 @@
       "body": [
         "You have now received ten emails about vehicle service contracts. That is enough emails about vehicle service contracts.",
         "Your quote stays live and your link keeps working. If the {{vehicle_model}} makes a sound you do not like in March, it will be there.",
-        "Either way, thank you for coming in to {{dealer_name}}. That part we would like to keep doing."
+        "Either way, thank you for bringing the {{vehicle_model}} in for its recall. That part we would like to keep doing."
       ],
       "featureRows": [
         {

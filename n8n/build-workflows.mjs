@@ -2280,7 +2280,7 @@ const reviewNodes = [
     '  + "To release one, set its vsc_enrollment row back to status = &#39;active&#39;; it then re-enters the cadence from wherever it had got to. "',
     '  + "Each vehicle is reported once and will not appear in a later digest.</p></div>";',
     '',
-    'return [{ json: { subject: "[" + ' + JSON.stringify(DEALER.dealer.displayName) + ' + "] " + rows.length + " held for commercial surcharge review", html } }];',
+    'return [{ json: { subject: "[" + ' + JSON.stringify(WF_LABEL) + ' + "] " + rows.length + " held for commercial surcharge review", html } }];',
   ].join('\n')),
 
   node('Send Review Alert', 'httpRequest', 4.2, [660, -100], {
@@ -2345,8 +2345,12 @@ const esc = (s) => String(s == null ? "" : s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const TZ = ${JSON.stringify(DEALER.sending.timezone)};
-const DEALER_NAME = ${JSON.stringify(DEALER.dealer.displayName)};
+// The label, not the bare dealer name: three Ferrario campaign files each
+// send a scorecard to the same inbox, and "[Ferrario Ford]" three times on a
+// Monday morning is three identical subjects.
+const DEALER_NAME = ${JSON.stringify(WF_LABEL)};
 const COHORT_TARGET = ${COHORT_TARGET};
+const AUDIENCE_MODE = ${AUDIENCE ? 'true' : 'false'};
 
 // The window the SQL used is the last 7 days ending now, so label it from the
 // same clock rather than from "last Monday", which would be a different week
@@ -2474,9 +2478,15 @@ const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:680px'>"
   + row("Asked to stop", n(r.unsubscribed_7d), "unsubscribed, a normal outcome")
   + row("Marked as spam", n(r.complained_7d), num(r.complained_total) > 0 ? n(r.complained_total) + " to date" : "")
   + row("Bad addresses", n(r.bounced_7d), num(r.bounced_total) > 0 ? n(r.bounced_total) + " to date, removed automatically" : "")
+  + (AUDIENCE_MODE
+      ? head("Quoting the list")
+        + row("Quoted so far", n(r.audience_quoted), "a quote exists in Elevate for each")
+        + row("Still to quote", n(r.audience_unquoted), num(r.audience_unquoted) > 0 ? "fifty an hour, automatically" : "done")
+        + row("Could not be quoted", n(r.audience_parked), num(r.audience_parked) > 0 ? "VIN would not decode after three tries" : "")
+      : "")
   + head("The programme so far")
   + row("Customers in the sequence", n(r.active_now),
-        COHORT_TARGET > 0 ? "of " + n(COHORT_TARGET) + " eligible at this store" : "")
+        COHORT_TARGET > 0 ? "of " + n(COHORT_TARGET) + (AUDIENCE_MODE ? " on the list" : " eligible at this store") : "")
   + row("Average emails received", num(r.avg_step).toFixed(1), "of 10 over 60 days")
   + row("Priced with a live quote", n(r.priced), num(r.unpriced) > 0 ? n(r.unpriced) + " awaiting a price" : "every one")
   + row("Emails sent in total", n(r.sent_total), "")
@@ -2573,6 +2583,25 @@ const scorecardNodes = [
     '  (select count(*) from vsc_send_log where dealer_id = $1 and campaign_id = $2',
     "     and sent_at >= now() - interval '14 days'",
     "     and sent_at <  now() - interval '7 days') as sent_prev_7d,",
+    '',
+    // AUDIENCE MODE: the list is quoted by 01 itself, fifty an hour, so the
+    // scorecard says how far that has got. Zero columns otherwise, so the
+    // composer can read them unconditionally and verify can check them.
+    ...(AUDIENCE ? [
+      '-- HOW MUCH OF THE LIST HAS A QUOTE YET. Audience buckets are quoted by',
+      '-- intake itself; until a row is quoted it cannot be enrolled, so this is',
+      '-- the pipeline in front of the cohort.',
+      `  (select count(*) from vsc_audience where dealer_id = '${AUDIENCE.dealerId}' and bucket = '${AUDIENCE.bucket}'`,
+      '     and quote_id is not null) as audience_quoted,',
+      `  (select count(*) from vsc_audience where dealer_id = '${AUDIENCE.dealerId}' and bucket = '${AUDIENCE.bucket}'`,
+      "     and quote_id is null and status_at_load = 'NEW' and quote_attempts < 3) as audience_unquoted,",
+      `  (select count(*) from vsc_audience where dealer_id = '${AUDIENCE.dealerId}' and bucket = '${AUDIENCE.bucket}'`,
+      '     and quote_id is null and quote_attempts >= 3) as audience_parked,',
+    ] : [
+      '  0 as audience_quoted,',
+      '  0 as audience_unquoted,',
+      '  0 as audience_parked,',
+    ]),
     '',
     '-- WHERE THE COHORT ACTUALLY IS. Without this, "0 purchases" reads as',
     '-- failure rather than as early. The sequence argues hardest at email 4',

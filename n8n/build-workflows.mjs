@@ -715,11 +715,256 @@ const intakeNodes = [
   node('Enrolled', 'noOp', 1, [140, 0], {}),
 ];
 
-const intakeConnections = connect([
+const intakePairs = [
   ['Hourly Intake Sweep', 'Campaign Config'],
   ['Campaign Config', 'Enroll Eligible Service Customers'],
   ['Enroll Eligible Service Customers', 'Enrolled'],
-]);
+];
+
+// ---------------------------------------------------------------------------
+// AUDIENCE MODE ONLY: create the quote records ourselves.
+//
+// The service drive campaign enrols people who already have a quote, because
+// Elevate's service drive integration creates one per visit. An audience
+// bucket has no such feed: it is a list of VINs and emails, and nothing in
+// Elevate knows them. Rather than wait on a manual import, this branch does
+// what that import would do, directly in the app's own database (this
+// Supabase project IS getelevatewarranty.com's database): a customers row, a
+// customer_vehicles row and a quotes row per audience member. Verified 11 Nov
+// 2026 on one real row: the app's AFTER INSERT webhook on customers minted
+// the Clerk user within seconds, GET /api/partners/quotes/{id} then returned
+// the rating and the guided_purchase_link for the new quote, and workflow 05
+// needs nothing it did not already do. The one thing the quote endpoint
+// insists on is make and model on the vehicle row: with them blank it
+// returns links but no rating. NHTSA's free VIN decoder supplies them, fifty
+// VINs a call, so a sweep creates at most fifty quotes an hour.
+//
+// Order matters inside the branch and is deliberate:
+//   1. link audience rows to quotes that already exist for their VIN (a
+//      QUOTED row, or one this branch made last hour), and copy the Clerk id
+//      from customer to quote for rows created before the webhook landed.
+//      The guided link works without it (tested); the sign-in link does not.
+//   2. pick up to fifty audience rows that still have no quote, fewer than
+//      three failed attempts, and no enrolment anywhere on this partner;
+//   3. decode, then create the three rows per person in one statement, or
+//      record why not, so an undecodable VIN is tried three times and parked.
+// The branch hangs off Campaign Config beside the enrolment query, not in
+// front of it, so a sweep with nothing to quote still enrols.
+const AUDIENCE_LINK_SQL = AUDIENCE ? [
+  'with linked as (',
+  '  update vsc_audience a',
+  '     set quote_id = q.id, quoted_at = now(), quote_error = null',
+  '    from quotes q',
+  '    join customer_vehicles cv on cv.id = q.customer_vehicle_id',
+  `   where a.dealer_id = '${AUDIENCE.dealerId}'`,
+  `     and a.bucket = '${AUDIENCE.bucket}'`,
+  '     and a.quote_id is null',
+  '     and q.partner_id = $1::uuid',
+  '     and upper(cv.vin) = upper(trim(a.vin))',
+  '  returning a.id',
+  '),',
+  'clerk as (',
+  '  update quotes q',
+  '     set clerk_user_id = c.clerk_user_id',
+  '    from customers c',
+  '   where q.customer_id = c.id',
+  '     and q.clerk_user_id is null',
+  '     and c.clerk_user_id is not null',
+  '     and q.partner_id = $1::uuid',
+  '  returning q.id',
+  ')',
+  'select (select count(*) from linked) as linked,',
+  '       (select count(*) from clerk)  as clerk_backfilled;',
+].join('\n') : null;
+
+const AUDIENCE_CANDIDATES_SQL = AUDIENCE ? [
+  'select a.id                 as audience_id,',
+  '       upper(trim(a.vin))   as vin,',
+  '       lower(trim(a.email)) as email,',
+  '       a.customer_names,',
+  '       a.model_year,',
+  '       a.est_mileage',
+  '  from vsc_audience a',
+  ` where a.dealer_id = '${AUDIENCE.dealerId}'`,
+  `   and a.bucket = '${AUDIENCE.bucket}'`,
+  '   and a.quote_id is null',
+  '   and a.quote_attempts < 3',
+  "   and a.status_at_load = 'NEW'",
+  '   and length(trim(a.vin)) = 17',
+  "   and a.email like '%@%'",
+  '   -- a quote for this VIN on this partner already exists: the link step',
+  '   -- above attaches it next sweep, so do not make a second one',
+  '   and not exists (',
+  '     select 1 from quotes q join customer_vehicles cv on cv.id = q.customer_vehicle_id',
+  '      where q.partner_id = $1::uuid and upper(cv.vin) = upper(trim(a.vin)))',
+  '   -- already in a campaign on this partner, under any file: no new quote',
+  '   and not exists (',
+  '     select 1 from vsc_enrollment e',
+  `      where e.dealer_id = any(array[${AUDIENCE.family.map((d) => `'${d}'`).join(', ')}])`,
+  '        and (lower(e.email) = lower(trim(a.email)) or upper(e.vin) = upper(trim(a.vin))))',
+  '   -- suppressed anywhere on this partner: no quote either',
+  '   and not exists (',
+  '     select 1 from vsc_suppression s',
+  `      where s.dealer_id = any(array[${AUDIENCE.family.map((d) => `'${d}'`).join(', ')}])`,
+  "        and s.customer_key = encode(sha256((s.dealer_id || ':' || lower(trim(a.email)))::bytea), 'hex'))",
+  ' order by a.quote_attempts, a.id',
+  ' limit 50;',
+].join('\n') : null;
+
+const AUDIENCE_BATCH_VINS_CODE = [
+  '// One decoder call for the whole sweep. NHTSA takes up to fifty VINs joined',
+  '// with semicolons and returns one result per VIN in the same order, keyed by',
+  '// VIN, so the pairing back onto audience rows is by value, not position.',
+  'const rows = $input.all().map((i) => i.json);',
+  'if (!rows.length) return [];',
+  'return [{ json: { DATA: rows.map((r) => r.vin).join(";"), count: rows.length } }];',
+].join('\n');
+
+const AUDIENCE_MATCH_CODE = [
+  "const title = (s) => String(s || '').toLowerCase().replace(/(^|[\\s'-])([a-z])/g, (m, a, b) => a + b.toUpperCase());",
+  '// vPIC spells makes in capitals (CHEVROLET) and most models as the maker',
+  '// does (Cruze, F-150). Title case the make; leave a mixed case model alone',
+  '// and only recase one that arrives shouting.',
+  "const niceModel = (m) => (m && m === m.toUpperCase() && m.length > 3 && !/\\d/.test(m)) ? title(m) : (m || '');",
+  '',
+  "const results = ($input.first().json.Results || []);",
+  'const byVin = {};',
+  "for (const r of results) byVin[String(r.VIN || '').toUpperCase()] = r;",
+  '',
+  'const out = [];',
+  "for (const item of $('Audience Needing Quotes').all()) {",
+  '  const a = item.json;',
+  '  const d = byVin[a.vin] || {};',
+  "  const make = title(d.Make || '');",
+  "  const model = niceModel(d.Model || '');",
+  "  const year = parseInt(d.ModelYear, 10) || a.model_year || null;",
+  "  const decoded = !!(make && model && year);",
+  "  const words = String(a.customer_names || '').trim().split(/\\s+/).filter(Boolean);",
+  "  const first = title(words[0] || '') || 'Customer';",
+  "  const last = title(words.slice(1).join(' '));",
+  '  out.push({ json: {',
+  '    audience_id: a.audience_id,',
+  '    email: a.email,',
+  '    first_name: first,',
+  '    last_name: last,',
+  '    vin: a.vin,',
+  "    make: decoded ? make : null,",
+  "    model: decoded ? model : null,",
+  '    year: decoded ? year : null,',
+  '    mileage: a.est_mileage == null ? null : Number(a.est_mileage),',
+  '    decoded,',
+  "    err: decoded ? null : ('vin_undecodable: ' + String(d.ErrorText || 'no decoder result').slice(0, 160)),",
+  '  } });',
+  '}',
+  'return out;',
+].join('\n');
+
+const AUDIENCE_CREATE_SQL = AUDIENCE ? [
+  '-- One person, one statement. Either every row is created or the attempt',
+  '-- is recorded; nothing half made. $10 says whether the VIN decoded.',
+  'with p as (',
+  '  select $1::int as audience_id, $2::text as email, $3::text as first_name, $4::text as last_name,',
+  '         $5::text as vin, $6::text as make, $7::text as model, $8::int as year, $9::int as mileage,',
+  '         $10::boolean as decoded, $11::text as err, $12::uuid as partner_id',
+  '),',
+  'fail as (',
+  '  update vsc_audience a set quote_attempts = a.quote_attempts + 1, quote_error = p.err',
+  '    from p where a.id = p.audience_id and not p.decoded',
+  '  returning a.id',
+  '),',
+  '-- the customer: reuse one with this email (the service drive may already',
+  '-- know them), else create one. The app webhook mints the Clerk user.',
+  'cust as (',
+  '  insert into customers (first_name, last_name, email, has_existing_warranty)',
+  '  select p.first_name, p.last_name, p.email, false from p',
+  '   where p.decoded',
+  '     and not exists (select 1 from customers c where lower(trim(c.email)) = p.email)',
+  '  returning id',
+  '),',
+  'cid as (',
+  '  select id from cust',
+  '  union all',
+  '  select c.id from customers c, p where p.decoded and lower(trim(c.email)) = p.email',
+  '  order by id limit 1',
+  '),',
+  "-- the vehicle: reuse this customer's row for the VIN, else create it with the",
+  '-- decoded make and model (the quote endpoint rates nothing without them)',
+  '-- and the estimated odometer, which the customer corrects at checkout.',
+  'veh as (',
+  '  insert into customer_vehicles (customer_id, vin, make, model, year, mileage,',
+  '                                 raw_vehicle_make, raw_vehicle_model, raw_vehicle_year, clerk_user_id)',
+  '  select cid.id, p.vin, p.make, p.model, p.year, p.mileage, p.make, p.model, p.year,',
+  '         (select clerk_user_id from customers where id = cid.id)',
+  '    from cid, p',
+  '   where not exists (select 1 from customer_vehicles cv where cv.customer_id = cid.id and upper(cv.vin) = p.vin)',
+  '  returning id, customer_id, clerk_user_id',
+  '),',
+  'vid as (',
+  '  select id, customer_id, clerk_user_id from veh',
+  '  union all',
+  '  select cv.id, cv.customer_id, cv.clerk_user_id from customer_vehicles cv, cid, p',
+  '   where cv.customer_id = cid.id and upper(cv.vin) = p.vin',
+  '  limit 1',
+  '),',
+  "-- the quote, in the same shape Elevate's own import leaves one: vehicle_added,",
+  '-- 48 month default, unpriced. 05 prices it through the partner API.',
+  'q as (',
+  '  insert into quotes (customer_id, customer_vehicle_id, partner_id, status, contract_months, clerk_user_id)',
+  "  select vid.customer_id, vid.id, p.partner_id, 'vehicle_added', 48, vid.clerk_user_id from vid, p",
+  '  returning id',
+  '),',
+  'done as (',
+  '  update vsc_audience a set quote_id = q.id, quoted_at = now(), quote_error = null',
+  '    from q, p where a.id = p.audience_id',
+  '  returning a.id',
+  ')',
+  'select (select id from q) as quote_id, (select count(*) from fail) as failed;',
+].join('\n') : null;
+
+if (AUDIENCE) {
+  intakeNodes.push(
+    pgNode('Link Existing Quotes', [-120, 220], AUDIENCE_LINK_SQL,
+      "={{ $('Campaign Config').item.json.partner_id }}"),
+
+    pgNode('Audience Needing Quotes', [140, 220], AUDIENCE_CANDIDATES_SQL,
+      "={{ $('Campaign Config').item.json.partner_id }}"),
+
+    codeNode('Batch VINs', [400, 220], AUDIENCE_BATCH_VINS_CODE),
+
+    node('Decode VINs (NHTSA)', 'httpRequest', 4.2, [640, 220], {
+      method: 'POST',
+      url: 'https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVINValuesBatch/',
+      sendBody: true,
+      contentType: 'form-urlencoded',
+      bodyParameters: {
+        parameters: [
+          { name: 'format', value: 'json' },
+          { name: 'DATA', value: '={{ $json.DATA }}' },
+        ],
+      },
+      options: {},
+    }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 5000 }),
+
+    codeNode('Match Decodes', [880, 220], AUDIENCE_MATCH_CODE),
+
+    pgNode('Create Quote Records', [1120, 220], AUDIENCE_CREATE_SQL,
+      '={{ $json.audience_id }}, {{ $json.email }}, {{ $json.first_name }}, {{ $json.last_name }}, {{ $json.vin }}, {{ $json.make }}, {{ $json.model }}, {{ $json.year }}, {{ $json.mileage }}, {{ $json.decoded }}, {{ $json.err }}, {{ $(\'Campaign Config\').item.json.partner_id }}'),
+
+    node('Quotes Created', 'noOp', 1, [1360, 220], {}),
+  );
+  // Campaign Config fans out: enrolment and quote creation side by side.
+  intakePairs[1] = ['Campaign Config', [['Enroll Eligible Service Customers', 'Link Existing Quotes']]];
+  intakePairs.push(
+    ['Link Existing Quotes', 'Audience Needing Quotes'],
+    ['Audience Needing Quotes', 'Batch VINs'],
+    ['Batch VINs', 'Decode VINs (NHTSA)'],
+    ['Decode VINs (NHTSA)', 'Match Decodes'],
+    ['Match Decodes', 'Create Quote Records'],
+    ['Create Quote Records', 'Quotes Created'],
+  );
+}
+
+const intakeConnections = connect(intakePairs);
 
 writeFileSync(join(ROOT, `${WF_DIR}/01-intake.json`),
   JSON.stringify(workflow('DriveOne VSC 01 Intake (' + DEALER.dealer.displayName + ')', intakeNodes, intakeConnections), null, 2));

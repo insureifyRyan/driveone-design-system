@@ -1,6 +1,6 @@
 {
   "$comment": "CAMPAIGN FILE for the Ferrario Ford DRIVE-BY bucket (plate-camera matches with no prior relationship to the dealership, not in the DMS). A separate dealer_id on purpose: vsc_enrollment, vsc_email_template and the n8n workflow set are all keyed on it, so this bucket has its own copy deck, its own From, its own schedule and its own exits, and shares nothing with the service drive campaign except the Supabase partner, the brand and the dedupe. Brand, colour, logo, contact and metricbridge blocks are copies of brand/dealers/ferrario-ford.json; edit them THERE and re-copy, do not fork them here.",
-  "$status": "CREATED 11 Nov 2026. QUOTING, NOT SENDING. 01 Intake is published in n8n as JDB3DiprdnKBN8Op and creates quotes hourly (see intake.audienceNote); initial_cohort is 0 so nobody is enrolled or emailed. 05 Pricing Inb7aK3fnFjEwsry and 03 Events sG5m7QsBx2Wmt620 published 11 Nov 2026 (03's Resend endpoint is not wired; the shared Resend webhook routes by tag through the service drive 03). 02 Scheduler UbvZup3o9jKdfouN created UNPUBLISHED (publishing it is the send switch); 06 Review C8cxptc5ccF18tXr and 07 Scorecard hSnGMsvgFwEwEv3D published. Templates being loaded into vsc_email_template. ferrario.driveoneservice.com VERIFIED in Resend 11 Nov 2026 ~20:40 UTC (DKIM, SPF MX+TXT, rsend CNAME all verified). Click and open tracking are OFF: update-domain reports success but the flag does not persist via the API, same as the service drive subdomain; flip it in the Resend dashboard if wanted. Copy rewritten 11 Nov 2026 as a no-relationship introduction after Ryan confirmed these are plate matches; SMS removed for lack of consent. Still waits on: Stephen creating the quotes from the Elevate import file, Ryan approving the two Email 1s.",
+  "$status": "CREATED 11 Nov 2026. LIVE (sending) from 11 Nov 2026 23:15 UTC. 01 Intake is published in n8n as JDB3DiprdnKBN8Op and creates quotes hourly (see intake.audienceNote). 05 Pricing Inb7aK3fnFjEwsry and 03 Events sG5m7QsBx2Wmt620 published 11 Nov 2026 (03's Resend endpoint is not wired; the shared Resend webhook routes by tag through the service drive 03). 02 Scheduler (PUBLISHED 11 Nov 23:15 UTC) UbvZup3o9jKdfouN created UNPUBLISHED (publishing it is the send switch); 06 Review C8cxptc5ccF18tXr and 07 Scorecard hSnGMsvgFwEwEv3D published. Templates being loaded into vsc_email_template. ferrario.driveoneservice.com VERIFIED in Resend 11 Nov 2026 ~20:40 UTC (DKIM, SPF MX+TXT, rsend CNAME all verified). Click and open tracking are OFF: update-domain reports success but the flag does not persist via the API, same as the service drive subdomain; flip it in the Resend dashboard if wanted. Copy rewritten 11 Nov 2026 as a no-relationship introduction after Ryan confirmed these are plate matches; SMS removed for lack of consent. Still waits on: Stephen creating the quotes from the Elevate import file, Ryan approving the two Email 1s.",
   "id": "ferrario-ford-list",
   "workflowLabel": "Ferrario Ford, drive-by bucket",
   "workflowLabelNote": "Bracketed suffix on the n8n workflow names only. dealer.displayName stays 'Ferrario Ford' because the customer sees that one.",
@@ -63,8 +63,8 @@
     "unsubscribeNote": "Same deployed Supabase Edge Function as Bob Johnson. It is keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
     "id": "ff_list_vsc_2026",
     "idNote": "Distinct from ff_postro_vsc_2026 and from the other bucket. Templates and enrolments are keyed on (dealer_id, campaign_id).",
-    "live": false,
-    "liveNote": "NOT LIVE. Flip to true only after (1) the From domain is verified in Resend, (2) the quotes exist in Elevate for this bucket's VINs, (3) Ryan has approved Email 1, and (4) 08 Sales Alert has been rebuilt so this dealer_id is on the roster. Then publish 01, 05, 06, 07, 03 and finally 02.",
+    "live": true,
+    "liveNote": "LIVE from 11 Nov 2026 23:15 UTC: Ryan said 'publish both schedulers'. 02 published; initial_cohort raised to 1893. First sends land on the next safe slot (Tue-Fri, 14-20 UTC) after enrolment, so Thu 12 Nov 14:00 UTC at the earliest. Preconditions that were met before flipping: (1) the From domain is verified in Resend, (2) the quotes exist in Elevate for this bucket's VINs, (3) Ryan has approved Email 1, and (4) 08 Sales Alert has been rebuilt so this dealer_id is on the roster. Then publish 01, 05, 06, 07, 03 and finally 02.",
     "commercialReviewTo": [
       "stephen@kovara.ai",
       "nlives@ascentadmin.com"
@@ -115,10 +115,10 @@
     "partner_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
     "partner_type": "service-drive-ferrario",
     "partner_type_note": "Note this is NOT 'service-drive' as on Bob Johnson. Do not copy that value across.",
-    "initial_cohort": 0,
+    "initial_cohort": 1893,
     "cohort_target": 1893,
     "cohort_target_note": "1,893 = the deduped list tab rows with a VIN and a NEW status at load (11 Nov 2026). Measured from vsc_audience, bucket 'list', status_at_load NEW. The 7,654 people on that tab without a VIN were not loaded and cannot be quoted.",
-    "initial_cohort_note": "0 = enrolment OFF. Raise toward cohort_target to start enrolling; intake deals newcomers at sending.newEnrolmentsPerDay per send day. Keep at 0 until the quotes exist in Elevate, or intake finds nothing and logs a zero run.",
+    "initial_cohort_note": "Raised 0 -> 1893 (= cohort_target) on 11 Nov 2026 23:15 UTC on Ryan's 'publish both schedulers'. The cohort is the TOTAL enrolment ceiling; intake deals newcomers at sending.newEnrolmentsPerDay per send day and only enrols rows that already have a quote, so the hourly quoting pace is the real throttle for the first days. Lower to 0 to pause enrolment.",
     "intake_window_days": 365,
     "intake_window_note": "Quote created_at window. Stephen's import will be created the week of 11 Nov 2026 so any window works; 365 is simply 'do not drop a quote because it aged'. Not the camera window, which is not filtered.",
     "max_mileage": 999999,

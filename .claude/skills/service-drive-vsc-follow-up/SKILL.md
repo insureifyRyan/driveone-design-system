@@ -44,6 +44,23 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**THROUGHPUT RAISED 11 Nov 2026, 20:20 UTC: 20 -> 90 new people a day.** Three
+things had to move, not one. `sending.newEnrolmentsPerDay` 90 (18 per slot) sets the
+dealing rate, but the live cohort ceiling `supabase.initial_cohort` was 90 and already
+full, and `supabase.intake_window_days` 90 had shrunk to 59 of the 1,260 quotes because
+the dealership's quotes were imported on 28 Jul to 5 Aug. Now 1,098 and 200. 01 was
+redeployed (Campaign Config values, 18-per-slot query, array-form queryReplacement) and
+run once by hand: 1,008 enrolled in one sweep, 1,098 total, dealt at 90 a send day from
+Thu 12 Nov to Tue 2 Dec plus the 81 restart rows on 12, 13, 17 and 18 Nov (those days
+run about 115). Rows dealt onto Thanksgiving Thursday 26 Nov and Friday 27 Nov were
+pushed a week by hand; `sending.days` has no holiday list, so do this for any dealer
+whose dealing crosses a holiday. 05 prices 100 an hour, so the 1,012 unpriced rows take
+about eleven hourly runs; the first sends are Thursday 14:00 UTC, well after. Watch the
+daily cap: at 90 new a day the follow-ups push total sends past 200 inside two weeks and
+the cap then defers, stretching the cadence; raise `sending.dailyCap` to about 300 if
+bounces and complaints stay clean. The subdomain was at 4.8% bounce and one complaint
+on 189 sends when this was turned up.
+
 **LIVE 11 Nov 2026, 20:15 UTC.** Ryan: "Ready to send now go ahead." 02 Scheduler
 published. The 81 are spread Thu 12, Fri 13, Tue 17, Wed 18 Nov at about 20 a day,
 first slot Thu 12 Nov 14:00 UTC (9am ET), all at the new prices. A check-in is set

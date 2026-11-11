@@ -1,0 +1,166 @@
+{
+  "$comment": "CAMPAIGN FILE for the Ferrario Ford wider customer list bucket. A separate dealer_id on purpose: vsc_enrollment, vsc_email_template and the n8n workflow set are all keyed on it, so this bucket has its own copy deck, its own From, its own schedule and its own exits, and shares nothing with the service drive campaign except the Supabase partner, the brand and the dedupe. Brand, colour, logo, contact and metricbridge blocks are copies of brand/dealers/ferrario-ford.json; edit them THERE and re-copy, do not fork them here.",
+  "$status": "CREATED 11 Nov 2026. NOT LIVE. Built and verified; templates and workflows not yet published. Waits on: ferrario.driveoneservice.com verified in Resend (list bucket only), Stephen creating the quotes from the Elevate import file, Ryan approving the two Email 1s.",
+  "id": "ferrario-ford-list",
+  "dealer": {
+    "name": "Ferrario Ford",
+    "legalName": "NEEDS CONFIRMATION",
+    "displayName": "Ferrario Ford",
+    "shortName": "Ferrario",
+    "state": "NY",
+    "stateNote": "CONFIRMED enough to rely on: the program contact's number is a 607 area code, which is NY, and NY is the modal state across their 1,244 service customers. dealer.state drives the ORIAS obligor in the footer, so it has to be the DEALERSHIP's state and not the customer's.",
+    "website": "NEEDS CONFIRMATION",
+    "tagline": "",
+    "serviceArea": "NEEDS CONFIRMATION",
+    "storeNote": "RESOLVED 30 Sep 2026 from the supplied artwork, extended 1 Oct. There are two marks and they are different businesses: 'Ferrario Ford' is this rooftop and 'Ferrario Auto Team / Truck Country USA' is the group, whose badge carries Chevrolet and Jeep marks alongside Ford. They share one physical address, 2472 Corning Rd, so the rooftop-versus-group distinction is about NAMING rather than location. Customer facing material reads Ferrario Ford because this campaign is the Ford rooftop's own service drive. Widening the audience to the Chevy or Jeep rooftops means a new dealer file with the group lockup, not an edit to this one.",
+    "city": "Elmira",
+    "cityNote": "CONFIRMED 1 Oct 2026 from Ferrario Ford's own website Find Us panel, which names Ferrario Ford at 2472 Corning Rd, Elmira NY 14903-1044, and corroborated by the Google Business Profile for Ferrario Auto Team at the same street address. Consistent with Geoff Crossley's 607 Elmira exchange."
+  },
+  "color": {
+    "$note": "Read by eye off the supplied Ferrario Ford artwork on 30 Sep 2026, not sampled from a brand sheet and not pulled from a stylesheet, so treat these as close rather than exact and confirm the hex values before the first send. The same caveat is on Bob Johnson's palette for the same reason. What matters more than the exact hex is that the previous values were wrong in kind, not just in degree: they were a guessed Ford corporate blue, and this brand is a deep navy ground with a RED wordmark. Accent drives every button and rule in the email, so a blue accent would have shipped a red brand's campaign in the wrong colour entirely.",
+    "primary": "#0B1B3F",
+    "primaryDark": "#060F26",
+    "accent": "#D81E24",
+    "primarySoft": "#FDECEE",
+    "onPrimary": "#FFFFFF",
+    "accentDark": "#9E1318",
+    "accentDarkNote": "Exists only because the mid-tone red at 9px on white does not have the contrast to read. Used for small legal and eyebrow type, never for a button ground.",
+    "onAccent": "#FFFFFF"
+  },
+  "logo": {
+    "$note": "Two lockups were supplied and they are not interchangeable. See dealer.storeNote for which business each one is. This file uses the Ferrario Ford rooftop mark.\n\nuseImage stays false, and the artwork does not change that. A hosted image does not render when the client blocks images, which is a large share of opens, so the header carries a type lockup we control. That is the same call as Bob Johnson and the same call build.mjs already makes for DriveOne's own D mark.\n\nTwo parts of the rooftop mark are deliberately not reproduced. The white cowboy hat resting on the final O is a drawn element with no type equivalent, the same problem as the D mark. The Ford oval is omitted for a different and more important reason: this email sells a DriveOne VSC administered by Ascent and, in New York, obligated by ORIAS. Ford is not the administrator, the obligor or the seller, and setting their oval beside the offer implies a manufacturer endorsement that does not exist. brand/offer.json is strict about not making claims the contract does not support; this is that same rule applied to artwork. If someone wants the oval in the header, that is a question for Ford's trademark guidelines and the client's Ford rep, not a build setting.",
+    "light": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "dark": "https://bbvkqwcapqsytrdrubci.supabase.co/storage/v1/object/public/partner-logos/ferrario-logo.jpeg",
+    "lightNote": "The partner record's logo, still unopened from this environment. Now that the client has supplied artwork directly, check whether this stored file is the rooftop mark or the group mark before any future switch to useImage true.",
+    "widthPx": 190,
+    "altText": "Ferrario Ford",
+    "wordmark": {
+      "line1": "FERRARIO",
+      "line2": "FORD",
+      "italic": true,
+      "$note": "CONFIRMED against the supplied rooftop artwork: FERRARIO is set in a heavy italic, which is what italic true reproduces. line2 is FORD because this is the Ford rooftop; the group lockup would read AUTO TEAM instead. The rule under the wordmark is always color.accent, never set here, so the two cannot drift apart."
+    },
+    "useImage": false
+  },
+  "contact": {
+    "storeName": "Ferrario Ford",
+    "addressLine1": "2472 Corning Rd",
+    "addressLine2": "Elmira, NY 14903",
+    "addressNote": "CONFIRMED 1 Oct 2026 by two independent sources that agree: Ferrario Ford's own website Find Us panel, and the Google Business Profile for Ferrario Auto Team. The site gives ZIP+4 as 14903-1044; the footer prints the five digit form, which is what CAN-SPAM needs and what a reader expects. A physical postal address in the footer is a legal requirement, not a nicety, and this one is now satisfied.",
+    "servicePhone": "(607) 734-1681",
+    "phoneNote": "USABLE BUT NOT IDEAL, and deliberately not left blocking. This is the main dealership number from the Ferrario Auto Team Google Business Profile, so it is genuinely customer facing and a caller reaches the dealership and gets routed. It is NOT confirmed to be the service department's direct line, and Ryan said the dealership would say which number they want printed. Swap it when they do.\n\nWhat it is definitely better than: 607-526-7748, which is Geoff Crossley's number on the partner record and is the PROGRAM contact rather than a customer service line. Bob Johnson made the same distinction. Never print the program contact's number in a customer footer.",
+    "replyTo": "stephen@driveoneprogram.com",
+    "replyToNote": "Same monitored mailbox as the service drive campaign. The From subdomain has no inbound; replies to From rather than Reply-To will bounce."
+  },
+  "campaign": {
+    "quoteUrlBase": "https://www.getelevatewarranty.com/quote",
+    "quoteUrlBaseNote": "PREVIEW ONLY. This value is read by email/build.mjs when it renders the local dist and preview HTML, and by nothing else. A production send never uses it: the scheduler reads vsc_enrollment.quote_url, which workflow 05 fills with the guided_purchase_link returned by the quote API, and refuses to send at all while that column is null (n8n/build-workflows.mjs, the quote_url is not null guard). Templates in vsc_email_template carry the {{quote_url}} merge tag, not this string.\n\nIt previously read \"SET VIA SHORT_LINK_BASE_URL IN n8n\", which was wrong twice over: no workflow reads a SHORT_LINK_BASE_URL variable, and docs/SUPABASE.md says plainly that no link is ever built locally. That placeholder is where the phantom fifth n8n variable came from.",
+    "utm": "utm_source=email&utm_medium=crm&utm_campaign=ff_list_vsc_2026",
+    "linkMode": "short",
+    "unsubscribeUrl": "https://bbvkqwcapqsytrdrubci.supabase.co/functions/v1/vsc-unsubscribe",
+    "unsubscribeNote": "Same deployed Supabase Edge Function as Bob Johnson. It is keyed per recipient and scoped by dealer_id in the URL, so dealerships share it without touching each other's opt outs. Set both UNSUBSCRIBE_URL_BASE and PREFERENCES_URL_BASE to this.",
+    "id": "ff_list_vsc_2026",
+    "idNote": "Distinct from ff_postro_vsc_2026 and from the other bucket. Templates and enrolments are keyed on (dealer_id, campaign_id).",
+    "live": false,
+    "liveNote": "NOT LIVE. Flip to true only after (1) the From domain is verified in Resend, (2) the quotes exist in Elevate for this bucket's VINs, (3) Ryan has approved Email 1, and (4) 08 Sales Alert has been rebuilt so this dealer_id is on the roster. Then publish 01, 05, 06, 07, 03 and finally 02.",
+    "commercialReviewTo": [
+      "stephen@kovara.ai",
+      "nlives@ascentadmin.com"
+    ],
+    "commercialReviewFrom": "DriveOne Campaign <alerts@kovara.ai>",
+    "scorecardTo": [
+      "ryan@kovara.ai"
+    ],
+    "scorecardFrom": "DriveOne Campaign <alerts@kovara.ai>",
+    "scorecardNote": "Who gets the weekly performance scorecard from workflow 07. Internal only for now, by instruction on 8 Oct 2026: the dealership and the sales rep get added once the numbers have been watched for a few weeks and the reporting is trusted. Adding them is a one line change here plus a rebuild.\n\nThe scorecard reports only what this system actually measures: enrolments, pricing, sends by step, exits by reason, suppressions and errors. It deliberately does NOT report opens or clicks. Open tracking and click tracking are both false on ferrario.driveoneprogram.com in Resend, and the Resend webhook subscribes to email.bounced and email.complained only, so no open, click or delivery event is captured anywhere. A scorecard line for them would read 0 forever and look like a dead campaign rather than an unmeasured one.\n\nSame From domain reasoning as the commercial review: kovara.ai is internal and verified, the rooftop subdomain is mid warmup carrying consumer mail.",
+    "commercialReviewNote": "Who hears about a vehicle held for the commercial surcharge. Intake parks a suspected business at status held_commercial, the scheduler only ever claims status active, so the row is never emailed; workflow 06 reports it hourly to these addresses and stamps review_notified_at so it is reported once.\n\nNikki Lives is at Ascent Administration Services, the administrator and (outside NY and FL) the obligor. She is outside Kovara, so the digest carries a customer name, vehicle and price to a third party. That is a normal processor relationship for a contract they administer, but it is why the digest carries no address and no phone.\n\nThe From domain is deliberately NOT the dealership subdomain. ferrario.driveoneprogram.com is mid warmup carrying consumer mail; ops alerts bouncing or being foldered there would cost reputation on exactly the thing the warmup is protecting. kovara.ai is verified in Resend and is internal.\n\nReleasing a hold is a one line update back to status active. The row re-enters the cadence where it left off. Do that for a false positive too - matching is on the name, so a retail customer can land here by accident.",
+    "copyDeck": "email/copy/ferrario-list.json",
+    "copyDeckNote": "Ten emails written for people who have NEVER been in: no visit references anywhere, the relationship is 'you are a Ferrario Ford customer', and the first email owns who DriveOne Service is. The mileage is an estimate and every mention says so.",
+    "vehicleLine": "Est. {{vehicle_mileage}} miles &nbsp;&middot;&nbsp; confirm at checkout",
+    "vehicleLineNote": "Replaces the service drive card's 'Serviced {{last_ro_date}} · N miles'. This bucket has no RO date and its odometer is modelled at 15,000 miles a year of age (vsc_audience.est_mileage) unless Elevate holds a real reading, so the card says so and points at checkout, where the customer types the real figure before paying.",
+    "relationshipLine": "You are receiving this because you are a {{dealer_name}} customer. {{dealer_name}} offers vehicle service contracts through DriveOne Service.",
+    "relationshipLineNote": "CAN-SPAM 'why you are getting this' line in the footer. The default says 'you have serviced a vehicle with', which is untrue for this bucket.",
+    "mileageLine": "The mileage shown is an estimate based on the vehicle's age. You confirm the actual odometer reading at checkout and the quote is recalculated before you pay.",
+    "mileageLineNote": "Footer disclosure. The default refers to the odometer recorded at the last visit, which this bucket does not have.",
+    "eventsWebhookPath": "vsc/events/ferrario-ford-list"
+  },
+  "intake": {
+    "internalNames": [
+      "ferrario"
+    ],
+    "staffEmailDomains": [
+      "NEEDS CONFIRMATION: the dealership mail domain, probably ferrarioford.com"
+    ],
+    "$comment": "internalNames and staffEmailDomains copied from the service drive file; same dealership, same exclusions.",
+    "audienceBucket": "list",
+    "audienceDealerId": "ferrario-ford",
+    "audienceNote": "Audience intake mode. Instead of the service drive query, 01 Intake reads vsc_audience rows loaded from the dealership's reconciliation workbook (dealer_id ferrario-ford, bucket 'list') and joins them to the partner's quotes by VIN or email. The workbook was deduped against the service visit tab before loading, and the intake SQL additionally refuses anyone already enrolled under ANY Ferrario dealer id (the partner family), so a person cannot be in two buckets or in a bucket and the service drive campaign at once. Eligibility still needs a quote in Elevate for the vehicle: rows with no quote are skipped, not errored, and appear once Stephen's import lands."
+  },
+  "metricbridge": {
+    "$comment": "CONFIRMED from the MetricBridge dealer record, 30 Sep 2026.",
+    "source": "elevate_service_drive",
+    "dealer_id": "f97b1597-e7ef-46e0-981a-ac83cdda34d7",
+    "source_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "slug": "ferrario-ford",
+    "business_name": "Ferrario Ford",
+    "program_contact": "Geoff Crossley, Gcrossley@ferrario.com, 607-526-7748",
+    "down_payment_percentage": 0.05,
+    "down_payment_note": "CONFIRMED 0.050 on the partner record, the same 5% Bob Johnson uses, so emails 1 and 5 need no change."
+  },
+  "supabase": {
+    "$comment": "CONFIRMED. partners.id here equals dealers.source_id in MetricBridge, which is the join between the two systems.",
+    "project_id": "bbvkqwcapqsytrdrubci",
+    "partner_id": "bd2de835-a881-467c-b78b-c5963ff9fbd5",
+    "partner_type": "service-drive-ferrario",
+    "partner_type_note": "Note this is NOT 'service-drive' as on Bob Johnson. Do not copy that value across.",
+    "initial_cohort": 0,
+    "cohort_target": 1893,
+    "cohort_target_note": "1,893 = the deduped list tab rows with a VIN and a NEW status at load (11 Nov 2026). Measured from vsc_audience, bucket 'list', status_at_load NEW. The 7,654 people on that tab without a VIN were not loaded and cannot be quoted.",
+    "initial_cohort_note": "0 = enrolment OFF. Raise toward cohort_target to start enrolling; intake deals newcomers at sending.newEnrolmentsPerDay per send day. Keep at 0 until the quotes exist in Elevate, or intake finds nothing and logs a zero run.",
+    "intake_window_days": 365,
+    "intake_window_note": "Quote created_at window. Stephen's import will be created the week of 11 Nov 2026 so any window works; 365 is simply 'do not drop a quote because it aged'. Not the camera window, which is not filtered.",
+    "max_mileage": 999999,
+    "max_mileage_note": "Effectively off, same as Bob Johnson. The rating API is keyed on VIN and decides what it can rate; a local ceiling only second guesses it, and a vehicle it cannot price records a pricing_error, never sends, and stops being retried after five attempts.",
+    "slug": "ferrario-ford",
+    "data_quality_flag": "RESOLVED 30 Sep 2026, decision by Ryan: market to the has_existing_warranty = false group. Checked before accepting it. The column is fully populated at both stores, zero nulls, so it IS being written for Ferrario rather than missing: 1 true and 1,243 false, against Bob Johnson's 37 and 410. Payment status could not corroborate either way because every quote at both rooftops is still 'pending', so nobody has bought yet anywhere. The rate difference between the two stores is a dealership-reality question rather than a data one.",
+    "data_quality_residual_risk": "Worth holding in mind rather than acting on: this flag is the ONLY guard against pitching coverage to someone who already owns it. The rating API will happily quote an existing owner because it has no idea they have a contract, and intake filters on nothing else. So if Ferrario under-reports the flag, those customers receive the campaign. At Bob Johnson's 8.3% rate that would be roughly 100 people of 1,244. The filter itself is written as `= false`, which excludes nulls as well as trues, so an unknown is treated as ineligible. That is the safe direction.",
+    "intake_window_days_note": "Quote created_at window. Stephen's import will be created the week of 11 Nov 2026 so any window works; 365 is simply 'do not drop a quote because it aged'. Not the camera window, which is not filtered."
+  },
+  "brandLead": {
+    "$comment": "dealer means the dealership colour leads the layout and DriveOne is reduced to the provider mark in the header. Correct for a send made on their behalf.",
+    "mode": "dealer"
+  },
+  "sending": {
+    "$comment": "Copied from Bob Johnson deliberately. These are starting heuristics rather than measured truths, and the two stores are close enough in audience that starting from the same numbers is more honest than inventing different ones.",
+    "timezone": "America/New_York",
+    "dailyCap": 125,
+    "dailyCapNote": "Hard ceiling per day for THIS bucket on its own subdomain. 125 fits 25 new a day with ten emails over sixty days at steady state. Raise with newEnrolmentsPerDay.",
+    "newEnrolmentsPerDay": 25,
+    "newEnrolmentsPerDayNote": "25 a day on a BRAND NEW subdomain. ferrario.driveoneservice.com has sent nothing; Gmail and Yahoo throttle unknown senders hard. 25 new a day means about 125 sends a day by week three. Double it after two clean weeks (bounce under 2%, complaints under 0.1%), then again. At 25 a day the 1,893 take about 19 weeks to enrol; at 100 a day, five.",
+    "days": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "daysNote": "Tuesday through Friday. Monday is excluded because Monday inboxes are cleared in bulk. Friday is INCLUDED for an arithmetic reason rather than a preference: two days drawn from Tue/Wed/Thu alone can only ever be 1, 2, 5, 6 or 7 days apart, so the 3 and 4 day gaps the deck opens with are impossible to express and every gap silently collapses to 7. Do not narrow this without re-running n8n/verify.mjs.",
+    "hours": [
+      9,
+      10,
+      11,
+      13,
+      14,
+      15,
+      16
+    ],
+    "hoursNote": "Local. Mid morning and early afternoon, skipping the lunch hour.",
+    "maxPerRun": 30,
+    "maxPerRunNote": "Ceiling on any single hourly run, so a backlog cannot arrive as one spike.",
+    "fromDomain": "ferrario.driveoneservice.com",
+    "fromAddress": "service@ferrario.driveoneservice.com",
+    "fromName": "Ferrario Ford with DriveOne Service",
+    "fromNote": "DECIDED 11 Nov 2026 with Ryan: the wider list has never been in the dealership, so it does not send from the service drive's subdomain. ferrario.driveoneservice.com is a fresh per-dealer subdomain of the DriveOne Service root (verified Resend root mail.driveoneservice.com already exists there), created in Resend 11 Nov 2026 20:15 UTC with DKIM, SPF (send.ferrario MX + TXT), the rsend CNAME and DMARC p=none on the root added to Vercel DNS the same evening. The From name says who is writing because this audience has no reason to recognise a bare 'Ferrario Ford Service'. A complaint spike here cannot touch ferrario.driveoneprogram.com's reputation, which is the point of the split.\n\nn8n's SEND_FROM for this workflow set must read `Ferrario Ford with DriveOne Service <service@ferrario.driveoneservice.com>`.",
+    "smsFromNumber": null,
+    "smsFromNumberNote": "The rooftop's OWN Sendblue sending number, passed per message as from_number. Null until the Sendblue account exists.\n\nThis is the real dealer-branding fix for SMS. Sendblue has no branded sender ID, so with a shared number every rooftop texts from the same unknown digits and the store name in the opening words is all the branding there is. A number per rooftop makes the text actually come from the dealership, and it is what customers will save to their contacts and reply to.\n\nIt also disambiguates inbound mail: workflow 11 works out whose number an inbound STOP came from by eliminating our own, and the set of our own numbers is built from this field across every dealer file. With none configured it falls back to reading from_number as the sender, which is correct under the ordinary reading of Sendblue's schema but is an inference rather than a guarantee."
+  }
+}

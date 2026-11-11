@@ -33,13 +33,18 @@ import { createHash } from 'node:crypto';
 const nodeRequire = createRequire(pathToFileURL(import.meta.url));
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
 
 // Verify a specific dealer's build. Defaults to bob-johnson to match the
 // generator, and takes the same argument so `verify ferrario-ford` checks
 // Ferrario's cadence rather than silently re-checking someone else's.
 const DEALER_ID = process.argv[2] || 'bob-johnson';
 const load = (f) => JSON.parse(readFileSync(join(ROOT, 'n8n/workflows', DEALER_ID, f), 'utf8'));
+// The deck is whichever one THIS campaign file names (campaign.copyDeck),
+// defaulting to the post-service deck, so the cadence check reads the deck the
+// workflows were actually generated from.
+const THIS_FILE = JSON.parse(readFileSync(join(ROOT, 'brand/dealers', `${DEALER_ID}.json`), 'utf8'));
+const DECK_PATH = (THIS_FILE.campaign && THIS_FILE.campaign.copyDeck) || 'email/copy/campaign.json';
+const DECK = JSON.parse(readFileSync(join(ROOT, DECK_PATH), 'utf8'));
 const WORKFLOWS = ['01-intake.json', '02-scheduler.json', '03-events.json',
   '04-error-handler.json', '05-pricing.json', '06-commercial-review.json',
   '07-scorecard.json', '08-sales-alert.json', '09-sms-send.json',
@@ -753,7 +758,7 @@ check('an SMS body fits one segment and names the store', () => {
   // in the live cohort rather than a short one, because the merge tag is what
   // pushes a body over: "Grand Cherokee" costs eight characters more than
   // "Escape" and that was the difference on message 3.
-  const deck = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
+  const deck = DECK;
   assert(Array.isArray(deck.sms) && deck.sms.length, 'the deck carries no SMS copy');
 
   // Worst case the live data can produce, not a convenient example.
@@ -1071,10 +1076,16 @@ check('only a service drive account reaches the service drive channel', () => {
     assert(fresh[1].includes(pid),
       `${d.id} is campaign.live but its partner id is not in the built query; rebuild 08`);
   }
-  // And a rooftop that is NOT live must not be in there.
+  // And a rooftop that is NOT live must not be in there. The roster is a set
+  // of PARTNER ids, and one partner can own several campaign files (Ferrario
+  // Ford's service drive, 'visited' and 'list' buckets all sell under one
+  // partner), so a partner is rightly on the roster as soon as any one of
+  // its files is live: a sale from a sibling bucket is still that dealer's
+  // sale. The trap is only for a partner none of whose files is live.
+  const livePartners = new Set(live.map((d) => d.supabase && d.supabase.partner_id).filter(Boolean));
   for (const d of dealers.filter((x) => !(x.campaign && x.campaign.live === true))) {
     const pid = d.supabase && d.supabase.partner_id;
-    if (pid) {
+    if (pid && !livePartners.has(pid)) {
       assert(!fresh[1].includes(pid),
         `${d.id} is not live but its sales would be announced`);
     }

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "DriveOne VSC co-branded dealer email design system and campaign automation",
   "scripts": {
-    "build": "npm run build:bob-johnson && npm run build:ferrario-ford",
+    "build": "npm run build:bob-johnson && npm run build:ferrario-ford && npm run build:ferrario-ford-visited && npm run build:ferrario-ford-list",
     "build:bob-johnson": "node email/build.mjs bob-johnson && node n8n/build-workflows.mjs bob-johnson && node n8n/verify.mjs bob-johnson && node scripts/check.mjs bob-johnson",
     "build:ferrario-ford": "node email/build.mjs ferrario-ford && node n8n/build-workflows.mjs ferrario-ford && node n8n/verify.mjs ferrario-ford && node scripts/check.mjs ferrario-ford",
     "check": "node scripts/check.mjs",
@@ -16,7 +16,9 @@
     "vercel-build": "npm run build && npm run publish:static",
     "n8n:sdk": "node scripts/to-n8n-sdk.mjs",
     "simulate": "node scripts/simulate-volume.mjs",
-    "apply:templates": "bash scripts/apply-templates.sh"
+    "apply:templates": "bash scripts/apply-templates.sh",
+    "build:ferrario-ford-visited": "node email/build.mjs ferrario-ford-visited && node n8n/build-workflows.mjs ferrario-ford-visited && node n8n/verify.mjs ferrario-ford-visited && node scripts/check.mjs ferrario-ford-visited",
+    "build:ferrario-ford-list": "node email/build.mjs ferrario-ford-list && node n8n/build-workflows.mjs ferrario-ford-list && node n8n/verify.mjs ferrario-ford-list && node scripts/check.mjs ferrario-ford-list"
   },
   "engines": {
     "node": ">=18"

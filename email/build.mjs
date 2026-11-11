@@ -21,7 +21,11 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const T = read('brand/driveone.tokens.json');
 const D = read(`brand/dealers/${DEALER_ID}.json`);
 const OFFER = read('brand/offer.json');
-const DECK = read('email/copy/campaign.json');
+// The deck is per CAMPAIGN FILE, not per repo. The post-service deck is the
+// default; a file that mails a different population (people seen on the lot
+// but never in the drive, or the dealership's wider list) names its own deck in
+// campaign.copyDeck, so the copy can say true things about that population.
+const DECK = read((D.campaign && D.campaign.copyDeck) || 'email/copy/campaign.json');
 
 // The form names a different Administrator/Obligor in NY, CA and FL. Resolve it
 // from the dealer's state so the footer is correct per dealership, not per brand.
@@ -63,6 +67,23 @@ const GUT = T.layout.gutter;
 /* ---------------------------------------------------------------- helpers */
 
 const esc = (s) => String(s).replace(/&(?![a-z#0-9]+;)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Three sentences that are only true for the post-service population and are
+// therefore owned by the campaign file, with the post-service wording as the
+// default. A campaign file that mails people who were never in the drive sets
+// its own: the vehicle card line (the "Serviced <date> · <miles>" line under the
+// model), the CAN-SPAM relationship line in the footer, and the mileage
+// disclosure in the footer. Merge tags are allowed in all three; the dealer
+// name is already resolved for the two footer lines because they are not
+// resolved through the tag table.
+const CAMPAIGN_TEXT = D.campaign || {};
+const VEHICLE_LINE = CAMPAIGN_TEXT.vehicleLine
+  || 'Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles';
+const RELATIONSHIP_LINE = CAMPAIGN_TEXT.relationshipLine
+  ? String(CAMPAIGN_TEXT.relationshipLine).split('{{dealer_name}}').join(esc(D.dealer.displayName))
+  : `You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}.`;
+const MILEAGE_LINE = CAMPAIGN_TEXT.mileageLine
+  || 'Your quote is based on the vehicle and the odometer reading recorded at your last service visit. If your mileage has changed since then, the price at checkout may differ.';
+
 
 /** Turn [[phrase]] into a cyan accent span. */
 const accent = (s) =>
@@ -270,7 +291,7 @@ const vehicleCard = () => `
     <tr><td style="padding:18px 20px 14px 20px;background-color:${A.soft};border-radius:${T.layout.radius}px ${T.layout.radius}px 0 0;">
       <p style="margin:0 0 6px 0;${font(F.body, 9, 700, A.accentDark, '1.5')}letter-spacing:1.6px;">DRIVEONE VSC &middot; PLATINUM COVERAGE</p>
       <p style="margin:0 0 3px 0;${font(F.display, 17, 800, C.ink, '1.3')}letter-spacing:-0.3px;">{{vehicle_year}} {{vehicle_make}} {{vehicle_model}}</p>
-      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">Serviced {{last_ro_date}} &nbsp;&middot;&nbsp; {{vehicle_mileage}} miles</p>
+      <p style="margin:0;${font(F.body, 13, 400, C.bodyText, '1.6')}">${VEHICLE_LINE}</p>
     </td></tr>
 
     <tr><td style="padding:16px 20px 0 20px;">
@@ -386,10 +407,10 @@ const footer = () => `
 <tr>
 <td style="padding:24px ${GUT}px 34px ${GUT}px;background-color:${C.paper};">
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    <strong style="color:${C.mutedText};">Advertisement.</strong> You are receiving this because you have serviced a vehicle with ${esc(D.dealer.displayName)}. This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
+    <strong style="color:${C.mutedText};">Advertisement.</strong> ${RELATIONSHIP_LINE} This message is about vehicle service contract coverage offered through ${esc(D.dealer.displayName)} and provided by DriveOne.
   </p>
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
-    Your quote is based on the vehicle and the odometer reading recorded at your last service visit. If your mileage has changed since then, the price at checkout may differ. The figure shown is the lowest monthly option available for your vehicle; other terms, including an unlimited mileage plan, are priced separately.
+    ${MILEAGE_LINE} The figure shown is the lowest monthly option available for your vehicle; other terms, including an unlimited mileage plan, are priced separately.
   </p>
   <p style="margin:0 0 12px 0;${font(F.body, 11, 400, C.legalText, '1.65')}">
     A vehicle service contract is not an insurance policy and is not a manufacturer warranty. Coverage, exclusions, deductible, eligibility and cancellation terms are governed entirely by your contract. Administrator and obligor: ${esc(OBLIGOR)}. Coverage is not available in all states and is not sold in California. Pricing varies by vehicle, mileage and term. Payment plan is not a loan and involves no credit check.

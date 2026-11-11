@@ -28,13 +28,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DECK = JSON.parse(readFileSync(join(ROOT, 'email/copy/campaign.json'), 'utf8'));
 // Dealer comes from argv, like email/build.mjs. This was hardcoded to
 // bob-johnson while the skill told people to run it when adding a dealership,
 // so a second rooftop would have silently regenerated the first one's
 // workflows and written them over the shared output path.
 const DEALER_ID = process.argv[2] || 'bob-johnson';
 const DEALER = JSON.parse(readFileSync(join(ROOT, `brand/dealers/${DEALER_ID}.json`), 'utf8'));
+// The deck is per campaign file (campaign.copyDeck), defaulting to the
+// post-service deck. The cadence, the SMS copy and the step count all come from
+// it, so a campaign file that mails a different population carries its own.
+const DECK_PATH = (DEALER.campaign && DEALER.campaign.copyDeck) || 'email/copy/campaign.json';
+const DECK = JSON.parse(readFileSync(join(ROOT, DECK_PATH), 'utf8'));
 
 /**
  * Every rooftop, not just the one being built.
@@ -385,7 +389,96 @@ const COMMERCIAL_TERMS = [
 // and doubling it would match a literal backslash instead of a word boundary.
 const COMMERCIAL_PATTERN = COMMERCIAL_TERMS.map((t) => `\\m${t}\\M`).join('|');
 
-const INTAKE_SQL = [
+// ---------------------------------------------------------------- audience intake
+// A campaign file can mail a NAMED population instead of the service drive:
+// intake.audienceBucket selects rows of public.vsc_audience (loaded from the
+// dealership's own list, deduped against the live cohort at load time) and
+// joins them to the Ferrario quotes Elevate creates for them, by VIN or by
+// email. Everything after the eligible CTE is the shared machinery: one row per
+// person, cohort ceiling, dealing onto send slots, the commercial hold.
+//
+// Three things differ from the service drive and are the reason this exists:
+//   - the odometer is an ESTIMATE (vsc_audience.est_mileage, 15,000 mi/yr of
+//     age) when the quote has none, and the customer confirms it to bind;
+//   - ro_closed_date is the first day the vehicle was seen on the lot for the
+//     visited bucket and null for the list bucket, so a deck that never says
+//     "serviced on" can still be rendered without a date;
+//   - nobody already enrolled in ANY campaign on this partner, by email or VIN,
+//     is admitted, so the same person cannot be quoted twice under two names.
+const AUDIENCE = DEALER.intake && DEALER.intake.audienceBucket
+  ? {
+      bucket: DEALER.intake.audienceBucket,
+      // the audience table is loaded under the ROOT rooftop's id
+      dealerId: DEALER.intake.audienceDealerId || DEALER.id,
+      // every campaign file on the same partner is "us" for the dedupe
+      family: ALL_DEALERS
+        .filter((d) => d.supabase && d.supabase.partner_id === DEALER.supabase.partner_id)
+        .map((d) => d.id),
+    }
+  : null;
+if (AUDIENCE && !/^[a-z_]+$/.test(AUDIENCE.bucket)) {
+  throw new Error(`intake.audienceBucket must be a plain identifier, got ${JSON.stringify(AUDIENCE.bucket)}`);
+}
+
+const AUDIENCE_ELIGIBLE_SQL = AUDIENCE ? [
+  'with eligible as (',
+  '  select',
+  "    encode(sha256(($1 || ':' || lower(trim(c.email)))::bytea), 'hex') as customer_key,",
+  '    lower(trim(c.email)) as email,',
+  '    c.first_name,',
+  '    c.last_name as last_name_src,',
+  '    cv.vin,',
+  '    q.id::text        as ro_number,',
+  AUDIENCE.bucket === 'visited'
+    ? "    nullif(a.first_camera_time, '')::timestamp::date as ro_closed_date,"
+    : '    null::date        as ro_closed_date,',
+  '    q.created_at      as visited_at,',
+  '    cv.year::text     as vehicle_year,',
+  '    cv.make           as vehicle_make,',
+  '    cv.model          as vehicle_model,',
+  '    -- the quote odometer when Elevate recorded one, else the estimate',
+  '    coalesce(cv.mileage, a.est_mileage) as vehicle_mileage,',
+  '    q.service_advisor_id as advisor_name,',
+  '    c.state           as garaging_state,',
+  '    q.id              as quote_id',
+  '  from vsc_audience a',
+  '  join quotes q            on q.partner_id = $3::uuid',
+  '  join customers c         on c.id  = q.customer_id',
+  '  join customer_vehicles cv on cv.id = q.customer_vehicle_id',
+  `  where a.dealer_id = '${AUDIENCE.dealerId}'`,
+  `    and a.bucket = '${AUDIENCE.bucket}'`,
+  '    -- the audience row and the quote are the same person: VIN or email',
+  '    and (upper(cv.vin) = upper(a.vin) or lower(trim(c.email)) = lower(trim(a.email)))',
+  '    and c.has_existing_warranty = false',
+  "    and q.payment_status = 'pending'",
+  "    and q.created_at > now() - ($4 || ' days')::interval",
+  "    and c.email is not null and c.email <> ''",
+  '    and c.opted_out = false',
+  '    and coalesce(c.email_bounced, false)    = false',
+  '    and coalesce(c.email_complained, false) = false',
+  "    and c.first_name !~* '(ferrario|fleet|test|pdi|auto sales|motors)'",
+  "    and lower(trim(c.email)) !~ '^(noemail|no|ask|test|tomtest|none|na)@'",
+  "    and lower(trim(c.email)) !~ '@(no|a|abc|noemail|none|test)\\\\.(com|net|org)$'",
+  "    and upper(coalesce(c.state, '')) <> 'CA'",
+  '    and coalesce(cv.mileage, a.est_mileage) is not null',
+  '    and coalesce(cv.mileage, a.est_mileage) <= $5',
+  '    and cv.year >= extract(year from now())::int - 12',
+  '    and not exists (',
+  '      select 1 from vsc_suppression s',
+  '      where s.dealer_id = $1',
+  "        and s.customer_key = encode(sha256(($1 || ':' || lower(trim(c.email)))::bytea), 'hex')",
+  '    )',
+  '    -- never someone already quoted by another campaign on this partner',
+  '    and not exists (',
+  '      select 1 from vsc_enrollment e',
+  `      where e.dealer_id = any(array[${AUDIENCE.family.map((d) => `'${d}'`).join(', ')}])`,
+  '        and (lower(e.email) = lower(trim(c.email)) or upper(e.vin) = upper(cv.vin))',
+  '    )',
+  '),',
+  '',
+] : null;
+
+const INTAKE_SQL_SERVICE = [
   '-- Candidates, one row per QUOTE. A customer with two visits appears twice,',
   '-- which matters once the rows are counted against the cohort below.',
   'with eligible as (',
@@ -590,6 +683,17 @@ const INTAKE_SQL = [
   'on conflict (dealer_id, campaign_id, customer_key) do nothing',
   'returning id, email, ro_closed_date, next_send_at;',
 ].join('\n');
+
+// With an audience bucket, swap the eligible CTE and keep everything after it.
+const INTAKE_SQL = AUDIENCE
+  ? (() => {
+      const lines = INTAKE_SQL_SERVICE.split('\n');
+      const from = lines.indexOf('with eligible as (');
+      const to = lines.findIndex((l) => l.startsWith('-- One row per PERSON'));
+      if (from < 0 || to < 0) throw new Error('intake SQL lost its eligible CTE markers');
+      return [...lines.slice(0, from), ...AUDIENCE_ELIGIBLE_SQL, ...lines.slice(to)].join('\n');
+    })()
+  : INTAKE_SQL_SERVICE;
 
 const intakeNodes = [
   node('Hourly Intake Sweep', 'scheduleTrigger', 1.2, [-620, 0], {
@@ -1104,6 +1208,15 @@ const schedulerNodes = [
       + ' reply_to: ' + JSON.stringify(SEND_REPLY_TO) + ','
       + ' subject: ($vars.DRY_RUN ? "[DRY RUN -> " + $("Claim Due Enrollments").itemMatching($itemIndex).json.email + "] " : "") + $json.subject,'
       + ' html: $json.html,'
+      // Which campaign this send belongs to, carried on the message itself.
+      // Resend's webhook is account wide and its payload names neither the
+      // sending domain nor anything of ours, so a bounce arriving at 03 has
+      // no other way of knowing which dealer_id's enrolment to exit. 03 reads
+      // this tag first and falls back to its own baked-in id only for a
+      // payload that lacks it (hand posted events, mail sent before this tag
+      // existed). Tag values may only be ASCII letters, digits, underscores
+      // and dashes, which every dealer id already satisfies.
+      + ' tags: [ { name: "dealer_id", value: ' + JSON.stringify(DEALER.id) + ' }, { name: "campaign_id", value: ' + JSON.stringify(CAMPAIGN_ID) + ' } ],'
       // One click unsubscribe, which Google and Yahoo expect from bulk senders
       // and which the SMTP node could never provide. The Edge Function already
       // only acts on POST, so it satisfies List-Unsubscribe-Post as written.
@@ -1264,7 +1377,15 @@ const CLASSIFY_CODE = [
   // item.json.params, not $json.params. This Code node runs once for all items,
   // and $json is only bound in run-once-per-item mode: reading it here is a
   // ReferenceError that takes down every event, valid ones included.
-  '  const dealer_id = p.dealer_id || p.dealer || item.json.params?.dealer || "' + DEALER.id + '";',
+  // Resend webhooks carry the send's tags as an object ({ dealer_id: "x" });
+  // the send API and some older payloads use the array form. Either names
+  // the bucket the message came from, which matters because every bucket's
+  // 03 receives every event on the account.
+  '  const tagsRaw = p.data?.tags || p.tags || null;',
+  '  const tags = Array.isArray(tagsRaw)',
+  '    ? Object.fromEntries(tagsRaw.filter(t => t && t.name).map(t => [t.name, t.value]))',
+  '    : (tagsRaw && typeof tagsRaw === "object" ? tagsRaw : {});',
+  '  const dealer_id = p.dealer_id || p.dealer || item.json.params?.dealer || tags.dealer_id || "' + DEALER.id + '";',
   '  const email = (p.email || p.data?.to?.[0] || p.to || "").toString().trim().toLowerCase();',
   '  const customer_key = p.customer_key',
   '    || (email ? crypto.createHash("sha256").update(dealer_id + ":" + email).digest("hex") : null);',
@@ -1281,7 +1402,7 @@ const CLASSIFY_CODE = [
   '      dealer_id,',
   '      customer_key,',
   '      email,',
-  '      campaign_id: p.campaign_id || "' + CAMPAIGN_ID + '",',
+  '      campaign_id: p.campaign_id || tags.campaign_id || "' + CAMPAIGN_ID + '",',
   '      // Engagement fields. Everything that is not an exit lands on the',
   '      // non-actionable branch and is recorded in vsc_email_event, so',
   '      // "delivered" and "clicked" become reportable instead of being',

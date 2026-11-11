@@ -1,0 +1,438 @@
+{
+  "$comment": "Copy deck for Ferrario Ford customers whose VEHICLE HAS BEEN ON THE LOT (dealership plate cameras) but who have no service drive record and no coverage on file. Voice: DriveOne Red Bull register. Deadpan, cheeky, confident. No exclamation points. No em dashes or en dashes. Never call the DriveOne product a warranty. NEVER quote the camera date or mention cameras: 'you have been in to see us' is as specific as it gets. The odometer is an ESTIMATE (15,000 miles a year of age) unless Elevate recorded a real one, so every mileage mention says estimated and points at checkout to confirm.",
+  "campaign": {
+    "id": "ff_visited_vsc_2026",
+    "name": "Been in to see us: VSC offer to Ferrario customers seen on the lot",
+    "audience": "Ferrario Ford customers whose vehicle was on the dealership lot, no vehicle service contract on file, deduped against the service drive campaign",
+    "accentOpen": "[[",
+    "accentClose": "]]"
+  },
+  "smsNote": "SMS nurture for the UNSOLD: the same enrolled service customers the emails go to, who have not bought. Sent as the DEALERSHIP, never as DriveOne, matching the email channel.\n\nTHREE texts against ten emails, on purpose. Mirroring the email cadence would mean ten texts in sixty days, which earns STOPs, carrier filtering, and a dealer asking why their customers are complaining. Each one sits two or three days AFTER the email whose argument it reinforces, so it lands as a nudge on something already said rather than a new pitch: day 5 follows the day-3 repair-math email, day 21 follows the day-18 payment-plan email which is the strongest conversion lever we have, day 50 follows the day-48 eligibility-window email.\n\nEvery message opens with the store name because Sendblue sends from a plain number with no branded sender ID. Until each rooftop has its own number, naming the store in the first few words IS the branding, and it is also what stops a text from a strange number reading as spam.\n\nOpt-out language rides on the first and last message. CTIA guidance is the first message plus periodic reminders; three messages make the first and last the sensible pair.\n\nBodies are kept under about 160 characters so each is one segment. The quote_url is a short link, and the merge tags resolve to the same values the emails use.",
+  "sms": [
+    {
+      "step": 1,
+      "sendDay": 5,
+      "slug": "sms-01-no-contract-on-file",
+      "goal": "Introduce the channel, name the store, hand them their own price and link",
+      "media": "dealerLogo",
+      "mediaNote": "The only MMS in the sequence, and the only one that earns the cost. A first text from an unknown number is the one most likely to be read as spam, and the store's own logo rendering above the message is what makes it visibly the dealership. Later messages are plain SMS: by then the number is recognised, and a logo on every text is just a bigger bill.",
+      "body": "{{dealer_name}} Service: your {{vehicle_year}} {{vehicle_model}} has no service contract on file. {{monthly_payment}}/mo covers it. 4 min online: {{quote_url}} Reply STOP to opt out."
+    },
+    {
+      "step": 2,
+      "sendDay": 21,
+      "slug": "sms-02-zero-percent",
+      "goal": "Reinforce the day-18 payment-plan email, the strongest affordability lever",
+      "body": "{{dealer_name}} Service: {{monthly_payment}}/mo on your {{vehicle_model}}, 0% for {{payment_term}} months, no credit check. Same shop, same people: {{quote_url}}"
+    },
+    {
+      "step": 3,
+      "sendDay": 50,
+      "slug": "sms-03-the-window",
+      "goal": "Reinforce the day-48 eligibility email, then stop",
+      "body": "{{dealer_name}} Service: last note on your {{vehicle_model}}. Coverage gets harder to add as the car ages. {{quote_url}} Reply STOP to opt out."
+    }
+  ],
+  "emails": [
+    {
+      "step": 1,
+      "sendDay": 0,
+      "slug": "01-you-have-been-in",
+      "goal": "Acknowledge the relationship without the ticket, name the gap, hand them a real quote",
+      "subject": "{{first_name}}, one thing is missing from your file",
+      "subjectAlt": "Your {{vehicle_model}} has been here. Its coverage has not.",
+      "preheader": "You have been in to see us. Your {{vehicle_year}} {{vehicle_model}} has no service contract on file. That is fixable in about four minutes, online.",
+      "eyebrow": "FROM THE STORE YOU ALREADY USE",
+      "headline": "You have been in to see us. [[One line is still blank.]]",
+      "subhead": "Your file at {{dealer_name}} shows no vehicle service contract on the {{vehicle_model}}. You can get one, and you can get it from us.",
+      "body": [
+        "You have been in to see us with your {{vehicle_year}} {{vehicle_model}}. We are glad of it, and we are not writing to ask for anything about that.",
+        "We are writing because of the one line in your file that is empty. There is no vehicle service contract attached to the car, which means the next repair that is not routine is priced at whatever that repair happens to cost.",
+        "You do not have to buy that off a television commercial. You can buy it from the store that already knows the car, at the price at the top of this email, which was worked out for your vehicle at an estimated {{vehicle_mileage}} miles. If the odometer says something different, you confirm it at checkout and the price updates."
+      ],
+      "featureRows": [
+        {
+          "icon": "0",
+          "title": "0% payment plan, up to 36 months",
+          "subtitle": "No credit check. 5% down to start."
+        },
+        {
+          "icon": "E",
+          "title": "Platinum, our best coverage",
+          "subtitle": "The top plan we offer, and the only one in this program. Exclusionary, not a stripped entry tier."
+        },
+        {
+          "icon": "$",
+          "title": "{{deductible_home}} deductible at our store",
+          "subtitle": "Bring it to {{dealer_short}} and your {{deductible_away}} deductible disappears. Roadside is included anywhere in the US."
+        }
+      ],
+      "benefitStrip": "Coverage is additive. The term and the miles are added on from the day you buy, on top of wherever the car is now. That is the lowest monthly we can do; longer terms and an unlimited mileage plan are on the quote page.",
+      "cta": {
+        "label": "Check out now",
+        "path": "welcome"
+      },
+      "ps": "Nobody is going to call you about this. The price is at the top of this email, the rest is online, and the mileage box at checkout is the only question you will be asked."
+    },
+    {
+      "step": 2,
+      "sendDay": 3,
+      "slug": "02-the-bill-you-have-not-had-yet",
+      "goal": "Reframe the repair math without a ticket to point at",
+      "subject": "The bill you have not had yet",
+      "subjectAlt": "{{vehicle_model}} math, briefly",
+      "preheader": "A covered repair at our store costs you zero. Not reduced. Zero.",
+      "eyebrow": "THE ARITHMETIC",
+      "headline": "There is a bill coming. [[We can make it zero.]]",
+      "subhead": "Covered repair, brought back to us, deductible zero. That is the whole idea.",
+      "body": [
+        "Your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
+        "Routine maintenance is not covered by any vehicle service contract, ours included, so we are not going to pretend the oil changes become free.",
+        "The bill this is for is the other one. A covered repair, brought back to {{dealer_name}}, costs you nothing at all. The only decision is whether to price that now, while the car is healthy, or later, when it is not."
+      ],
+      "featureRows": [
+        {
+          "icon": "0",
+          "title": "A covered repair here costs you zero",
+          "subtitle": "Your {{deductible_away}} deductible disappears at our store. At another authorized shop it is {{deductible_away}}."
+        },
+        {
+          "icon": "S",
+          "title": "Fixed right here",
+          "subtitle": "Same shop, same advisors, same building you have already parked at."
+        },
+        {
+          "icon": "T",
+          "title": "Term set at purchase",
+          "subtitle": "Match the coverage to how long you actually plan to keep the car."
+        }
+      ],
+      "benefitStrip": "Maintenance stays yours. Covered breakdowns become ours. That line is in the contract, not just in this email.",
+      "cta": {
+        "label": "Check out now",
+        "path": "math"
+      },
+      "ps": "The quote is free and it does not put you on a list. There is no list."
+    },
+    {
+      "step": 3,
+      "sendDay": 7,
+      "slug": "03-nobody-is-going-to-call-you",
+      "goal": "Own the grievance: no call centers, no pressure, 100% online",
+      "subject": "Nobody is going to call you",
+      "subjectAlt": "This email has no salesperson attached to it",
+      "preheader": "That is not an oversight. That is the product.",
+      "eyebrow": "HOW THIS WORKS",
+      "headline": "Nobody is going to call you. [[That is the product.]]",
+      "subhead": "No hold music. No four step transfer. No representative standing by.",
+      "body": [
+        "You already know what buying coverage usually feels like. Somebody reads a script. Somebody offers to check with a manager. Somebody calls back on a Tuesday.",
+        "We took all of that out. You open your quote, you confirm the mileage, you pick a plan, you check out. The whole thing is online and it is yours to do at 11pm in a kitchen if that is when you have a spare four minutes.",
+        "If you would genuinely like to talk to a human at {{dealer_short}}, our service line is at the bottom of this email and they are good. But you will never need to use it to buy this."
+      ],
+      "featureRows": [
+        {
+          "icon": "W",
+          "title": "100% online checkout",
+          "subtitle": "Quote, confirm mileage, select, purchase. No appointment, no finance office."
+        },
+        {
+          "icon": "N",
+          "title": "No pressure, no follow up call",
+          "subtitle": "We mean this literally. Nobody is assigned to chase you."
+        },
+        {
+          "icon": "C",
+          "title": "30 day full refund",
+          "subtitle": "Cancel in the first 30 days with no claims made and the full price comes back."
+        }
+      ],
+      "benefitStrip": "Open the quote. Close the tab. Come back in a week. It will still be there.",
+      "cta": {
+        "label": "Buy now, online",
+        "path": "online"
+      },
+      "ps": "We are aware that an email telling you nobody will call you is itself a form of contact. We accept the irony."
+    },
+    {
+      "step": 4,
+      "sendDay": 12,
+      "slug": "04-the-disappearing-deductible",
+      "goal": "The $0-at-our-store deductible, the strongest dealer-specific hook",
+      "subject": "Your deductible disappears when you come back",
+      "subjectAlt": "A number that goes to zero",
+      "preheader": "Bring the car back to {{dealer_short}} and the deductible on a covered repair goes away.",
+      "eyebrow": "THE HOME FIELD CLAUSE",
+      "headline": "Come back to us and your deductible [[goes to zero.]]",
+      "subhead": "Anywhere else it is {{deductible_away}}. Here it is {{deductible_home}}.",
+      "body": [
+        "Coverage bought through {{dealer_name}} carries a disappearing deductible. Take a covered repair to another authorized repair facility and you pay {{deductible_away}}. Bring it to us and you pay {{deductible_home}}.",
+        "This is not a loyalty points scheme. It is a line in the contract.",
+        "You are welcome to use any licensed repair facility the administrator authorizes, and the coverage travels with the car. We would just rather you did not have to. You know where we are."
+      ],
+      "featureRows": [
+        {
+          "icon": "0",
+          "title": "{{deductible_home}} deductible at {{dealer_short}}",
+          "subtitle": "On covered repairs, per your contract terms."
+        },
+        {
+          "icon": "M",
+          "title": "Repairs anywhere the administrator authorizes",
+          "subtitle": "Breaking down out of town is a bad day, not a coverage problem."
+        },
+        {
+          "icon": "H",
+          "title": "A shop that already knows the car",
+          "subtitle": "You have been here. We would rather you came back on your terms than on a tow truck."
+        }
+      ],
+      "benefitStrip": "Same building. Same people. Smaller invoice.",
+      "cta": {
+        "label": "Buy now",
+        "path": "deductible"
+      },
+      "ps": "Deductible terms are set by your contract. The quote page shows exactly which one applies to your vehicle before you buy."
+    },
+    {
+      "step": 5,
+      "sendDay": 18,
+      "slug": "05-zero-percent-thirty-six-months",
+      "goal": "Payment plan mechanics, remove the affordability objection",
+      "subject": "0% for {{payment_term}} months, no credit check",
+      "subjectAlt": "Coverage, divided by {{payment_term}}",
+      "preheader": "5% down. The rest spread out at zero percent. No credit pull.",
+      "eyebrow": "THE PAYMENT PART",
+      "headline": "Zero percent. [[Thirty six months.]] No credit check.",
+      "subhead": "The reason people skip coverage is almost never the coverage. It is the number on the day.",
+      "body": [
+        "So we removed the number on the day. Coverage starts with 5% down. Whatever is left splits across up to 36 months at zero percent.",
+        "There is no credit check and there is no interest. It is a payment plan, not a loan, and it does not touch your credit file.",
+        "Your {{vehicle_model}} comes out at {{monthly_payment}} a month at an estimated {{vehicle_mileage}} miles. That figure is at the top of this email, and once you confirm the odometer at checkout it is the same number you pay."
+      ],
+      "featureRows": [
+        {
+          "icon": "5",
+          "title": "5% down to activate",
+          "subtitle": "{{down_payment}} down on your plan, then the monthly figure above."
+        },
+        {
+          "icon": "0",
+          "title": "0% for up to 36 months",
+          "subtitle": "No interest. Not a promotional rate that expires."
+        },
+        {
+          "icon": "X",
+          "title": "No credit check",
+          "subtitle": "No hard pull, no soft pull, no effect on your score."
+        }
+      ],
+      "benefitStrip": "Payment plan. Not a loan. Not financing. The distinction matters and we keep it straight.",
+      "cta": {
+        "label": "Check out now",
+        "path": "payments"
+      },
+      "ps": "Pricing is set by vehicle, mileage and term. {{monthly_payment}} is your figure at the estimated mileage, not a range and not an average."
+    },
+    {
+      "step": 6,
+      "sendDay": 25,
+      "slug": "06-exclusionary-explained",
+      "goal": "Educate on exclusionary vs listed-component, the real quality differentiator",
+      "subject": "The good kind of coverage has an ugly name",
+      "subjectAlt": "Exclusionary. Terrible word, excellent thing.",
+      "preheader": "Most plans list what is covered. Ours lists what is not. That gap is the whole game.",
+      "eyebrow": "ONE WORD, EXPLAINED",
+      "headline": "Platinum. [[Our best.]] Also the only one here.",
+      "subhead": "We sell one plan in this program and it is the top one. Exclusionary coverage, which is the good kind and has the worst name in the business.",
+      "body": [
+        "A listed component plan names the parts it covers. If your part is not on the list, it is not covered, and the list is always shorter than the car.",
+        "An exclusionary plan flips it. It names the short list of things it does not cover, and everything else is in. You are reading a page instead of a phone book, and the burden sits with us rather than with you.",
+        "Exclusionary is the coverage level that usually costs extra elsewhere. Here it is the only one we sell, because Platinum is the only plan in this program."
+      ],
+      "featureRows": [
+        {
+          "icon": "E",
+          "title": "Platinum is the only plan here",
+          "subtitle": "Our highest tier. Not held back for a different customer, not upsold later."
+        },
+        {
+          "icon": "L",
+          "title": "A short list of exclusions",
+          "subtitle": "Printed in the contract, readable before you buy. Term and mileage options, including unlimited mileage, are yours to pick."
+        },
+        {
+          "icon": "P",
+          "title": "Transferable if you sell the car",
+          "subtitle": "Coverage follows a proper transfer to the next owner."
+        }
+      ],
+      "benefitStrip": "If you only remember one word from this campaign, it is this one.",
+      "cta": {
+        "label": "Buy now",
+        "path": "exclusionary"
+      },
+      "ps": "The full terms and conditions are linked from the quote page. Read them. We wrote them to survive being read."
+    },
+    {
+      "step": 7,
+      "sendDay": 32,
+      "slug": "07-not-the-tv-people",
+      "goal": "Differentiate from direct-response VSC telemarketers without naming anyone",
+      "subject": "We are not the people from the commercial",
+      "subjectAlt": "Your car's extended warranty, and other famous phone calls",
+      "preheader": "Not a robocall. Not a monthly subscription. A store you have actually stood in.",
+      "eyebrow": "A NECESSARY CLARIFICATION",
+      "headline": "We are not [[the people from the commercial.]]",
+      "subhead": "You have had the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice. You have also seen the ads offering coverage by monthly subscription.",
+      "body": [
+        "Here is the difference, and it is not subtle. Those callers do not know your car. We have your {{vehicle_year}} {{vehicle_model}} in our system, and you have been in our building.",
+        "The subscription pitch is its own thing. A subscription covers you for as long as you keep paying it, at whatever the price becomes. What we sell is a contract: a term, a mileage allowance and a price, all fixed on the day you buy, transferable if you sell the car, refundable in full for 30 days.",
+        "So we are not a call center that bought your number, and we are not an app with a monthly charge. We are a Ford store with a service drive and a street address. Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize, which makes it a real contract with a real obligor, sold by a store you can drive to."
+      ],
+      "featureRows": [
+        {
+          "icon": "F",
+          "title": "Fixed at purchase, not month to month",
+          "subtitle": "Your term, your mileage and your price are set the day you buy."
+        },
+        {
+          "icon": "A",
+          "title": "A real administrator",
+          "subtitle": "{{administrator}} backs the contract."
+        },
+        {
+          "icon": "B",
+          "title": "A real building",
+          "subtitle": "{{dealer_name}}, serving {{service_area}}."
+        }
+      ],
+      "benefitStrip": "No robocall has ever had you on its lot. We have.",
+      "cta": {
+        "label": "Check out now",
+        "path": "real"
+      },
+      "ps": "If you would like to verify any of this in person, the service drive is open and we are exactly where you left us."
+    },
+    {
+      "step": 8,
+      "sendDay": 40,
+      "slug": "08-the-stuff-you-forget-you-have",
+      "goal": "Ancillary benefits: roadside, towing, rental reimbursement",
+      "subject": "The parts of coverage nobody talks about",
+      "subjectAlt": "Roadside, rental, and the rest of it",
+      "preheader": "Coverage is not only for the day the transmission goes. Most of it is for smaller, more annoying days.",
+      "eyebrow": "THE REST OF THE CONTRACT",
+      "headline": "The big repair is [[not the only thing]] in here.",
+      "subhead": "Most of what you will actually use is the unglamorous middle of the contract.",
+      "body": [
+        "Coverage gets sold on the catastrophic repair. In practice, the parts people use most are the small ones, and they work anywhere in the country rather than only in our zip code.",
+        "A tow on a Sunday night. A rental car while yours sits on a lift for three days. A sensor you had never heard of, which turns out to be essential.",
+        "None of that makes for dramatic advertising. All of it makes for a better Tuesday."
+      ],
+      "featureRows": [
+        {
+          "icon": "R",
+          "title": "24/7 roadside assistance",
+          "subtitle": "Anywhere in the US, up to three events per year, towing included."
+        },
+        {
+          "icon": "K",
+          "title": "Rental reimbursement",
+          "subtitle": "{{rental_rate}} per 6 hours of labor time, up to {{rental_max}} per claim visit."
+        },
+        {
+          "icon": "D",
+          "title": "Towing to the nearest shop",
+          "subtitle": "Up to $100 per occurrence, part of the same roadside benefit."
+        }
+      ],
+      "benefitStrip": "Roadside covers three events a year. Most people use one and are glad it was there.",
+      "cta": {
+        "label": "Buy now",
+        "path": "included"
+      },
+      "ps": "Rental reimbursement needs proof of rental submitted with an authorized claim, so keep the receipt. Benefit limits are set by your contract."
+    },
+    {
+      "step": 9,
+      "sendDay": 48,
+      "slug": "09-the-window",
+      "goal": "The honest why-buy-now: eligibility is mileage and age gated",
+      "subject": "Why we keep saying now",
+      "subjectAlt": "{{vehicle_model}} eligibility, plainly",
+      "preheader": "Eligibility runs on mileage and model year. Both of yours are moving in one direction.",
+      "eyebrow": "THE ACTUAL URGENCY",
+      "headline": "There is a window. [[Yours is open.]]",
+      "subhead": "We have avoided fake deadlines for eight emails. Here is the real one.",
+      "body": [
+        "Vehicle service contracts are underwritten against mileage and model year. Every plan has a ceiling, and we priced your {{vehicle_year}} {{vehicle_model}} at an estimated {{vehicle_mileage}} miles. If the real number is lower, good news at checkout. If it is higher, the window is narrower than this email suggests.",
+        "Nothing expires this Friday. No countdown clock is running. But coverage is additive: the term and the miles start the day you buy and get added to wherever the car is then. Every month you wait is a month of protection you are not holding, on a car that is quietly getting older.",
+        "Coverage cannot be bought retroactively. That is the entire reason this campaign exists."
+      ],
+      "featureRows": [
+        {
+          "icon": "M",
+          "title": "Priced on an estimated odometer",
+          "subtitle": "Your quote assumes {{vehicle_mileage}} miles today. You confirm the real figure at checkout and coverage is added from there."
+        },
+        {
+          "icon": "T",
+          "title": "Some coverage narrows with mileage",
+          "subtitle": "Seals and gaskets are covered only while the vehicle is under 125,000 miles at the time of a claim."
+        },
+        {
+          "icon": "X",
+          "title": "No coverage after the fact",
+          "subtitle": "Existing conditions are not covered by any contract, anywhere."
+        }
+      ],
+      "benefitStrip": "No countdown timer in this email. We checked.",
+      "cta": {
+        "label": "Check out now",
+        "path": "window"
+      },
+      "ps": "If you have already sold or traded the {{vehicle_model}}, ignore all of this and enjoy the new one."
+    },
+    {
+      "step": 10,
+      "sendDay": 60,
+      "slug": "10-we-will-stop",
+      "goal": "Graceful close, permission-respecting, leaves the door open",
+      "subject": "Last one from us on this",
+      "subjectAlt": "We are going to stop emailing you about this",
+      "preheader": "Ten emails is a reasonable limit. Your quote link stays alive regardless.",
+      "eyebrow": "THE LAST ONE",
+      "headline": "This is the last one. [[Genuinely.]]",
+      "subhead": "We said there would be no pressure, and a campaign that never ends is pressure.",
+      "body": [
+        "You have now received ten emails about vehicle service contracts. That is enough emails about vehicle service contracts.",
+        "Your quote stays live and your link keeps working. If the {{vehicle_model}} makes a sound you do not like in March, it will be there.",
+        "Either way, thank you for coming in to {{dealer_name}}. That part we would like to keep doing."
+      ],
+      "featureRows": [
+        {
+          "icon": "L",
+          "title": "Your quote link stays active",
+          "subtitle": "Bookmark it. Use it whenever."
+        },
+        {
+          "icon": "S",
+          "title": "The service drive is still here",
+          "subtitle": "Coverage or no coverage, the door is open."
+        },
+        {
+          "icon": "N",
+          "title": "No further emails in this series",
+          "subtitle": "This sequence ends here automatically."
+        }
+      ],
+      "benefitStrip": "No hard sell on the way out. That would undercut the previous nine emails.",
+      "cta": {
+        "label": "Buy now",
+        "path": "last"
+      },
+      "ps": "If you would rather hear nothing from us at all, the unsubscribe link below works instantly and we will not make you explain yourself."
+    }
+  ]
+}

@@ -24,7 +24,7 @@ const DEALER_ID = process.argv[2] || 'bob-johnson';
 const FROM = Number(process.argv[3] || 1);
 const TO   = Number(process.argv[4] || 99);
 const D = read(`brand/dealers/${DEALER_ID}.json`);
-const DECK = read('email/copy/campaign.json');
+const DECK = read((D.campaign && D.campaign.copyDeck) || 'email/copy/campaign.json');
 // Read from THIS dealer's build directory, never a shared one. The publisher
 // takes a dealer id and the builder takes a dealer id, and when they disagreed
 // the publisher silently wrote whichever dealership was built last into the

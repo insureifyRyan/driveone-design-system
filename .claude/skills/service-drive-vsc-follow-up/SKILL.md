@@ -44,6 +44,14 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**TWO NEW BUCKETS BUILT, 11 Nov 2026 (not live).** Ferrario's reconciliation workbook gave two more audiences, and each is now its own campaign file with its own copy deck, From and schedule:
+- `brand/dealers/ferrario-ford-visited.json` → deck `email/copy/ferrario-visited.json`, campaign `ff_visited_vsc_2026`, dealer_id `ferrario-ford-visited`. Vehicle seen on the lot (plate cameras), no service ticket. Sends from the existing `service@ferrario.driveoneprogram.com`. Copy says "you have been in to see us", never the camera or its date. Cohort target 141.
+- `brand/dealers/ferrario-ford-list.json` → deck `email/copy/ferrario-list.json`, campaign `ff_list_vsc_2026`, dealer_id `ferrario-ford-list`. Never been in. Sends as "Ferrario Ford with DriveOne Service" from `service@ferrario.driveoneservice.com` (new subdomain, pending Resend verification). Copy owns who is writing in Email 1, no visit references at all. Cohort target 1,893.
+- Both: `intake.audienceBucket` drives 01 Intake off `vsc_audience` joined to quotes by VIN/email, refusing anyone enrolled under any Ferrario dealer id. Mileage card reads "Est. N miles · confirm at checkout" (`campaign.vehicleLine`), the CAN-SPAM line and mileage disclosure are per file (`relationshipLine`, `mileageLine`). `initial_cohort` is 0 (enrolment off) until Stephen's quotes exist in Elevate.
+- Routing fix shipped with it: every send now carries Resend tags `dealer_id` and `campaign_id`, and 03 Classify Event reads them before falling back to its baked-in id, so the one account-wide Resend webhook can serve all three buckets. The live ferrario-ford 02 and 03 must be redeployed to pick this up (not yet done).
+- `n8n/verify.mjs` roster check now treats a partner as covered when any of its files is live (three files share Ferrario's partner_id).
+- TO GO LIVE: domain verified → Stephen's quotes imported → Ryan approves Email 1s → `node scripts/publish-templates.mjs <id>` → create the n8n workflow set for each id (new workflows, new RESEND_WEBHOOK_SECRET_<ID> not needed: 03 verifies with the shared secret var per dealer, check) → rebuild + redeploy 08 → raise `initial_cohort` → publish 02 last.
+
 **THROUGHPUT RAISED 11 Nov 2026, 20:20 UTC: 20 -> 90 new people a day.** Three
 things had to move, not one. `sending.newEnrolmentsPerDay` 90 (18 per slot) sets the
 dealing rate, but the live cohort ceiling `supabase.initial_cohort` was 90 and already

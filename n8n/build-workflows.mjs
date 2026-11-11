@@ -162,6 +162,11 @@ const OFFER = JSON.parse(readFileSync(join(ROOT, 'brand/offer.json'), 'utf8'));
 // id identifies one dealership's run of it and must not be shared, because
 // enrolment and template rows are keyed on (dealer_id, campaign_id, ...).
 const CAMPAIGN_ID = (DEALER.campaign && DEALER.campaign.id) || DECK.campaign.id;
+// What the n8n workflow names carry in brackets. The dealer's display name by
+// default; a campaign file that shares a display name with a sibling (the
+// Ferrario buckets all read "Ferrario Ford" to the customer) sets
+// workflowLabel so the three 01 Intakes are not three identical names.
+const WF_LABEL = DEALER.workflowLabel || DEALER.dealer.displayName;
 
 // Workflows land per dealer for the same reason the emails do: one shared
 // output path plus a dealer argument is a silent overwrite waiting to happen.
@@ -967,7 +972,7 @@ if (AUDIENCE) {
 const intakeConnections = connect(intakePairs);
 
 writeFileSync(join(ROOT, `${WF_DIR}/01-intake.json`),
-  JSON.stringify(workflow('DriveOne VSC 01 Intake (' + DEALER.dealer.displayName + ')', intakeNodes, intakeConnections), null, 2));
+  JSON.stringify(workflow('DriveOne VSC 01 Intake (' + WF_LABEL + ')', intakeNodes, intakeConnections), null, 2));
 
 console.log('built 01-intake.json');
 
@@ -1569,7 +1574,7 @@ const schedulerConnections = connect([
 ]);
 
 writeFileSync(join(ROOT, `${WF_DIR}/02-scheduler.json`),
-  JSON.stringify(workflow('DriveOne VSC 02 Scheduler (' + DEALER.dealer.displayName + ')', schedulerNodes, schedulerConnections), null, 2));
+  JSON.stringify(workflow('DriveOne VSC 02 Scheduler (' + WF_LABEL + ')', schedulerNodes, schedulerConnections), null, 2));
 
 console.log('built 02-scheduler.json');
 
@@ -1909,7 +1914,7 @@ const eventsConnections = connect([
 ]);
 
 writeFileSync(join(ROOT, `${WF_DIR}/03-events.json`),
-  JSON.stringify(workflow('DriveOne VSC 03 Events (' + DEALER.dealer.displayName + ')', eventsNodes, eventsConnections), null, 2));
+  JSON.stringify(workflow('DriveOne VSC 03 Events (' + WF_LABEL + ')', eventsNodes, eventsConnections), null, 2));
 
 console.log('built 03-events.json');
 
@@ -2163,7 +2168,7 @@ const pricingNodes = [
 ];
 
 writeFileSync(join(ROOT, `${WF_DIR}/05-pricing.json`),
-  JSON.stringify(workflow('DriveOne VSC 05 Pricing (' + DEALER.dealer.displayName + ')', pricingNodes, connect([
+  JSON.stringify(workflow('DriveOne VSC 05 Pricing (' + WF_LABEL + ')', pricingNodes, connect([
     ['Price Sweep', 'Campaign Config'],
     ['Campaign Config', 'Claim Unpriced Enrolments'],
     ['Claim Unpriced Enrolments', 'Get Quote'],
@@ -2291,7 +2296,7 @@ const reviewNodes = [
 ];
 
 writeFileSync(join(ROOT, `${WF_DIR}/06-commercial-review.json`),
-  JSON.stringify(workflow('DriveOne VSC 06 Commercial Review (' + DEALER.dealer.displayName + ')', reviewNodes, connect([
+  JSON.stringify(workflow('DriveOne VSC 06 Commercial Review (' + WF_LABEL + ')', reviewNodes, connect([
     ['Hourly Review Sweep', 'Campaign Config'],
     ['Campaign Config', 'Claim Unreported Holds'],
     ['Claim Unreported Holds', 'Anything Held?'],
@@ -2654,7 +2659,7 @@ const scorecardNodes = [
 ];
 
 writeFileSync(join(ROOT, `${WF_DIR}/07-scorecard.json`),
-  JSON.stringify(workflow('DriveOne VSC 07 Weekly Scorecard (' + DEALER.dealer.displayName + ')', scorecardNodes, connect([
+  JSON.stringify(workflow('DriveOne VSC 07 Weekly Scorecard (' + WF_LABEL + ')', scorecardNodes, connect([
     ['Weekly Scorecard Trigger', 'Campaign Config'],
     ['Campaign Config', 'Gather Numbers'],
     ['Gather Numbers', 'Compose Scorecard'],

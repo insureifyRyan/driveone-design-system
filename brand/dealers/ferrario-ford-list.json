@@ -2,6 +2,8 @@
   "$comment": "CAMPAIGN FILE for the Ferrario Ford DRIVE-BY bucket (plate-camera matches with no prior relationship to the dealership, not in the DMS). A separate dealer_id on purpose: vsc_enrollment, vsc_email_template and the n8n workflow set are all keyed on it, so this bucket has its own copy deck, its own From, its own schedule and its own exits, and shares nothing with the service drive campaign except the Supabase partner, the brand and the dedupe. Brand, colour, logo, contact and metricbridge blocks are copies of brand/dealers/ferrario-ford.json; edit them THERE and re-copy, do not fork them here.",
   "$status": "CREATED 11 Nov 2026. NOT LIVE. Built and verified; templates and workflows not yet published. ferrario.driveoneservice.com VERIFIED in Resend 11 Nov 2026 ~20:40 UTC (DKIM, SPF MX+TXT, rsend CNAME all verified). Click and open tracking are OFF: update-domain reports success but the flag does not persist via the API, same as the service drive subdomain; flip it in the Resend dashboard if wanted. Copy rewritten 11 Nov 2026 as a no-relationship introduction after Ryan confirmed these are plate matches; SMS removed for lack of consent. Still waits on: Stephen creating the quotes from the Elevate import file, Ryan approving the two Email 1s.",
   "id": "ferrario-ford-list",
+  "workflowLabel": "Ferrario Ford, drive-by bucket",
+  "workflowLabelNote": "Bracketed suffix on the n8n workflow names only. dealer.displayName stays 'Ferrario Ford' because the customer sees that one.",
   "dealer": {
     "name": "Ferrario Ford",
     "legalName": "NEEDS CONFIRMATION",

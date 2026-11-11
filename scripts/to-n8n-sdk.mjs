@@ -78,16 +78,23 @@ function chain(name, seen) {
     if (f) s += `\n  .onFalse(${handle(f)}${chain(f, seen)})`;
     return s;
   }
-  const [next] = targets(name, 0);
+  const [next, ...more] = targets(name, 0);
   const [err] = targets(name, 1);   // second output on a node is its error branch
   let s = '';
   if (next) s += `\n  .to(${handle(next)}${chain(next, seen)})`;
   if (err)  s += `\n  .onError(${handle(err)}${chain(err, seen)})`;
+  // A node whose first output feeds several targets (01 Intake's Campaign
+  // Config fans out to enrolment AND quote creation) is wired once per extra
+  // target as `.add(source).to(target...)`, which is how the SDK adds a
+  // second connection from an existing node.
+  for (const t of more) fanOuts.push([name, t]);
   return s;
 }
 
 const seen = new Set();
+const fanOuts = [];
 const chains = roots.map((r) => `  .add(${handle(r)})${chain(r, seen)}`);
+for (const [src, t] of fanOuts) chains.push(`  .add(${handle(src)})\n  .to(${handle(t)}${chain(t, seen)})`);
 const id = basename(file, '.json').replace(/[^a-z0-9-]/g, '-');
 out.push(`export default workflow(${JSON.stringify(id)}, ${JSON.stringify(wf.name)})`);
 out.push(chains.join('\n') + ';');

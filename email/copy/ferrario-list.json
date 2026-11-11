@@ -1,54 +1,30 @@
 {
-  "$comment": "Copy deck for Ferrario Ford's wider customer list: people the dealership has a relationship with (its own email list) who have NEVER been in the service drive and, as far as we know, never on the lot. Voice: DriveOne Red Bull register. Deadpan, cheeky, confident. No exclamation points. No em dashes or en dashes. Never call the DriveOne product a warranty. NO visit references of any kind: no 'thanks for coming in', no 'last time you were here', no 'your service history'. The relationship is 'you are a Ferrario Ford customer'. The odometer is an ESTIMATE (15,000 miles a year of age) and every mileage mention says so and points at checkout to confirm. Sent from the DriveOne Service subdomain as 'Ferrario Ford with DriveOne Service', so the first email owns who is writing and why.",
+  "$comment": "Copy deck for the DRIVE-BY bucket: plate-camera matches with NO prior relationship to Ferrario Ford. Not in the DMS, never serviced, never bought here. Voice: DriveOne Red Bull register. Deadpan, cheeky, confident. No exclamation points. No em dashes or en dashes. Never call the DriveOne product a warranty. NEVER claim a relationship: no 'you are a customer', no 'on file', no 'thanks for coming in', no 'we know your car'. The email is an INTRODUCTION from the local Ford store with a real price in it. Never explain how the vehicle was identified and never mention cameras or plates. The odometer is an ESTIMATE (15,000 miles a year of age) and every mileage mention says so and points at checkout to confirm. Sent from the DriveOne Service subdomain as 'Ferrario Ford with DriveOne Service', so Email 1 owns who is writing and why.",
   "campaign": {
     "id": "ff_list_vsc_2026",
-    "name": "A real quote for Ferrario customers who have not been in",
-    "audience": "Ferrario Ford's own customer list, no vehicle service contract on file, never seen in the service drive, deduped against the other Ferrario campaigns",
+    "name": "An introduction with a price in it: VSC offer to drivers near Ferrario Ford",
+    "audience": "Vehicles identified near the dealership with no relationship to Ferrario Ford and no vehicle service contract known to us, deduped against every other Ferrario campaign",
     "accentOpen": "[[",
     "accentClose": "]]"
   },
-  "smsNote": "SMS nurture for the UNSOLD: the same enrolled service customers the emails go to, who have not bought. Sent as the DEALERSHIP, never as DriveOne, matching the email channel.\n\nTHREE texts against ten emails, on purpose. Mirroring the email cadence would mean ten texts in sixty days, which earns STOPs, carrier filtering, and a dealer asking why their customers are complaining. Each one sits two or three days AFTER the email whose argument it reinforces, so it lands as a nudge on something already said rather than a new pitch: day 5 follows the day-3 repair-math email, day 21 follows the day-18 payment-plan email which is the strongest conversion lever we have, day 50 follows the day-48 eligibility-window email.\n\nEvery message opens with the store name because Sendblue sends from a plain number with no branded sender ID. Until each rooftop has its own number, naming the store in the first few words IS the branding, and it is also what stops a text from a strange number reading as spam.\n\nOpt-out language rides on the first and last message. CTIA guidance is the first message plus periodic reminders; three messages make the first and last the sensible pair.\n\nBodies are kept under about 160 characters so each is one segment. The quote_url is a short link, and the merge tags resolve to the same values the emails use.",
-  "sms": [
-    {
-      "step": 1,
-      "sendDay": 5,
-      "slug": "sms-01-no-contract-on-file",
-      "goal": "Introduce the channel, name the store, hand them their own price and link",
-      "media": "dealerLogo",
-      "mediaNote": "The only MMS in the sequence, and the only one that earns the cost. A first text from an unknown number is the one most likely to be read as spam, and the store's own logo rendering above the message is what makes it visibly the dealership. Later messages are plain SMS: by then the number is recognised, and a logo on every text is just a bigger bill.",
-      "body": "{{dealer_name}} Service: your {{vehicle_year}} {{vehicle_model}} has no service contract on file. {{monthly_payment}}/mo covers it. 4 min online: {{quote_url}} Reply STOP to opt out."
-    },
-    {
-      "step": 2,
-      "sendDay": 21,
-      "slug": "sms-02-zero-percent",
-      "goal": "Reinforce the day-18 payment-plan email, the strongest affordability lever",
-      "body": "{{dealer_name}} Service: {{monthly_payment}}/mo on your {{vehicle_model}}, 0% for {{payment_term}} months, no credit check. Same shop, same people: {{quote_url}}"
-    },
-    {
-      "step": 3,
-      "sendDay": 50,
-      "slug": "sms-03-the-window",
-      "goal": "Reinforce the day-48 eligibility email, then stop",
-      "body": "{{dealer_name}} Service: last note on your {{vehicle_model}}. Coverage gets harder to add as the car ages. {{quote_url}} Reply STOP to opt out."
-    }
-  ],
+  "smsNote": "NO SMS FOR THIS BUCKET. These are plate matches with no relationship to the dealership and no prior express consent of any kind. The TCPA requires prior express written consent for marketing texts; an email list built from plate matches has none, and a STOP-capable text is not consent. The sms array is empty on purpose so workflow 09 has nothing to send even if it is deployed. Do not copy the service drive deck's texts back in.",
+  "sms": [],
   "emails": [
     {
       "step": 1,
       "sendDay": 0,
-      "slug": "01-a-real-number-for-your-car",
-      "goal": "Own who is writing, name the gap, hand them a real quote on their actual vehicle",
-      "subject": "{{first_name}}, a real number for your {{vehicle_model}}",
-      "subjectAlt": "Your {{vehicle_year}} {{vehicle_model}} has no coverage on file",
-      "preheader": "Not a robocall. A real monthly price for the car you own, from the Ford store you already know, confirmed in four minutes online.",
+      "slug": "01-an-introduction-with-a-price-in-it",
+      "goal": "Introduce the store honestly to a stranger, own who is writing, hand them a real quote with no relationship claimed",
+      "subject": "{{first_name}}, a real price for a {{vehicle_year}} {{vehicle_model}}",
+      "subjectAlt": "The Ford store in Elmira, with a number instead of a pitch",
+      "preheader": "We have not met. This is the Ford store on Corning Rd, with a real monthly price for a {{vehicle_year}} {{vehicle_model}}, confirmed in four minutes online. Nobody will call you.",
       "eyebrow": "FROM FERRARIO FORD, WITH DRIVEONE SERVICE",
-      "headline": "You are a Ferrario customer. [[Your car is not covered.]]",
-      "subhead": "There is no vehicle service contract on file for your {{vehicle_year}} {{vehicle_model}}. Here is a real price to fix that, and nobody is going to call you about it.",
+      "headline": "We have not met. [[Here is a number anyway.]]",
+      "subhead": "{{dealer_name}} is the Ford store on Corning Rd in Elmira. This is an introduction, and it has a real price for a {{vehicle_year}} {{vehicle_model}} in it instead of a pitch.",
       "body": [
-        "First, who this is. {{dealer_name}} offers vehicle service contracts through DriveOne Service, and this email comes from both of us. It is not the call you keep getting about your car's extended warranty. It has a price in it, it has our address at the bottom, and it was written for your car.",
-        "The price at the top is for your {{vehicle_year}} {{vehicle_model}} at an estimated {{vehicle_mileage}} miles. We do not have your odometer, so we assumed about fifteen thousand miles a year. At checkout you type in the real number and the price updates before you pay anything.",
-        "What it buys is our top plan, Platinum, with a payment plan at zero percent and no credit check. The next repair that is not routine is priced at whatever it costs, or at your deductible. That is the whole decision."
+        "First, who this is. {{dealer_name}} is the Ford dealership at 2472 Corning Rd in Elmira, and we sell vehicle service contracts through DriveOne Service. This email comes from both of us. You have not been in, we are not pretending you have, and it is not the call you keep getting about your car's extended warranty.",
+        "The price at the top is for a {{vehicle_year}} {{vehicle_model}} at an estimated {{vehicle_mileage}} miles. We do not have the odometer, so we assumed about fifteen thousand miles a year. At checkout you type in the real number and the price updates before you pay anything.",
+        "What it buys is our top plan, Platinum, with a payment plan at zero percent and no credit check. Without it, the next repair that is not routine is priced at whatever it costs. With it, the repair is priced at your deductible. That is the whole decision, and it is yours to make at 11pm in a kitchen if that is when you have four minutes."
       ],
       "featureRows": [
         {
@@ -72,7 +48,7 @@
         "label": "See your quote",
         "path": "welcome"
       },
-      "ps": "The only question you will be asked is your mileage. Everything else is already filled in."
+      "ps": "The only question you will be asked is the mileage. If this is not your vehicle any more, ignore us; the unsubscribe link at the bottom works instantly."
     },
     {
       "step": 2,
@@ -86,7 +62,7 @@
       "headline": "There is a bill coming. [[We can make it zero.]]",
       "subhead": "Covered repair, brought to Ferrario, deductible zero. That is the whole idea.",
       "body": [
-        "Your {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
+        "A {{vehicle_year}} {{vehicle_model}} is a normal car having a normal life, and normal cars eventually produce a bill that is not routine. Alternators. Transmissions. Infotainment units that cost more than your first car. None of them fail on a schedule you get to see coming.",
         "Routine maintenance is not covered by any vehicle service contract, ours included, so we are not going to pretend the oil changes become free.",
         "The bill this is for is the other one. A covered repair, brought to {{dealer_name}}, costs you nothing at all. The only decision is whether to price that now, while the car is healthy, or later, when it is not."
       ],
@@ -99,7 +75,7 @@
         {
           "icon": "S",
           "title": "Fixed at a Ford store",
-          "subtitle": "Factory trained technicians, Ford parts, and a building with a street address."
+          "subtitle": "Factory trained technicians, Ford parts, and a building at 2472 Corning Rd with a street address."
         },
         {
           "icon": "T",
@@ -168,7 +144,7 @@
       "body": [
         "Coverage bought through {{dealer_name}} carries a disappearing deductible. Take a covered repair to another authorized repair facility and you pay {{deductible_away}}. Bring it to us and you pay {{deductible_home}}.",
         "This is not a loyalty points scheme. It is a line in the contract.",
-        "You are welcome to use any licensed repair facility the administrator authorizes, and the coverage travels with the car. We would just rather be the ones who fix it, and we have priced the deductible to make that an easy call."
+        "You are welcome to use any licensed repair facility the administrator authorizes, and the coverage travels with the car. We would just like to be the shop that fixes it, and we have priced the deductible to make that an easy call for someone who has never been here."
       ],
       "featureRows": [
         {
@@ -184,7 +160,7 @@
         {
           "icon": "H",
           "title": "A Ford store, not a call center",
-          "subtitle": "2472 Corning Rd, Elmira. We are easy to find and hard to argue with on price."
+          "subtitle": "2472 Corning Rd, Elmira. Easy to find, and we would like to meet you under better circumstances than a breakdown."
         }
       ],
       "benefitStrip": "A real building. A real service drive. A deductible of zero.",
@@ -286,7 +262,7 @@
       "headline": "We are not [[the people from the commercial.]]",
       "subhead": "You have had the call about your vehicle's extended warranty. Possibly during dinner. Possibly twice. You have also seen the ads offering coverage by monthly subscription.",
       "body": [
-        "Here is the difference, and it is not subtle. Those callers do not know your car. We have your {{vehicle_year}} {{vehicle_model}} on file because you are a {{dealer_name}} customer, and the price in this email was built for it.",
+        "Here is the difference, and it is not subtle. Those callers do not know what you drive. The price in this email was built for a {{vehicle_year}} {{vehicle_model}}, and the store it comes from is one you could drive to this afternoon.",
         "The subscription pitch is its own thing. A subscription covers you for as long as you keep paying it, at whatever the price becomes. What we sell is a contract: a term, a mileage allowance and a price, all fixed on the day you buy, transferable if you sell the car, refundable in full for 30 days.",
         "So we are not a call center that bought your number, and we are not an app with a monthly charge. We are a Ford dealership and the service company it chose to work with. Coverage is administered by {{administrator}} and honored at any licensed repair facility they authorize, which makes it a real contract with a real obligor."
       ],
@@ -304,7 +280,7 @@
         {
           "icon": "B",
           "title": "A real building",
-          "subtitle": "{{dealer_name}}, serving {{service_area}}."
+          "subtitle": "{{dealer_name}}, 2472 Corning Rd, Elmira, serving {{service_area}}."
         }
       ],
       "benefitStrip": "No robocall has ever had a street address. We do.",
@@ -408,7 +384,7 @@
       "body": [
         "You have now received ten emails about vehicle service contracts. That is enough emails about vehicle service contracts.",
         "Your quote stays live and your link keeps working. If the {{vehicle_model}} makes a sound you do not like in March, it will be there.",
-        "Either way, thank you for being a {{dealer_name}} customer. That part we would like to keep."
+        "Either way, that is the whole introduction. {{dealer_name}} is on Corning Rd, the service drive is open, and the next time the car needs a Ford store you know where one is."
       ],
       "featureRows": [
         {
@@ -418,8 +394,8 @@
         },
         {
           "icon": "S",
-          "title": "The service drive is here when you need it",
-          "subtitle": "Coverage or no coverage, the door is open."
+          "title": "The service drive is open",
+          "subtitle": "Coverage or no coverage, you are welcome to come in."
         },
         {
           "icon": "N",

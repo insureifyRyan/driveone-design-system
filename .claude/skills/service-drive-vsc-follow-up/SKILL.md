@@ -434,6 +434,34 @@ MX or SPF, so a subdomain inherits no DMARC at all; add
 bulk-sender rules want it, and it costs nothing at p=none. The cold list ramps from
 about 25 a day, not 200.
 
+**Progress 11 Nov 2026, after Ryan said yes to the subdomain.** DMARC is now in place:
+`_dmarc.driveoneservice.com TXT "v=DMARC1; p=none; rua=mailto:dmarc@driveoneprogram.com; pct=100; adkim=r; aspf=r"`
+plus the cross-domain authorisation `driveoneservice.com._report._dmarc.driveoneprogram.com TXT "v=DMARC1"`,
+both on Vercel DNS under the Kovara team. The Resend domain itself is NOT created:
+Resend refused with "domain limit of your plan" (ten domains in the account). Two
+of the ten are dead, `bobjohnsonauto.com` and `bobjohnson.driveoneprogram.com`, both
+`failed` and never verified; removing one frees the slot, but the Resend tool insists
+on the owner confirming a removal by name, so it waits on Ryan. The alternative is a
+plan upgrade. Once a slot exists: create `ferrario.driveoneservice.com` with click
+tracking on and open tracking off, add its four records on Vercel (`resend._domainkey.ferrario`
+TXT, `send.ferrario` MX 10 and TXT, `rsend.ferrario` CNAME, all values from Resend),
+optionally `links.ferrario` CNAME `links2.resend-dns.com` for a branded tracking
+host like the Ferrario subdomain has, then verify.
+
+**Mileage for the new populations, decided 11 Nov 2026 (Stephen).** The dealership
+list has no odometer, so estimate 15,000 miles per year of vehicle age, age from the
+VIN model year, and have the customer confirm the real mileage to bind. Implemented
+on `vsc_audience` as `model_year`, `est_mileage` (floor 7,500) and `mileage_basis`;
+the VIN year code is position 10, disambiguated by position 7 (a letter there means
+the 2010+ cycle). The quote import request for Elevate,
+`Ferrario_quote_import_for_Elevate.xlsx`, was handed to Ryan the same day: 142
+visited rows, 1,893 list rows, 56 already quoted. Expect a large share to be
+unratable at that estimate: 1,422 of the 1,926 list vehicles and 122 of the 165
+visited ones estimate above 150,000 miles, because the list skews old (886 are
+2010 to 2015, 536 are 2009 or older). The campaign only mails rows that come back
+with a price, so this costs reach rather than correctness; a lower annual figure
+would rate more cars but would also mis-state more of them.
+
 
 The audience is cut into buckets, launched one at a time. Each bucket is a distinct
 population with its own reason to hear from the dealer, so each gets its own eligibility

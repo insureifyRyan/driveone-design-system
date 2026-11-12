@@ -2166,7 +2166,17 @@ const pricingNodes = [
         { name: 'Accept', value: 'application/json' },
       ],
     },
-    options: { response: { response: { neverError: false } } },
+    options: {
+      response: { response: { neverError: false } },
+      // Paced, not burst. A run claims up to 100 rows and used to fire all
+      // 100 GETs at once; under that load the quote endpoint sometimes
+      // answered 200 with the links but NO rating block (its own rating call
+      // had timed out), which 05 recorded as "no financed quote_options" and
+      // retried an hour later. Probed 12 Nov 2026: every one of those quotes
+      // rated fine when asked one at a time. Two a second is what Resend gets
+      // too, and 100 rows still clears in under a minute.
+      batching: { batch: { batchSize: 2, batchInterval: 1100 } },
+    },
   }, { retryOnFail: true, maxTries: 3, waitBetweenTries: 4000, onError: 'continueErrorOutput' }),
 
   codeNode('Map Rating To Enrolment', [240, -110], MAP_RATING_CODE),

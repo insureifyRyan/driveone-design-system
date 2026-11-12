@@ -1914,3 +1914,12 @@ select phone_e164, 'x' from gone where false returning phone_e164;
 Leave the consent row revoked rather than deleting it: it is an accurate record
 of what happened, and re-running the test later should start from a revoked
 state anyway.
+
+**12 Nov 2026, MONTHLY DEALER REPORT.** A dealer-facing program report lives
+at `reports/ferrario-ford/program-report-2026-11.html` (published artifact
+https://claude.ai/artifact/WCXBksKfHQsAa7cxuXqeeN; aggregates only, no
+customer data). It opens with the camera provenance section (Captured's
+10,256 emailed, 832 plate reads, 165 vehicles on the lot, then the recall and
+drive-by buckets) and runs large to small, trimmed to what the dealer acts on.
+The scheduled task "Ferrario monthly dealer report" refreshes it on the 1st of
+each month; recipe in `references/monthly-dealer-report.md`.

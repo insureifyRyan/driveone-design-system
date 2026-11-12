@@ -1,0 +1,280 @@
+<title>Ferrario Ford Program Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: one quiet document column, dealer navy header band, red rules as the only accent. */
+  :root {
+    --bg: #FFFFFF; --fg: #1C1D1F; --muted: #5F6B7A; --rule: #E3E7EC; --soft: #F4F6F9;
+    --navy: #0B1B3F; --on-navy: #FFFFFF; --red: #D81E24; --red-deep: #9E1318;
+    --ok: #1F7A4D; --warn: #B4600F;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --body: Inter, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0F1420; --fg: #E8ECF2; --muted: #9AA7B8; --rule: #26304A; --soft: #161D2E;
+    --navy: #0B1B3F; --on-navy: #FFFFFF; --red: #FF4B52; --red-deep: #FF6B70; --ok: #4CC38A; --warn: #E8A04A; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #0F1420; --fg: #E8ECF2; --muted: #9AA7B8; --rule: #26304A; --soft: #161D2E;
+    --navy: #0B1B3F; --on-navy: #FFFFFF; --red: #FF4B52; --red-deep: #FF6B70; --ok: #4CC38A; --warn: #E8A04A; color-scheme: dark }
+
+  body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); margin: 0; }
+  .band { background: var(--navy); color: var(--on-navy); }
+  .wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px; }
+  header .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px; padding-block: 30px 26px; }
+  .mark { line-height: .86; }
+  .mark .l1 { font: italic 800 44px/.86 var(--display); letter-spacing: .5px; }
+  .mark .l2 { font: italic 800 26px/.9 var(--display); letter-spacing: 3px; margin-top: 4px; }
+  .mark .bar { height: 4px; width: 100%; background: var(--red); margin-top: 8px; }
+  .provider { text-align: right; font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; opacity: .85; }
+  .provider b { display: block; font: 700 20px/1 var(--body); letter-spacing: 0; text-transform: none; margin-top: 4px; }
+  .provider b span { font-weight: 400; }
+  .title { border-top: 1px solid var(--rule); }
+  .eyebrow { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--red-deep); font-weight: 700; }
+  h1 { font: 700 28px/1.2 var(--body); margin: 6px 0 4px; text-wrap: balance; }
+  h2 { font: 700 19px/1.3 var(--body); margin: 0 0 10px; text-wrap: balance; }
+  h3 { font: 600 15px/1.3 var(--body); margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0; }
+  section { padding-block: 22px; border-top: 1px solid var(--rule); }
+  section.first { border-top: 0; }
+  p { margin: 0 0 12px; max-width: 68ch; }
+  .lead { font-size: 16.5px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  thead th:first-child, td:first-child { padding-left: 0; }
+  thead th:last-child, td:last-child { padding-right: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .tile { background: var(--soft); padding: 16px 18px; border-top: 3px solid var(--navy); min-width: 0; }
+  .tile .n { font: 700 30px/1 var(--body); letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+  .tile .k { font-size: 11.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+  .tile .d { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; border: 1px solid currentColor; }
+  .pill.live { color: var(--ok); }
+  .pill.ramp { color: var(--warn); }
+  ul { margin: 0 0 12px; padding-left: 20px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  .note { background: var(--soft); border-left: 3px solid var(--red); padding: 12px 16px; margin: 14px 0; max-width: 70ch; }
+  .fine { font-size: 12.5px; color: var(--muted); }
+  footer .wrap { padding-block: 18px 30px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); }
+  @media (max-width: 480px) { .mark .l1 { font-size: 36px } h1 { font-size: 24px } .provider { text-align: left } }
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div class="mark" aria-label="Ferrario Ford">
+      <div class="l1">FERRARIO</div>
+      <div class="l2">FORD</div>
+      <div class="bar"></div>
+    </div>
+    <div class="provider">Vehicle service contract program<br>in partnership with<b>drive<span>one</span></b></div>
+  </div>
+</header>
+
+<div class="wrap title">
+  <div class="eyebrow">Monthly program report</div>
+  <h1>Where the Ferrario Ford service contract program stands</h1>
+  <p class="sub">Prepared for Ferrario Ford, 2472 Corning Rd, Elmira NY. Figures as of Wednesday 11 November 2026, 10:00 pm Eastern.</p>
+</div>
+
+<div class="wrap">
+  <section class="first">
+    <div class="eyebrow">Where the lists come from</div>
+    <h2>What the lot cameras showed</h2>
+    <p class="lead">Everything in this report starts with one source: the plate cameras at the store and the email campaigns Capture Data Services built on them. Captured emailed 10,256 vehicle owners identified from plate captures. The cameras then recorded who actually came onto the lot. Those people are the recall group; the people emailed who never appeared are the drive-by group.</p>
+    <div class="grid">
+      <div class="tile"><div class="n">10,256</div><div class="k">People emailed by Captured</div><div class="d">Ford and Jeep campaigns, June to August.</div></div>
+      <div class="tile"><div class="n">832</div><div class="k">Plate reads on the lot</div><div class="d">Four cameras, 23 June to 2 November.</div></div>
+      <div class="tile"><div class="n">584</div><div class="k">Visit days recorded</div><div class="d">575 of them after the person was emailed.</div></div>
+      <div class="tile"><div class="n">165</div><div class="k">Vehicles identified on the lot</div><div class="d">Matched to 164 of the people Captured had emailed.</div></div>
+    </div>
+    <h3 style="margin-top:22px">From plate capture to a quote</h3>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Step</th><th class="num">People</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Emailed by Captured from plate captures</td><td class="num">10,256</td><td>June to August 2026, Ford and Jeep campaigns</td></tr>
+        <tr><td>With a vehicle we can identify</td><td class="num">2,602</td><td>A VIN on file or linked. 7,654 had no VIN and cannot be quoted</td></tr>
+        <tr><td>Already in your service records</td><td class="num">545</td><td>Already in the service drive campaign, so not emailed twice</td></tr>
+        <tr><td>Seen on the lot (recall visitors)</td><td class="num">165</td><td>165 vehicles, 164 people. 23 of them were already being quoted from your service records</td></tr>
+        <tr><td>Emailed but never seen on the lot (drive-by)</td><td class="num">1,893</td><td>New to the program</td></tr>
+        <tr><td>Eligible after the model-year and heavy-duty rules</td><td class="num">710</td><td>56 recall visitors, 654 drive-by</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3 style="margin-top:22px">Lot visits by week</h3>
+    <p class="fine">Visit days by the week they fell in. The gap in mid-September to early October is a gap in the camera record, not in traffic.</p>
+    <svg viewBox="0 0 760 170" width="100%" role="img" aria-label="bar chart" style="max-width:100%;height:auto;font:11px Inter,Arial,sans-serif">
+<line x1="34" y1="136.0" x2="760" y2="136.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="28" y="140.0" text-anchor="end" fill="var(--muted)">0</text>
+<line x1="34" y1="105.5" x2="760" y2="105.5" stroke="var(--rule)" stroke-width="1"/>
+<text x="28" y="109.5" text-anchor="end" fill="var(--muted)">16</text>
+<line x1="34" y1="75.0" x2="760" y2="75.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="28" y="79.0" text-anchor="end" fill="var(--muted)">31</text>
+<line x1="34" y1="44.5" x2="760" y2="44.5" stroke="var(--rule)" stroke-width="1"/>
+<text x="28" y="48.5" text-anchor="end" fill="var(--muted)">46</text>
+<line x1="34" y1="14.0" x2="760" y2="14.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="28" y="18.0" text-anchor="end" fill="var(--muted)">62</text>
+<rect x="39.8" y="122.2" width="24.7" height="13.8" fill="var(--navy)"><title>22 Jun: 7</title></rect>
+<text x="52.1" y="150" text-anchor="middle" fill="var(--muted)">22 Jun</text>
+<rect x="76.1" y="120.3" width="24.7" height="15.7" fill="var(--navy)"><title>29 Jun: 8</title></rect>
+<rect x="112.4" y="80.9" width="24.7" height="55.1" fill="var(--navy)"><title>6 Jul: 28</title></rect>
+<text x="124.7" y="150" text-anchor="middle" fill="var(--muted)">6 Jul</text>
+<rect x="148.7" y="65.2" width="24.7" height="70.8" fill="var(--navy)"><title>13 Jul: 36</title></rect>
+<rect x="185.0" y="25.8" width="24.7" height="110.2" fill="var(--navy)"><title>20 Jul: 56</title></rect>
+<text x="197.3" y="150" text-anchor="middle" fill="var(--muted)">20 Jul</text>
+<rect x="221.3" y="57.3" width="24.7" height="78.7" fill="var(--navy)"><title>27 Jul: 40</title></rect>
+<rect x="257.6" y="49.4" width="24.7" height="86.6" fill="var(--navy)"><title>3 Aug: 44</title></rect>
+<text x="269.9" y="150" text-anchor="middle" fill="var(--muted)">3 Aug</text>
+<rect x="293.9" y="17.9" width="24.7" height="118.1" fill="var(--navy)"><title>10 Aug: 60</title></rect>
+<rect x="330.2" y="57.3" width="24.7" height="78.7" fill="var(--navy)"><title>17 Aug: 40</title></rect>
+<text x="342.5" y="150" text-anchor="middle" fill="var(--muted)">17 Aug</text>
+<rect x="366.5" y="63.2" width="24.7" height="72.8" fill="var(--navy)"><title>24 Aug: 37</title></rect>
+<rect x="402.8" y="14.0" width="24.7" height="122.0" fill="var(--navy)"><title>31 Aug: 62</title></rect>
+<text x="415.1" y="150" text-anchor="middle" fill="var(--muted)">31 Aug</text>
+<rect x="439.1" y="77.0" width="24.7" height="59.0" fill="var(--navy)"><title>7 Sep: 30</title></rect>
+<rect x="475.4" y="136.0" width="24.7" height="0.0" fill="var(--navy)"><title>14 Sep: 0</title></rect>
+<text x="487.7" y="150" text-anchor="middle" fill="var(--muted)">14 Sep</text>
+<rect x="511.7" y="136.0" width="24.7" height="0.0" fill="var(--navy)"><title>21 Sep: 0</title></rect>
+<rect x="548.0" y="136.0" width="24.7" height="0.0" fill="var(--navy)"><title>28 Sep: 0</title></rect>
+<text x="560.3" y="150" text-anchor="middle" fill="var(--muted)">28 Sep</text>
+<rect x="584.3" y="108.5" width="24.7" height="27.5" fill="var(--navy)"><title>5 Oct: 14</title></rect>
+<rect x="620.6" y="29.7" width="24.7" height="106.3" fill="var(--navy)"><title>12 Oct: 54</title></rect>
+<text x="632.9" y="150" text-anchor="middle" fill="var(--muted)">12 Oct</text>
+<rect x="656.9" y="69.1" width="24.7" height="66.9" fill="var(--navy)"><title>19 Oct: 34</title></rect>
+<rect x="693.2" y="77.0" width="24.7" height="59.0" fill="var(--navy)"><title>26 Oct: 30</title></rect>
+<text x="705.5" y="150" text-anchor="middle" fill="var(--muted)">26 Oct</text>
+<rect x="729.5" y="128.1" width="24.7" height="7.9" fill="var(--navy)"><title>2 Nov: 4</title></rect>
+</svg>
+    <p class="fine" style="margin-top:12px">A plate read establishes that the vehicle was on the lot; it does not identify the driver or prove the email caused the visit. </p>
+  </section>
+
+  <section>
+    <h2>Where those people are now</h2>
+    <p class="lead">Three groups are now in the program, each with its own quote, its own email series and its own pace. Every person gets a real price for their own vehicle before the first email goes out.</p>
+    <div class="grid">
+      <div class="tile"><div class="n">1,926</div><div class="k">Drive-by owners with a VIN</div><div class="d">283 quoted so far, 50 more an hour. 654 are recent enough to be eligible.</div></div>
+      <div class="tile"><div class="n">1,064</div><div class="k">Service drive customers</div><div class="d">In the email sequence. First emails Thursday 12 November.</div></div>
+      <div class="tile"><div class="n">165</div><div class="k">Recall visitors</div><div class="d">164 quoted. 56 are recent enough to be eligible.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The three audiences</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Audience</th><th>Who they are</th><th class="num">On the list</th><th class="num">Eligible</th><th class="num">Quoted</th><th>Emails</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Service drive</strong></td>
+          <td>Customers with a service visit in your records and no service contract on file. Quotes created from the visit.</td>
+          <td class="num">1,244</td><td class="num">1,064</td><td class="num">1,098</td>
+          <td>Start Thu 12 Nov, about 90 new people a day through 4 Dec</td>
+          <td><span class="pill live">Live</span></td>
+        </tr>
+        <tr>
+          <td><strong>Recall visitors</strong></td>
+          <td>People Captured emailed whose vehicle the lot cameras then recorded on the premises, in for recall work. No quote existed.</td>
+          <td class="num">165</td><td class="num">56</td><td class="num">164</td>
+          <td>Start Thu 12 Nov, up to 45 new people a day</td>
+          <td><span class="pill live">Live</span></td>
+        </tr>
+        <tr>
+          <td><strong>Drive-by</strong></td>
+          <td>Owners identified from plate captures and emailed by Captured, with a VIN, never recorded on the lot and not in your service records.</td>
+          <td class="num">1,926</td><td class="num">654</td><td class="num">283</td>
+          <td>Start Thu 12 Nov, 10 new people a day, rising as the sending domain earns reputation</td>
+          <td><span class="pill ramp">Live, ramping</span></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="fine" style="margin-top:10px">"On the list" for the drive-by group counts only people with a VIN. A further 7,654 of the people Captured emailed had no VIN link, so they cannot be quoted. "Quoted" for the drive-by group grows by about 50 an hour until the list is done, roughly two days.</p>
+  </section>
+
+  <section>
+    <h2>Who is eligible, and why the lists shrink</h2>
+    <p>A customer receives emails only when all of the following hold. The same rules apply to every audience.</p>
+    <ul>
+      <li>The vehicle is model year 2014 or newer. This is the largest filter on the two new lists: the recall visitors have a median model year of 2012, and the drive-by list the same, so most of those vehicles are simply too old to cover.</li>
+      <li>There is no vehicle service contract already on file.</li>
+      <li>We have a working email address, and the person has not opted out, bounced, or marked a previous email as spam.</li>
+      <li>The vehicle is not a heavy-duty truck. Nothing above the F-150 class is rated in this program (F-250 and up, RAM 2500 and up, GM 2500 and 3500), so those customers never receive an email.</li>
+      <li>Nobody receives two series. A person who appears in more than one list is emailed once, in the first group they qualified for.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What the emails say</h2>
+    <p>Each audience has its own ten-email series over 60 days, written for its situation. No series calls the product a warranty, and none mentions the cameras.</p>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Audience</th><th>Opening message</th><th>Sent as</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Service drive</strong></td><td>You serviced your vehicle with us on this date, and one thing is missing from your file. Here is a real monthly price.</td><td>Ferrario Ford Service, from service@ferrario.driveoneprogram.com</td></tr>
+        <tr><td><strong>Recall visitors</strong></td><td>The recall fixed one thing, for free. The rest of the car is on you. Here is a real monthly price.</td><td>Ferrario Ford Service, from service@ferrario.driveoneprogram.com</td></tr>
+        <tr><td><strong>Drive-by</strong></td><td>We have not met. Ferrario Ford is the Ford store on Corning Rd, and here is a real price for your vehicle anyway.</td><td>Ferrario Ford with DriveOne Service, from service@ferrario.driveoneservice.com</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="margin-top:12px">Every email carries the same offer: our Platinum plan, a 0% payment plan over up to 36 months with 5% down and no credit check, a 30-day full refund, roadside assistance anywhere in the US, and a <strong>$0 deductible when the covered repair is done at Ferrario Ford</strong>. That last point is printed in every email, because it is the reason to come back to your service drive rather than any shop. Checkout is entirely online. Nobody is called.</p>
+  </section>
+
+  <section>
+    <h2>Pricing after the November reduction</h2>
+    <div class="grid">
+      <div class="tile"><div class="n">$85.53</div><div class="k">Average monthly quoted</div><div class="d">Service drive customers priced so far, at the new rates.</div></div>
+      <div class="tile"><div class="n">$56 to $324</div><div class="k">Monthly range</div><div class="d">Set by vehicle, mileage and term. Lowest monthly option is shown in the email.</div></div>
+      <div class="tile"><div class="n">2014 to 2025</div><div class="k">Model years in the service drive group</div><div class="d">Median 2018. Ford, Chevrolet, Nissan, Jeep and Toyota lead.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What has happened so far</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>When</th><th>What</th></tr></thead>
+      <tbody>
+        <tr><td>7 to 22 Oct</td><td>Pilot run to the first 90 service drive customers: 220 emails, 7 quote clicks, no purchases. Paused at the store's request on 23 Oct.</td></tr>
+        <tr><td>10 to 11 Nov</td><td>Relaunched at the new pricing with the full service drive list of 1,098. Every October quote was replaced with a fresh one.</td></tr>
+        <tr><td>11 Nov</td><td>Recall and drive-by lists reconciled against your service records, loaded, and quoting started. Both email series approved and switched on.</td></tr>
+        <tr><td>12 Nov onward</td><td>First emails to all three groups. Tuesday to Friday only, 9 am to 4 pm Eastern, never more than 200 a day to the service drive group.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What Ferrario Ford should expect</h2>
+    <ul>
+      <li><strong>Calls to the service line.</strong> Every email prints (607) 734-1681. A customer may ring to ask whether the email is genuine. It is, and the price in it is theirs.</li>
+      <li><strong>Replies.</strong> Replies go to DriveOne, who answer coverage questions and pass anything about a specific vehicle to the store.</li>
+      <li><strong>Opt-outs.</strong> Every email has a one-click unsubscribe. Opt-outs, bounces and spam complaints remove the person from the program automatically, across all three groups.</li>
+      <li><strong>Sales.</strong> A purchase is posted to the store the moment it completes. The customer's contract names Ferrario Ford as the selling dealer and carries the $0 in-store deductible.</li>
+      <li><strong>This report.</strong> Refreshed on the first of each month with emails sent, quote clicks, contracts sold and opt-outs for each group.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What to expect</h2>
+    <p>These are planning ranges, not forecasts. They apply published vehicle service contract response rates for direct-to-consumer and affinity email programs to the number of people who will actually be emailed, and they assume the full ten-email series runs. Conversion on a cold list is historically about half that of a known customer, which is why the drive-by range is lower.</p>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Audience</th><th class="num">People emailed</th><th>Benchmark response</th><th class="num">Contracts, low</th><th class="num">Contracts, high</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Service drive</strong></td><td class="num">1,064</td><td>1% to 2% of people emailed</td><td class="num">11</td><td class="num">21</td></tr>
+        <tr><td><strong>Recall visitors</strong></td><td class="num">56</td><td>1% to 2% of people emailed</td><td class="num">1</td><td class="num">1</td></tr>
+        <tr><td><strong>Drive-by</strong></td><td class="num">654</td><td>0.5% to 1% of people emailed</td><td class="num">3</td><td class="num">7</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="fine" style="margin-top:10px">At the average quoted price, each contract is roughly $2,100 to $2,600 in written premium.</p>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    Prepared by DriveOne for Ferrario Ford. Coverage is a vehicle service contract, not an insurance policy and not a manufacturer warranty, administered by Ascent Administration Services and, in New York, obligated by ORIAS Warranty Services. Customer data stays within the program and is never shared with third parties beyond the administrator.
+  </div>
+</footer>

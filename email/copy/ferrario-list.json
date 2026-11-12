@@ -20,7 +20,7 @@
       "preheader": "We have not met. This is the Ford store on Corning Rd, with a real monthly price for a {{vehicle_year}} {{vehicle_model}}, confirmed in four minutes online. Nobody will call you.",
       "eyebrow": "FROM FERRARIO FORD, WITH DRIVEONE SERVICE",
       "headline": "We have not met. [[Here is a number anyway.]]",
-      "subhead": "{{dealer_name}} is the Ford store on Corning Rd in Elmira. This is an introduction, and it has a real price for a {{vehicle_year}} {{vehicle_model}} in it instead of a pitch.",
+      "subhead": "{{dealer_name}} is the Ford store on Corning Rd in Elmira. This is an introduction, and it has a real price for a {{vehicle_year}} {{vehicle_model}} in it instead of a pitch. Bring a covered repair to {{dealer_short}} and your deductible is $0.",
       "body": [
         "First, who this is. {{dealer_name}} is the Ford dealership at 2472 Corning Rd in Elmira, and we sell vehicle service contracts through DriveOne Service. This email comes from both of us. You have not been in, we are not pretending you have, and it is not the call you keep getting about your car's extended warranty.",
         "The price at the top is for a {{vehicle_year}} {{vehicle_model}} at an estimated {{vehicle_mileage}} miles. We do not have the odometer, so we assumed about fifteen thousand miles a year. At checkout you type in the real number and the price updates before you pay anything.",

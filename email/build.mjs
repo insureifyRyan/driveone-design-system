@@ -278,7 +278,7 @@ function buyButton(label, widthPx) {
 const trustRow = () => `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
   <td align="center" style="padding:10px 0 0 0;${font(F.body, 11, 500, C.mutedText, '1.6')}">
-    Secure checkout &nbsp;&middot;&nbsp; 0% payment plan &nbsp;&middot;&nbsp; No credit check &nbsp;&middot;&nbsp; 30 day money back
+    Secure checkout &nbsp;&middot;&nbsp; 0% payment plan &nbsp;&middot;&nbsp; No credit check &nbsp;&middot;&nbsp; 30 day money back &nbsp;&middot;&nbsp; $0 deductible at ${esc(D.dealer.shortName)}
   </td>
 </tr></table>`;
 

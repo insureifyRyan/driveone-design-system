@@ -44,7 +44,7 @@
       "preheader": "Ford paid for the recall. It covered exactly one thing. Your {{vehicle_year}} {{vehicle_model}} has no coverage for anything else. Fixable in four minutes, online.",
       "eyebrow": "FROM THE STORE THAT DID YOUR RECALL",
       "headline": "The recall fixed one thing. [[The rest of the car is on you.]]",
-      "subhead": "You came in to {{dealer_name}} for recall work. Nothing else on the {{vehicle_model}} is covered, and your file says so. You can fix that from the store that already knows the car.",
+      "subhead": "You came in to {{dealer_name}} for recall work. Nothing else on the {{vehicle_model}} is covered, and your file says so. You can fix that from the store that already knows the car. Bring a covered repair back to {{dealer_short}} and your deductible is $0.",
       "body": [
         "You brought your {{vehicle_year}} {{vehicle_model}} in to us for a recall. Ford paid for that, as it should, and the work covered exactly one thing: the part the recall named.",
         "What it did not cover is everything else. Your file at {{dealer_name}} shows no vehicle service contract on the car, which means the next repair that is not a recall and is not routine is priced at whatever that repair happens to cost.",

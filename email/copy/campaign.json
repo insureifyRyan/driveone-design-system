@@ -44,7 +44,7 @@
       "preheader": "No coverage on file. That is fixable in about four minutes, online, without talking to anybody.",
       "eyebrow": "AFTER YOUR SERVICE VISIT",
       "headline": "Thanks for coming in. [[One line was blank.]]",
-      "subhead": "Your profile shows no vehicle service contract. You can still get one, and you can get it from us.",
+      "subhead": "Your profile shows no vehicle service contract. You can still get one, and you can get it from us. Bring a covered repair back to {{dealer_short}} and your deductible is $0.",
       "body": [
         "Your {{vehicle_year}} {{vehicle_model}} was in with us on {{last_ro_date}}. Everything on that ticket is handled.",
         "Here is the part nobody mentioned in the service lane: there is no vehicle service contract attached to your file. Which means the next repair is priced at whatever the next repair happens to cost.",

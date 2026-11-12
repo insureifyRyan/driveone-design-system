@@ -150,6 +150,20 @@ const ROWS_PER_SLOT = Math.max(1, Math.ceil(NEW_PER_DAY / SAFE_UTC_HOURS.length)
 // property of a dealership, it is meant to be flipped without a rebuild, and
 // instance-wide is the right blast radius for "send nothing to customers".
 const SEND_FROM = `${DEALER.sending.fromName} <${DEALER.sending.fromAddress}>`;
+
+// HEAVY DUTY IS NOT RATED, BY DESIGN. The program covers nothing above an
+// F-150 class truck: F-250 and up, RAM/Dodge 2500 and up, GM 2500/3500,
+// E-350/E-450 and the big vans. The rating API returns zero options for them
+// and 05 used to record that as a pricing error and retry five times; Ryan
+// (12 Nov 2026): not an error, just never rate or email them. So intake keeps
+// them out before a quote or an enrolment exists, and the audience branch
+// parks them at load. The SQL form is applied to a (make, model) pair.
+const HEAVY_DUTY_SQL = (make, model) => [
+  `not (${model} ~* '(^|[^0-9])F-?(2|3|4|5|6)50([^0-9]|$)' or ${model} ~* 'super ?duty'`,
+  `  or (upper(${make}) in ('RAM','DODGE') and ${model} ~* '(^|[^0-9])(2|3|4|5)500([^0-9]|$)')`,
+  `  or (upper(${make}) in ('CHEVROLET','GMC') and ${model} ~* '(2|3)500')`,
+  `  or ${model} ~* '(^|[^0-9])E-?(3|4)50([^0-9]|$)' or ${model} ~* '(express|savana) ?(3|4)500')`,
+].join('\n');
 const SEND_REPLY_TO = DEALER.contact.replyTo;
 const UNSUB_BASE = DEALER.campaign.unsubscribeUrl;
 
@@ -468,6 +482,8 @@ const AUDIENCE_ELIGIBLE_SQL = AUDIENCE ? [
   '    and coalesce(cv.mileage, a.est_mileage) is not null',
   '    and coalesce(cv.mileage, a.est_mileage) <= $5',
   '    and cv.year >= extract(year from now())::int - 12',
+  '    -- heavy duty trucks are not rated, by design (see HEAVY_DUTY_SQL)',
+  '    and ' + HEAVY_DUTY_SQL('cv.make', 'cv.model').replace(/\n/g, '\n    '),
   '    and not exists (',
   '      select 1 from vsc_suppression s',
   '      where s.dealer_id = $1',
@@ -548,6 +564,8 @@ const INTAKE_SQL_SERVICE = [
   '    -- ceiling tracks the rate card: above it we cannot quote, so we do not email',
   '    and cv.mileage is not null and cv.mileage <= $5',
   '    and cv.year >= extract(year from now())::int - 12',
+  '    -- heavy duty trucks are not rated, by design (see HEAVY_DUTY_SQL)',
+  '    and ' + HEAVY_DUTY_SQL('cv.make', 'cv.model').replace(/\n/g, '\n    '),
   '    -- campaign level do-not-contact, which outlives any single enrollment',
   '    and not exists (',
   '      select 1 from vsc_suppression s',
@@ -847,7 +865,13 @@ const AUDIENCE_MATCH_CODE = [
   "  const make = rawMake.length <= 3 ? rawMake.toUpperCase() : title(rawMake);",
   "  const model = niceModel(d.Model || '');",
   "  const year = parseInt(d.ModelYear, 10) || a.model_year || null;",
-  "  const decoded = !!(make && model && year);",
+  "  const decodedOk = !!(make && model && year);",
+  '  // Heavy duty is not rated, by design: do not create a quote, park the row.',
+  "  const hd = /(^|[^0-9])F-?(2|3|4|5|6)50([^0-9]|$)/i.test(model) || /super ?duty/i.test(model)",
+  "    || (/^(RAM|DODGE)$/i.test(make) && /(^|[^0-9])(2|3|4|5)500([^0-9]|$)/.test(model))",
+  "    || (/^(CHEVROLET|GMC)$/i.test(make) && /(2|3)500/.test(model))",
+  "    || /(^|[^0-9])E-?(3|4)50([^0-9]|$)/i.test(model) || /(express|savana) ?(3|4)500/i.test(model);",
+  "  const decoded = decodedOk && !hd;",
   "  const words = String(a.customer_names || '').trim().split(/\\s+/).filter(Boolean);",
   "  const first = title(words[0] || '') || 'Customer';",
   "  const last = title(words.slice(1).join(' '));",
@@ -869,7 +893,7 @@ const AUDIENCE_MATCH_CODE = [
   '  // the dealership never goes through this code.',
   '    mileage: a.est_mileage == null ? null : Math.min(Number(a.est_mileage), 145000),',
   '    decoded,',
-  "    err: decoded ? null : ('vin_undecodable: ' + String(d.ErrorText || 'no decoder result').slice(0, 160)),",
+  "    err: decoded ? null : (hd ? ('heavy duty, not rated by design: ' + make + ' ' + model) : ('vin_undecodable: ' + String(d.ErrorText || 'no decoder result').slice(0, 160))),",
   '  } });',
   '}',
   'return out;',
@@ -884,7 +908,8 @@ const AUDIENCE_CREATE_SQL = AUDIENCE ? [
   '         $10::boolean as decoded, $11::text as err, $12::uuid as partner_id',
   '),',
   'fail as (',
-  '  update vsc_audience a set quote_attempts = a.quote_attempts + 1, quote_error = p.err',
+  '  -- a heavy duty vehicle is parked at once (three attempts), not retried',
+  "  update vsc_audience a set quote_attempts = case when p.err like 'heavy duty%' then 3 else a.quote_attempts + 1 end, quote_error = p.err",
   '    from p where a.id = p.audience_id and not p.decoded',
   '  returning a.id',
   '),',

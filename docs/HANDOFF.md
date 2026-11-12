@@ -24,45 +24,17 @@ Three systems, one database. The Elevate app (getelevatewarranty.com) owns custo
 
 ```mermaid
 flowchart LR
-  subgraph SRC[Sources]
-    DMS[Dealership service drive<br/>quotes created per visit by Elevate]
-    CAP[Capture Data Services<br/>plate cameras + reconciliation workbook<br/>arrives by email]
-  end
-  subgraph SB[Supabase · elevate-production]
-    APP[(customers<br/>customer_vehicles<br/>quotes)]
-    AUD[(vsc_audience)]
-    ENR[(vsc_enrollment<br/>vsc_send_log<br/>vsc_suppression<br/>vsc_email_event)]
-    TPL[(vsc_email_template)]
-  end
-  subgraph N8[n8n Cloud · hourly]
-    I[01 Intake]
-    P[05 Pricing]
-    S[02 Scheduler]
-    E[03 Events]
-    R[06 Review · 07 Scorecard · 08 Sales alert]
-  end
-  API[Elevate partner quote API<br/>rating + checkout links]
-  RS[Resend<br/>dealer subdomain, DKIM/SPF/DMARC]
-  CUST((Customer inbox))
-  CHK[Elevate checkout<br/>pre-filled from customers]
-  ING[Inbox ingest job<br/>Microsoft 365 → vsc_audience]
-  NHTSA[NHTSA vPIC<br/>VIN decode]
-
-  DMS --> APP
-  CAP --> ING --> AUD
+  CAP[Captured camera reports<br/>arrive by email] --> ING[Inbox ingest<br/>weekdays 07:41 ET] --> AUD[(vsc_audience)]
+  DMS[Service drive visits<br/>one Elevate quote per visit] --> APP[(customers<br/>vehicles · quotes)]
+  AUD --> I[01 Intake<br/>decode VIN, create quote, enrol]
   APP --> I
-  AUD --> I
-  I -- audience mode --> NHTSA
-  I -- creates customer + vehicle + quote --> APP
-  I --> ENR
-  ENR --> P --> API --> ENR
-  ENR --> S
-  TPL --> S
-  S --> RS --> CUST --> CHK
-  RS -- delivered / clicked / bounced / complained --> E
-  CHK -- purchased --> E
+  I --> ENR[(vsc_enrollment<br/>the state machine)]
+  ENR --> P[05 Pricing] --> API[Elevate quote API<br/>price + checkout link] --> ENR
+  ENR --> S[02 Scheduler<br/>claim, render, send] --> RS[Resend] --> CUST((Customer)) --> CHK[Elevate checkout]
+  RS -. delivered · clicked · bounced .-> E[03 Events]
+  CHK -. purchased .-> E
   E --> ENR
-  ENR --> R
+  ENR --> R[07 Scorecard · 08 Sales alert<br/>monthly dealer report]
 ```
 
 | Component               | Role                                                                                                                             | Where                                                                                                                   | Credential / owner                                                                                                                                            |

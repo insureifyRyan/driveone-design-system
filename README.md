@@ -12,6 +12,8 @@ Product: **DriveOne VSC, Platinum**, administered by Ascent Administration Servi
 and in New York by ORIAS Warranty Services. Every offer claim in the campaign is quoted
 from or directly supported by the executed contract form.
 
+**New to this repo?** Start with `docs/HANDOFF.md`, the end-to-end engineering handoff (system map, data model, pipeline, invariants, improvement list). The operations manual is `.claude/skills/service-drive-vsc-follow-up/SKILL.md`.
+
 ## Dealerships
 
 | | Status |

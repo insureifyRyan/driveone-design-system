@@ -5,6 +5,12 @@ description: Operations manual for the DriveOne Service Drive VSC follow up camp
 
 # Service Drive VSC follow up
 
+> **Start here if you are new.** `docs/HANDOFF.md` is the end-to-end engineering handoff
+> written 12 Nov 2026 (system map, data model, the seven workflows, the three Ferrario
+> campaigns, the rules that must not change, the prioritised improvement list, and the
+> access a new owner needs). Read it before this file. This file is the operations log and
+> manual: the STATUS section below is newest first, and everything after it is reference.
+
 > **One repo, one engine, one brand file per rooftop.** This began as two projects: the
 > Bob Johnson build and a Ferrario fork of it, each carrying its own copy of
 > `n8n/build-workflows.mjs`, `email/build.mjs`, `n8n/verify.mjs` and this file. They were

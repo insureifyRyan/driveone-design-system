@@ -127,7 +127,7 @@ const OFFER_TAGS = {
 };
 
 /** Recipient level tags. These stay as {{tags}} in dist and get sample values in preview. */
-const SAMPLE = {
+const SAMPLE_DEFAULT = {
   first_name: 'Dana',
   vehicle_year: '2021',
   vehicle_make: 'Chevrolet',
@@ -144,6 +144,9 @@ const SAMPLE = {
   unsubscribe_url: '#unsubscribe',
   preferences_url: '#preferences',
 };
+/** A dealer file may override the sample recipient (brand/dealers/<id>.json, preview.sample) so the
+ *  client review shows one of their own makes at a price the rating API really returned. */
+const SAMPLE = { ...SAMPLE_DEFAULT, ...((D.preview && D.preview.sample) || {}) };
 
 /** Resolve offer tags always; recipient tags only when filling a preview. */
 function resolve(str, fill) {

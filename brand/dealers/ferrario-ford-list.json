@@ -164,5 +164,21 @@
     "fromNote": "DECIDED 11 Nov 2026 with Ryan: the drive-by list has no relationship with the dealership at all, so it does not send from the service drive's subdomain. ferrario.driveoneservice.com is a fresh per-dealer subdomain of the DriveOne Service root (verified Resend root mail.driveoneservice.com already exists there), created in Resend 11 Nov 2026 20:15 UTC and VERIFIED by 20:40 UTC, with DKIM, SPF (send.ferrario MX + TXT), the rsend CNAME and DMARC p=none on the root added to Vercel DNS the same evening. The From name says who is writing because this audience has no reason to recognise a bare 'Ferrario Ford Service'. A complaint spike here cannot touch ferrario.driveoneprogram.com's reputation, which is the point of the split.\n\nn8n's SEND_FROM for this workflow set must read `Ferrario Ford with DriveOne Service <service@ferrario.driveoneservice.com>`.",
     "smsFromNumber": null,
     "smsFromNumberNote": "NOT APPLICABLE. This bucket has no SMS consent and its deck carries no texts. Leave null."
+  },
+  "preview": {
+    "sampleNote": "Preview and client-review renders only. A real 2021 F-150 quote from this store's service drive list at the November rates; production emails read the recipient's own row.",
+    "sample": {
+      "first_name": "Dana",
+      "vehicle_year": "2021",
+      "vehicle_make": "Ford",
+      "vehicle_model": "F-150",
+      "vehicle_mileage": "70,000",
+      "monthly_payment": "$66.62",
+      "coverage_label": "72 more months, 100,000 more miles",
+      "down_payment": "$126.23",
+      "payment_term": "36",
+      "contract_price": "$2,524.56",
+      "last_ro_date": "October 28"
+    }
   }
 }

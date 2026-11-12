@@ -50,6 +50,31 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**12 Nov 2026, 16:40 UTC, FIRST SENDS CHECKED, TWO BUGS FIXED.** First three
+hourly slots sent 28 service drive, 28 recall, 31 drive-by; every send tracked, no
+send errors, all 02 runs green, 92 delivered, 1 click, 4 permanent bounces (1 per
+campaign plus one more drive-by). Two bugs surfaced in how those bounces were
+handled, both fixed in the generator and deployed:
+- **Tags did not decide the dealer.** Classify Event consulted `params.dealer`
+  (stamped `ferrario-ford` by the Resend door) before the send's tags, so bucket
+  bounces were suppressed under `ferrario-ford` with a `ferrario-ford:` key and the
+  recall/drive-by enrolments were never exited. Tags now win (03
+  `ZobQxDEJeJiUc0FJ` redeployed). Data repaired: 3 suppressions re-keyed under the
+  right dealer ids, 3 bucket rows + 1 service drive row exited `bounced`, 7
+  mis-keyed suppression rows removed.
+- **Advance State resurrected an exit.** A bounce processed by 03 while 02 was
+  still finishing (16:07:18 vs 16:07:20) was set back to `active`. Advance State
+  now keeps any non-active status (all three 02s redeployed).
+- **Bob Johnson's Resend webhook is still enabled** (`e74a03ea-…`, bounces and
+  complaints, account-wide) and writes Ferrario bounces into `vsc_suppression` as
+  `bob-johnson`. Disabling it from here was refused by the permission layer; Ryan
+  to disable it in the Resend dashboard, or re-enable only when Bob Johnson
+  relaunches with tagged sends. Its 4 wrong rows from today were deleted.
+- `npm run build` currently stops at bob-johnson (verify: "scorecard has no
+  recipient") before reaching the Ferrario files; build the Ferrario ids
+  individually until that file gets a `scorecardTo` again.
+
+
 **12 Nov 2026, 03:00 UTC, three fixes before the first sends.** (1) HEAVY DUTY IS NOT AN ERROR: nothing above the F-150 class is rated, by design (Ryan). `HEAVY_DUTY_SQL` in the generator excludes F-250+/Super Duty, RAM/Dodge 2500+, GM 2500/3500, E-350/E-450 and the big vans at intake for every dealer, the audience branch parks them at load (quote_attempts 3, error "heavy duty, not rated by design"), and the 29 already enrolled were exited with exit_reason ineligible_heavy_duty. Deployed to all three 01s. (2) THE OTHER PRICING FAILURES WERE THE BURST, not the vehicles: 05 fired 100 GETs at once and the quote endpoint sometimes answered 200 with links but no rating block; every one of those quotes rated fine one at a time. Get Quote now batches 2 per 1.1s (deployed to all three 05s) and the 28 affected rows were reset to re-price. The one genuine gap seen: a 2018 RAM 1500 whose quote carries no rating at all; raise with Stephen. (3) $0 DEDUCTIBLE IN EVERY EMAIL: the trust line under every Buy button now ends "$0 deductible at <shortName>" (build.mjs, all dealers) and each deck's Email 1 subhead ends on it; all 30 Ferrario templates republished. Dealer report for Ferrario: https://claude.ai/artifact/WCXBksKfHQsAa7cxuXqeeN (emailed to Ryan 03:05 UTC; includes a planning-range section, 1-2% warm / 0.5-1% cold).
 
 **MILEAGE CAP, 12 Nov 2026 01:05 UTC.** The rating returns no options above 150,000 miles, and the 15,000-a-year estimate put every 2014 to 2016 vehicle over it: 23 of the first 35 bucket pricing failures were the estimate, not the vehicle. The estimate is now capped at 145,000 (same bracket as the ceiling; checkout re-prices on the real odometer): generator Match Decodes caps on creation (deployed to both 01s), and the existing data was capped in place (1,600 vsc_audience rows, 266 customer_vehicles rows we created, 26 bucket enrolments reset for re-pricing). The dozen failures that remain are real: Super Duty / F-550 / RAM 3500 (no rates for heavy duty) and a scattering of ordinary vehicles at round mileages (2018 Cruze at 100k, 2017 RAV4 at 60k) that look like rating-table gaps worth raising with Stephen; 05 retries them five times then leaves them unpriced and unsent.

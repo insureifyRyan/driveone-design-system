@@ -58,6 +58,46 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 16 Nov 2026: $1,000 cap CONFIRMED. Site traffic may be collapsing.**
+
+**THE CAP IS SETTLED, not an inference.** The Nov run (1 to 11 Nov) totalled **exactly $1,000.00**
+with a $5.68 part-day stub on 11 Nov, then dark. The Oct run (1 to 9 Oct) totalled **exactly
+$1,000.00** with a $2.36 stub. The Sep blackout has the same shape. Three occurrences, two exact to
+the cent. **A prediction made 9 Nov (dark around 10 or 11 Nov) held.** The ceiling is $1,000 and
+buys about ten days at $100/day. Stop re-deriving it.
+
+The $152/day overspend is **resolved**: the Nov run averaged $99.43 against the $100 budget.
+
+**THE LEAD CONCERN NOW: site traffic is falling steeply, and the ads are not the cause.**
+
+| Sunday | Ads | PageViews | Quote starts |
+|---|---|---|---|
+| 4 Oct | running | 434 | 5 |
+| 11 Oct | off 2 days | 382 | 3 |
+| 18 Oct | off 9 days | 326 | 7 |
+| 25 Oct | off 16 days | 268 | 6 |
+| 1 Nov | running | 332 | 0 |
+| 8 Nov | running | 150 | 6 |
+| 15 Nov | off 3 days | **74** | 0 |
+
+**434 to 74 in six weeks.** Ad state does not explain it: 15 Nov was three days after the ads
+stopped and read 74, against 326 at nine days dark and 268 at sixteen. **That also rules out the
+swipe-click explanation** floated on 9 Nov, because bad paid clicks cannot reduce organic traffic.
+
+**Corroboration against an independent measure, which is how this was narrowed:** the DOD audience
+is still growing (+700 to 13,000), so **the pixel is not dead** and the numbers are not simply
+broken; but its growth is decelerating (+1,200, +1,000, +700), which fits genuinely fewer visitors.
+Two measures pointing the same way makes a real traffic decline the simplest reading. Hedge kept
+honest with Ryan: one ten-hour window, one day a week, one tool. **He was asked to check his own
+analytics or server logs for the last eight weeks, and told it outranks everything else.**
+
+**Two runs, $2,000, no quotes and no sales.** Quote starts have sat between 0 and 7 a Sunday in
+every condition, so $100/day does not move them. The only recorded conversion across both runs is
+one Messenger thread.
+
+**Placement split: stop reporting it in detail.** Seven identical measurements since August. One
+line if anything delivered; never a discovery.
+
 **State as of 9 Nov 2026: dilution finding WITHDRAWN. Read raw counts, not rates.**
 
 **Eight days of continuous delivery, 1 to 8 Nov: $798.69, averaging $99.84 against the $100
@@ -348,7 +388,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), 11,300 (2 Nov), **12,300 (9 Nov)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), 11,300 (2 Nov), 12,300 (9 Nov), **13,000 (16 Nov)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 

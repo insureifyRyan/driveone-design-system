@@ -74,3 +74,29 @@ the search can be wide and cheap.
 Workflow 01 for each bucket (recall `UC9l4GQBJXIRKkJI`, drive-by
 `JDB3DiprdnKBN8Op`) picks the new rows up on its next hourly sweep, decodes the
 VIN and creates the quote. No workflow change is needed for new rows.
+
+## Part two: the weekly service-visit load (added 18 Nov 2026)
+
+Captured also loads Ferrario's service visits into Elevate (the `quotes` table,
+one quote per visit, `service_advisor_id` set, not matched by VIN or email in
+`vsc_audience`). They are meant to do this weekly. Every sweep also checks for
+that load and makes sure the campaign acted on it:
+
+```sql
+-- dealership visits that arrived since the last sweep (camera-sourced quotes excluded)
+select count(*) new_visits, min(q.created_at), max(q.created_at),
+       count(*) filter (where exists (select 1 from vsc_enrollment e where e.quote_id = q.id)) enrolled
+from quotes q
+where q.partner_id = 'bd2de835-a881-467c-b78b-c5963ff9fbd5'
+  and q.created_at > now() - interval '8 days'
+  and not exists (select 1 from vsc_audience a join customer_vehicles cv on cv.id = q.customer_vehicle_id
+                  where a.dealer_id = 'ferrario-ford' and upper(a.vin) = upper(cv.vin));
+```
+
+If new visits exist and `enrolled` lags after the next hourly 01 run (`:23`), check
+in this order: the 01 cohort_limit (5000; raise it if `select count(*) from
+vsc_enrollment where dealer_id = 'ferrario-ford'` is within 200 of it), the
+eligibility filters (model year within 12, mileage present, heavy duty, junk
+addresses), and the 01 execution log. Report the count of new visits, how many
+enrolled, how many were ineligible and why, and the first send date dealt to them.
+Nothing else changes: the service drive deck, pace and caps already apply.

@@ -50,6 +50,17 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**18 Nov 2026, 21:10 UTC, SERVICE VISITS COME FROM CAPTURED WEEKLY.** Ryan: Captured
+pulls the dealership's service visits and loads them into Elevate weekly, and has not
+done so since the August import, so the service drive intake has enrolled nobody
+since 11 Nov (1,098 of 1,098, cohort full). Two changes so the next load is acted on
+without a human: 01 `AJYWBfCCu66B6x4n` cohort_limit raised 1098 → 5000 (dealer file
+`supabase.initial_cohort` to match; pace still comes from 90 a day and the daily cap),
+and the weekday "Captured inbox ingest (Ferrario)" task now also checks `quotes` for
+new non-camera visits and confirms 01 enrolled them (recipe part two in
+`references/captured-inbox-ingest.md`). Ryan is chasing Captured for the load.
+
+
 **18 Nov 2026, 20:45 UTC, DRIVE-BY PAUSED.** First-week numbers (12–18 Nov): service
 drive 322 people / 478 sends, 96% delivered, 6 unique clicks, 21 hard bounces, 2
 complaints (0.3%); recall 32 people / 63 sends, 1 bounce; drive-by 240 people / 240

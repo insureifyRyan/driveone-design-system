@@ -50,6 +50,25 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**18 Nov 2026, 20:45 UTC, DRIVE-BY PAUSED.** First-week numbers (12–18 Nov): service
+drive 322 people / 478 sends, 96% delivered, 6 unique clicks, 21 hard bounces, 2
+complaints (0.3%); recall 32 people / 63 sends, 1 bounce; drive-by 240 people / 240
+sends, 91% delivered, 0 clicks, 21 hard bounces (8.8%), 2 complaints (0.8%), 1
+unsubscribe. No purchases yet (day 7 of 60). The drive-by domain
+`ferrario.driveoneservice.com` is over Resend's 4% bounce / 0.08% complaint limits, so
+on Ryan's go the drive-by list was paused: 01 `JDB3DiprdnKBN8Op` Campaign Config
+cohort_limit set to 0 (quoting continues, enrolment stops), and the 373 enrolled rows
+still at step 0 were parked at `status = 'held_list_pause'` so 02 never claims them.
+The 216 people already emailed keep receiving their series. **To resume:** run the
+queued addresses (373 held + the unquoted audience) through an email verification
+service and exit the undeliverable ones; set `supabase.initial_cohort` back to a ramp
+step (start 5 a day: sending.newEnrolmentsPerDay 5) and redeploy 01's cohort_limit;
+release the held rows with `update vsc_enrollment set status='active' where
+dealer_id='ferrario-ford-list' and status='held_list_pause'`. The service drive domain
+is also over the complaint line at 0.3%; watch the Monday scorecard before raising
+its pace.
+
+
 **12 Nov 2026, 16:40 UTC, FIRST SENDS CHECKED, TWO BUGS FIXED.** First three
 hourly slots sent 28 service drive, 28 recall, 31 drive-by; every send tracked, no
 send errors, all 02 runs green, 92 delivered, 1 click, 4 permanent bounces (1 per

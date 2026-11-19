@@ -1,0 +1,588 @@
+<title>Warranty Solutions Pay Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Archivo+Narrow:wght@400;500;600;700&display=swap">
+<style>
+  /* Layout: a document-style sheet that mirrors the Vantage fee schedule, with a markup control and fee-tier rule table above it. */
+  :root {
+    --bg: #f4f6f9;
+    --sheet: #ffffff;
+    --fg: #1a2233;
+    --muted: #5b6678;
+    --rule: #cfd7e3;
+    --navy: #1f3a64;
+    --navy-fg: #ffffff;
+    --band: #dbe8f7;
+    --band-fg: #1a2233;
+    --row-alt: #eef4fb;
+    --accent: #1d6fd6;
+    --accent-soft: #e4efff;
+    --input-bg: #ffffff;
+    --warn: #b45309; --warn-soft: #fff4e0;
+    --good: #0f7a4d;
+    --paul: #0f7a4d;  --paul-soft: #e3f5ec;
+    --ken: #5a3fb8;   --ken-soft: #ece7fb;
+    --ryan: #8a4b00;  --ryan-soft: #fff1df;
+    --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-data: "Archivo Narrow", "Arial Narrow", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141c; --sheet: #161d28; --fg: #e8edf5; --muted: #9aa6b8; --rule: #2a3444;
+      --navy: #223f6d; --navy-fg: #ffffff; --band: #243550; --band-fg: #e8edf5; --row-alt: #1b2432;
+      --accent: #6aa9ff; --accent-soft: #1d2c44; --input-bg: #0f141c; --warn: #ffb866; --warn-soft: #3a2a12; --good: #5fd39b;
+      --paul: #5fd39b; --paul-soft: #12301f; --ken: #b9a6ff; --ken-soft: #261f45; --ryan: #ffb866; --ryan-soft: #3a2a12;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141c; --sheet: #161d28; --fg: #e8edf5; --muted: #9aa6b8; --rule: #2a3444;
+    --navy: #223f6d; --navy-fg: #ffffff; --band: #243550; --band-fg: #e8edf5; --row-alt: #1b2432;
+    --accent: #6aa9ff; --accent-soft: #1d2c44; --input-bg: #0f141c; --warn: #ffb866; --warn-soft: #3a2a12; --good: #5fd39b;
+    --paul: #5fd39b; --paul-soft: #12301f; --ken: #b9a6ff; --ken-soft: #261f45; --ryan: #ffb866; --ryan-soft: #3a2a12;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.45; }
+  .wrap {
+    max-width: 1360px; margin: 0 auto;
+    padding-block: 20px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; gap: 18px;
+  }
+
+  .masthead {
+    background: linear-gradient(100deg, #0b1626 0%, #163055 55%, #0b1626 100%);
+    color: #fff; border-radius: 6px; padding: 26px 24px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand .v { font-weight: 700; font-size: 30px; letter-spacing: 0.06em; }
+  .brand .v span { color: #7fb4ff; }
+  .brand small { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 10px; line-height: 1.3; }
+  .masthead .meta { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+
+  h1 { font-size: 20px; font-weight: 700; text-align: center; margin: 0; text-wrap: balance; }
+  h1 + p { text-align: center; color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+
+  .rules { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; display: grid; gap: 12px; }
+  .rules h2 { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 600; }
+  .markup { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); border-radius: 6px; }
+  .markup label { font-weight: 600; }
+  .markup .hint { color: var(--muted); font-size: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; background: var(--input-bg); }
+  .seg label { padding: 6px 12px; font-size: 12.5px; font-weight: 500; cursor: pointer; color: var(--muted); user-select: none; }
+  .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .seg input:checked + label { background: var(--accent); color: #fff; }
+  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
+  td.dc { font-weight: 600; }
+  table.sched tbody td.dc { color: var(--warn); }
+  .num { width: 84px; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 5px; background: var(--input-bg); color: var(--fg); font: 600 14px var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+  .num:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tierwrap { overflow-x: auto; }
+  table.tiers { border-collapse: collapse; font-family: var(--font-data); font-size: 14px; min-width: 760px; width: 100%; }
+  table.tiers th { background: var(--band); color: var(--band-fg); font: 600 12px var(--font-ui); padding: 6px 8px; border: 1px solid var(--rule); text-align: center; }
+  table.tiers th.paul { color: var(--paul); } table.tiers th.ken { color: var(--ken); } table.tiers th.ryan { color: var(--ryan); }
+  table.tiers th .role, table.sched thead th .role { display: block; font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  table.tiers td { border: 1px solid var(--rule); padding: 4px 8px; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.tiers td.feecol { font-weight: 700; }
+  table.tiers td.wsfee { font-weight: 700; color: var(--accent); }
+  table.tiers td.tot { font-weight: 700; }
+  table.tiers td.was { color: var(--muted); font-size: 12.5px; }
+  table.tiers tr.missing td { background: var(--warn-soft); }
+  table.tiers tr.missing td.feecol::after { content: " · needs rule"; font: 500 11px var(--font-ui); color: var(--warn); }
+  table.tiers .num { width: 68px; padding: 4px 6px; border-radius: 4px; }
+  .rules .note { color: var(--muted); font-size: 12px; margin: 0; }
+  .rules .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+  button { font: 500 12px var(--font-ui); padding: 6px 12px; border-radius: 5px; border: 1px solid var(--rule); background: var(--input-bg); color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; display: grid; gap: 22px; }
+  .tablewrap { overflow-x: auto; }
+  table.sched { width: 100%; border-collapse: collapse; font-family: var(--font-data); font-size: 14px; min-width: 1200px; }
+  caption { caption-side: top; background: var(--navy); color: var(--navy-fg); font: 700 15px var(--font-ui); padding: 7px 10px; text-align: center; }
+  table.sched thead th { background: var(--band); color: var(--band-fg); font: 600 12.5px var(--font-ui); padding: 7px 8px; text-align: center; border: 1px solid var(--rule); }
+  table.sched thead th.paul { color: var(--paul); } table.sched thead th.ken { color: var(--ken); } table.sched thead th.ryan { color: var(--ryan); }
+  table.sched thead th.wsfee { color: var(--accent); }
+  table.sched tbody td { border: 1px solid var(--rule); padding: 6px 8px; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  table.sched tbody td.prog { text-align: left; font-weight: 700; }
+  table.sched tbody tr.sub td.prog { padding-left: 32px; }
+  table.sched tbody tr.top td.prog { padding-left: 8px; }
+  table.sched tbody tr.group td { font-weight: 700; padding-top: 9px; }
+  table.sched tbody tr.sub:nth-of-type(odd) td { background: var(--row-alt); }
+  td.fee { color: var(--muted); }
+  td.wsfee { font-weight: 700; color: var(--accent); }
+  td.pay { padding: 3px 6px; }
+  td.pay.paul { background: color-mix(in srgb, var(--paul-soft) 55%, var(--sheet)); }
+  td.pay.ken  { background: color-mix(in srgb, var(--ken-soft) 55%, var(--sheet)); }
+  td.pay.ryan { background: color-mix(in srgb, var(--ryan-soft) 55%, var(--sheet)); }
+  td.total { font-weight: 700; }
+  td.pct { font-weight: 700; }
+  table.sched thead th.net { color: var(--good); }
+  table.sched tbody td.net { font-weight: 700; color: var(--good); background: color-mix(in srgb, var(--paul-soft) 35%, var(--sheet)) !important; }
+  td.pct.hi { color: var(--warn); }
+  tr.nomatch td.total, tr.nomatch td.pct { color: var(--warn); }
+  .cell { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+  .cell input { width: 66px; padding: 4px 6px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--fg); font: 600 14px var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+  .cell input::placeholder { color: var(--fg); opacity: 0.6; font-weight: 500; }
+  .cell input:hover { border-color: var(--rule); background: var(--input-bg); }
+  .cell input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; background: var(--input-bg); border-color: transparent; }
+  .cell input.override { border-color: var(--accent); background: var(--input-bg); }
+  .cell input.unset::placeholder { color: var(--warn); opacity: 1; }
+  table.sched tfoot td { border: 1px solid var(--rule); padding: 7px 8px; text-align: center; font-weight: 700; background: var(--band); color: var(--band-fg); font-variant-numeric: tabular-nums; }
+  table.sched tfoot td.prog { text-align: right; font: 600 12px var(--font-ui); }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+  .stat { border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; }
+  .stat .k { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .stat .v { font: 700 20px var(--font-data); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .stat .s { font-size: 11px; color: var(--muted); }
+  .stat .s b { color: var(--good); font-weight: 600; }
+  .stat.hl { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); }
+
+  .footer { text-align: center; color: var(--muted); font-size: 11.5px; }
+  .footer a { color: var(--accent); }
+
+  @media (max-width: 520px) {
+    .masthead { padding: 18px 16px; }
+    .brand .v { font-size: 24px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cell input, button { transition: border-color 120ms, background 120ms; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="brand">
+      <div class="v"><span>V</span>ANTAGE</div>
+      <small>Administration<br>Services, LP</small>
+    </div>
+    <div class="meta">Marketing Fee Schedule · Warranty Solutions · 11/2026</div>
+  </header>
+
+  <div>
+    <h1>Warranty Solutions Pay Plan</h1>
+    <p id="intro">Each product's WS fee is the Vantage marketing fee plus a standard markup. Paul, Ken, and Ryan are paid by fee tier, and commission % is measured against the WS fee.</p>
+  </div>
+
+  <section class="rules" aria-label="Payout rules by fee tier">
+    <h2>How commissions are funded</h2>
+    <div class="markup">
+      <span class="seg" role="radiogroup" aria-label="Commission funding">
+        <input type="radio" name="mode" id="modeMarkup" value="markup" checked><label for="modeMarkup">Markup on the WS fee</label>
+        <input type="radio" name="mode" id="modeCost" value="cost"><label for="modeCost">Added to product cost</label>
+      </span>
+      <span class="hint" id="modeHint"></span>
+    </div>
+    <div class="markup" id="markupBox">
+      <label for="markup">Standard markup on every product</label>
+      <span style="display:inline-flex;align-items:center;gap:4px">$<input class="num" type="number" id="markup" min="0" step="1" value="5" aria-label="Markup added to every Vantage fee"></span>
+      <span class="hint">Set to 0 to see the plan on the original Vantage fees.</span>
+    </div>
+
+    <h2>Payout rule by fee tier</h2>
+    <div class="tierwrap">
+      <table class="tiers" id="tierTable">
+        <thead><tr>
+          <th>Vantage fee</th><th data-h="ws">WS fee<span class="role">after markup</span></th><th data-h="dc">Dealer cost +<span class="role">&nbsp;</span></th>
+          <th class="paul">Paul<span class="role">Sales Rep</span></th><th class="ken">Ken<span class="role">Sales Rep</span></th><th class="ryan">Ryan<span class="role">&nbsp;</span></th>
+          <th>Total paid<span class="role">&nbsp;</span></th><th data-h="pct">Commission %<span class="role">of WS fee</span></th><th data-h="was">Was<span class="role">at $0 markup</span></th><th data-h="net">Net to WS<span class="role">after payouts</span></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <p class="note">Tiers are keyed to the Vantage fee so a product keeps its rule when the markup changes. Type a dollar amount into any Paul, Ken, or Ryan cell in the schedules below to override one program; overridden cells show a blue outline.</p>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" id="resetBtn">Clear program overrides</button>
+        <button type="button" id="resetTiersBtn">Reset tiers to plan</button>
+      </span>
+    </div>
+  </section>
+
+  <section class="summary" aria-label="Totals across all programs" id="summary">
+    <div class="stat hl"><div class="k" id="statPctK">Overall commission</div><div class="v" id="statPct">0%</div><div class="s" id="statWas"></div></div>
+    <div class="stat"><div class="k">Total WS fee</div><div class="v" id="statFee">$0.00</div><div class="s" id="statFeeWas"></div></div>
+    <div class="stat"><div class="k">Added to dealer cost</div><div class="v" id="statDealer">$0.00</div><div class="s" id="statDealerOther"></div></div>
+    <div class="stat"><div class="k">Total paid out</div><div class="v" id="statPaid">$0.00</div><div class="s" id="statSplit"></div></div>
+    <div class="stat"><div class="k">Net to WS</div><div class="v" id="statNet">$0.00</div><div class="s" id="statNetOther"></div></div>
+  </section>
+
+  <section class="sheet" id="sheet" aria-label="Fee schedules"></section>
+
+  <p class="footer">8834 N. Capital of Texas Hwy. · Suite 250 · Austin, Texas · 78759 · 855-955-ROAD (7623) · <a href="https://www.vtg-services.com" target="_blank" rel="noopener">www.vtg-services.com</a> · WS1126</p>
+</div>
+
+<script>
+(function () {
+  const PEOPLE = [
+    { key: "paul", name: "Paul", role: "Sales Rep" },
+    { key: "ken",  name: "Ken",  role: "Sales Rep" },
+    { key: "ryan", name: "Ryan", role: "" },
+  ];
+
+  // Pay plan tiers, keyed by the Vantage (base) fee. With a $5 markup, base $15 becomes the $20 bucket.
+  // null = no rule given yet for that fee.
+  const PLAN_TIERS = {
+    5:  { paul: 0, ken: 0, ryan: 0 },
+    8:  { paul: 1, ken: 1, ryan: 1 },
+    10: { paul: 1, ken: 1, ryan: 1 },
+    15: { paul: 3, ken: 3, ryan: 3 },
+    25: { paul: 5, ken: 5, ryan: 5 },
+    30: { paul: 5, ken: 5, ryan: 5 },
+    35: { paul: 7, ken: 7, ryan: 7 },
+  };
+  const PLAN_MARKUP = 5;
+
+  // Source: Vantage Administration Services, Marketing Fee Schedule prepared for Warranty Solutions, 11/2026 (WS1126).
+  const SCHEDULES = [
+    {
+      id: "bundle", title: "Bundle Marketing Fee Schedule", hasClass: true,
+      groups: [
+        { name: "SupremeAdvantage MAX", rows: [
+          { id: "sam-tw", program: "Supreme Tire & Wheel", term: "2 - 7 Year", cls: "All Classes", fee: 15 },
+          { id: "sam-care", program: "SupremeCare MAX", term: "2 - 7 Year", cls: "All Classes", fee: 30 },
+          { id: "sam-adv", program: "SupremeAdvantage MAX", term: "2 - 7 Year", cls: "All Classes", fee: 35 },
+        ]},
+        { name: "SupremeAdvantage", rows: [
+          { id: "sa-tw", program: "Supreme Tire & Wheel", term: "2 - 7 Year", cls: "All Classes", fee: 15 },
+          { id: "sa-care", program: "SupremeCare", term: "2 - 7 Year", cls: "All Classes", fee: 30 },
+          { id: "sa-adv", program: "SupremeAdvantage", term: "2 - 7 Year", cls: "All Classes", fee: 30 },
+        ]},
+        { name: "Total PreferredPlus Bundle", rows: [
+          { id: "tpp-tw", program: "Tire & Wheel", term: "2 - 7 Year", cls: "All Classes", fee: 15 },
+          { id: "tpp-sup", program: "Superior", term: "2 - 7 Year", cls: "All Classes", fee: 30 },
+          { id: "tpp-ult", program: "Ultimate", term: "2 - 7 Year", cls: "All Classes", fee: 35 },
+        ]},
+        { name: "PreferredPlus Protection Bundle", rows: [
+          { id: "ppp-tw", program: "Tire & Wheel", term: "2 - 7 Year", cls: "All Classes", fee: 15 },
+          { id: "ppp-sup", program: "Superior", term: "2 - 7 Year", cls: "All Classes", fee: 25 },
+          { id: "ppp-ult", program: "Ultimate", term: "2 - 7 Year", cls: "All Classes", fee: 30 },
+        ]},
+        { name: "Preferred Care Advantage (Front-load Program)", rows: [
+          { id: "pca-6m", program: "6 Month term", term: "6 Months", cls: "All Classes", fee: 5 },
+          { id: "pca-27", program: "2 - 7 Year term", term: "2 - 7 Year", cls: "All Classes", fee: 15 },
+        ]},
+      ]
+    },
+    {
+      id: "lease", title: "Lease Wear & Tear Products Marketing Fee Schedule", hasClass: true,
+      groups: [
+        { name: null, rows: [
+          { id: "lease-plc", program: "Preferred LeaseCare Bundle", term: "All Terms", cls: "All Classes", fee: 25 },
+          { id: "lease-lv", program: "LeaseVantage", term: "All Terms", cls: "All Classes", fee: 25 },
+          { id: "lease-lvm", program: "LeaseVantage MAX", term: "All Terms", cls: "All Classes", fee: 25 },
+        ]},
+      ]
+    },
+    {
+      id: "standalone", title: "Stand-alone Marketing Fee Schedule", hasClass: false,
+      groups: [
+        { name: null, rows: [
+          { id: "st-pptw", program: "PreferredPlus Tire & Wheel", term: "2 - 7 Year", cls: "", fee: 15 },
+          { id: "st-pdr", program: "Preferred Paintless Dent Repair", term: "2 - 7 Year", cls: "", fee: 8 },
+          { id: "st-ier", program: "Preferred Interior/Exterior Repair", term: "2 - 7 Year", cls: "", fee: 8 },
+          { id: "st-ws", program: "Windshield", term: "2 - 7 Year", cls: "", fee: 8 },
+          { id: "st-wsrr", program: "Windshield Repair/Replace", term: "2 - 7 Year", cls: "", fee: 8 },
+          { id: "st-evcp", program: "EV Elite CarePlus", term: "2 - 7 Year", cls: "", fee: 10 },
+          { id: "st-evlc", program: "EV Elite LeaseCare", term: "2 - 7 Year", cls: "", fee: 10 },
+          { id: "st-htv", program: "High Tech VSC", term: "All Terms", cls: "", fee: 15 },
+          { id: "st-ssl", program: "Supreme Screen and Lens", term: "All Terms", cls: "", fee: 15 },
+        ]},
+      ]
+    }
+  ];
+
+  const STORE_KEY = "ws-pay-plan-v7";
+  const state = { mode: "markup", markup: PLAN_MARKUP, tiers: clone(PLAN_TIERS), overrides: {} };
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s && typeof s.markup === "number") state.markup = s.markup;
+      if (s && (s.mode === "markup" || s.mode === "cost")) state.mode = s.mode;
+      if (s && s.tiers) Object.keys(PLAN_TIERS).forEach(f => { if (f in s.tiers) state.tiers[f] = s.tiers[f]; });
+      if (s && s.overrides) state.overrides = s.overrides;
+    } catch (e) { /* storage unavailable; run with plan defaults */ }
+  }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+  const money = n => "$" + (Math.round(n * 100) / 100).toFixed(2);
+  const pctOf = (part, whole) => whole > 0 ? (Math.round(part / whole * 1000) / 10) + "%" : "";
+  const markupVal = () => Number(state.markup) || 0;
+  const isCost = () => state.mode === "cost";
+  const wsFee = base => isCost() ? base : base + markupVal();
+
+  function setLabels() {
+    const cost = isCost();
+    const L = {
+      ws: cost ? ["WS fee", "stays intact"] : ["WS fee", "after markup"],
+      dc: cost ? ["Dealer cost +", "commission load"] : ["Dealer cost +", "standard markup"],
+      pct: cost ? ["Load %", "of WS fee"] : ["Commission %", "of WS fee"],
+      was: cost ? ["Net if from fee", "no markup"] : ["Was", "at $0 markup"],
+      net: cost ? ["Net to WS", "full fee kept"] : ["Net to WS", "fee less payouts"],
+      feeMain: cost ? ["Fee", "WS fee, intact"] : ["Fee", "new WS fee"],
+      vfee: cost ? ["Vantage fee", "&nbsp;"] : ["Vantage fee", "before markup"],
+    };
+    document.querySelectorAll("[data-h]").forEach(th => { const l = L[th.dataset.h]; if (l) th.innerHTML = l[0] + '<span class="role">' + l[1] + '</span>'; });
+    document.getElementById("markupBox").hidden = cost;
+    document.getElementById("modeHint").textContent = cost
+      ? "Commissions are added on top of each product's cost. The WS fee is untouched and WS nets the full Vantage fee."
+      : "Every product carries a standard markup, and commissions come out of the WS fee.";
+    document.getElementById("intro").textContent = cost
+      ? "Each product keeps its Vantage marketing fee as the WS fee. Paul, Ken, and Ryan are paid by fee tier, and their commission is added to the product's cost instead of taken from the fee."
+      : "Each product's WS fee is the Vantage marketing fee plus a standard markup. Paul, Ken, and Ryan are paid by fee tier, and commission % is measured against the WS fee.";
+    document.getElementById("statPctK").textContent = cost ? "Commission from WS fee" : "Overall commission";
+  }
+
+  function payFor(who, row) {
+    const o = state.overrides[row.id];
+    if (o && o[who] !== undefined && o[who] !== null && o[who] !== "") return { amount: Number(o[who]) || 0, override: true, set: true };
+    const t = state.tiers[row.fee] || null;
+    if (t && t[who] !== undefined && t[who] !== null) return { amount: Number(t[who]) || 0, override: false, set: true };
+    return { amount: 0, override: false, set: false };
+  }
+
+  function allRows() {
+    const out = [];
+    SCHEDULES.forEach(s => s.groups.forEach(g => g.rows.forEach(r => out.push(r))));
+    return out;
+  }
+
+  function buildTiers() {
+    const tbody = document.querySelector("#tierTable tbody");
+    const fees = Object.keys(state.tiers).map(Number).sort((a, b) => a - b);
+    tbody.innerHTML = fees.map(fee =>
+      '<tr data-fee="' + fee + '">' +
+        '<td class="feecol">' + money(fee) + '</td><td class="wsfee" data-tt="ws"></td><td class="dc" data-tt="dc"></td>' +
+        PEOPLE.map(p => '<td><input class="num" type="number" min="0" step="0.5" id="tier-' + p.key + '-' + fee + '" data-tier="' + fee + '" data-who="' + p.key + '" aria-label="' + p.name + ' payout at Vantage fee ' + money(fee) + '"></td>').join("") +
+        '<td class="tot" data-tt="tot"></td><td class="tot" data-tt="pct"></td><td class="was" data-tt="was"></td><td data-tt="net"></td>' +
+      '</tr>').join("");
+  }
+
+  function renderTiers() {
+    document.querySelectorAll("#tierTable tbody tr").forEach(tr => {
+      const fee = Number(tr.dataset.fee);
+      const ws = wsFee(fee);
+      const t = state.tiers[fee];
+      let total = 0, complete = true;
+      PEOPLE.forEach(p => {
+        const inp = document.getElementById("tier-" + p.key + "-" + fee);
+        const v = t && t[p.key] !== undefined && t[p.key] !== null ? t[p.key] : null;
+        if (document.activeElement !== inp) inp.value = v === null ? "" : v;
+        if (v === null) complete = false; else total += Number(v) || 0;
+      });
+      const cost = isCost();
+      tr.classList.toggle("missing", !complete);
+      tr.querySelector('[data-tt="ws"]').textContent = money(ws);
+      tr.querySelector('[data-tt="dc"]').textContent = complete ? money(cost ? total : markupVal()) : "—";
+      tr.querySelector('[data-tt="tot"]').textContent = complete ? money(total) : "—";
+      tr.querySelector('[data-tt="pct"]').textContent = complete ? pctOf(total, ws) : "—";
+      tr.querySelector('[data-tt="was"]').textContent = complete ? (cost ? money(fee - total) : pctOf(total, fee)) : "—";
+      tr.querySelector('[data-tt="net"]').textContent = complete ? money(cost ? ws : ws - total) : "—";
+    });
+  }
+
+  function payCell(p, r) {
+    return '<td class="pay ' + p.key + '"><span class="cell">' +
+      '<input type="text" inputmode="decimal" id="' + p.key + '-' + r.id + '" data-who="' + p.key + '" data-id="' + r.id + '" aria-label="' + p.name + ' payout for ' + r.program + '">' +
+      '</span></td>';
+  }
+
+  function build() {
+    const sheet = document.getElementById("sheet");
+    sheet.innerHTML = "";
+    const empties = '<td></td>'.repeat(5 + PEOPLE.length + 3);
+    SCHEDULES.forEach(s => {
+      const wrap = document.createElement("div");
+      wrap.className = "tablewrap";
+      const t = document.createElement("table");
+      t.className = "sched";
+      const cap = document.createElement("caption");
+      cap.textContent = s.title;
+      t.appendChild(cap);
+
+      const thead = document.createElement("thead");
+      thead.innerHTML =
+        '<tr><th class="prog">Program</th><th>Term</th>' + (s.hasClass ? '<th>Class</th>' : '<th></th>') +
+        '<th class="wsfee" data-h="feeMain">Fee<span class="role">new WS fee</span></th><th data-h="vfee">Vantage fee<span class="role">before markup</span></th><th data-h="dc">Dealer cost +<span class="role">&nbsp;</span></th>' +
+        PEOPLE.map(p => '<th class="' + p.key + '">' + p.name + (p.role ? '<span class="role">' + p.role + '</span>' : '<span class="role">&nbsp;</span>') + '</th>').join("") +
+        '<th>Total paid<span class="role">&nbsp;</span></th><th data-h="pct">Commission %<span class="role">of WS fee</span></th><th class="net" data-h="net">Net to WS<span class="role">fee less payouts</span></th></tr>';
+      t.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      s.groups.forEach(g => {
+        if (g.name) {
+          const tr = document.createElement("tr");
+          tr.className = "group";
+          tr.innerHTML = '<td class="prog">' + g.name + '</td>' + empties;
+          tbody.appendChild(tr);
+        }
+        g.rows.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.className = g.name ? "sub" : "sub top";
+          tr.dataset.id = r.id;
+          tr.innerHTML =
+            '<td class="prog">' + r.program + '</td>' +
+            '<td>' + r.term + '</td>' +
+            '<td>' + (r.cls || "") + '</td>' +
+            '<td class="wsfee" data-row="ws"></td>' +
+            '<td class="fee">' + money(r.fee) + '</td>' +
+            '<td class="dc" data-row="dc"></td>' +
+            PEOPLE.map(p => payCell(p, r)).join("") +
+            '<td class="total" data-row="tot"></td><td class="pct" data-row="pct"></td><td class="net" data-row="net"></td>';
+          tbody.appendChild(tr);
+        });
+      });
+      t.appendChild(tbody);
+
+      const tfoot = document.createElement("tfoot");
+      tfoot.innerHTML = '<tr><td class="prog" colspan="3">Schedule totals</td><td data-tot="ws"></td><td data-tot="fee"></td><td data-tot="dc"></td>' +
+        PEOPLE.map(p => '<td data-tot="' + p.key + '"></td>').join("") + '<td data-tot="tot"></td><td data-tot="pct"></td><td data-tot="net"></td></tr>';
+      tfoot.dataset.sched = s.id;
+      t.appendChild(tfoot);
+
+      wrap.appendChild(t);
+      sheet.appendChild(wrap);
+    });
+  }
+
+  function render() {
+    setLabels();
+    renderTiers();
+    document.getElementById("markup").value = state.markup;
+    const cost = isCost();
+    const totals = { fee: 0, ws: 0, tot: 0, dc: 0, missing: 0, feeSet: 0, wsSet: 0, nSet: 0 };
+    PEOPLE.forEach(p => totals[p.key] = 0);
+    SCHEDULES.forEach(s => {
+      const per = { fee: 0, ws: 0, tot: 0, dc: 0, wsSet: 0, feeSet: 0 };
+      PEOPLE.forEach(p => per[p.key] = 0);
+      s.groups.forEach(g => g.rows.forEach(r => {
+        const ws = wsFee(r.fee);
+        let rowTotal = 0, rowSet = true;
+        PEOPLE.forEach(p => {
+          const who = p.key;
+          const pay = payFor(who, r);
+          const inp = document.getElementById(who + "-" + r.id);
+          if (pay.override) {
+            inp.value = (Math.round(pay.amount * 100) / 100).toFixed(2);
+            inp.placeholder = "";
+            inp.classList.add("override"); inp.classList.remove("unset");
+          } else {
+            if (document.activeElement !== inp) inp.value = "";
+            inp.placeholder = pay.set ? money(pay.amount) : "set";
+            inp.classList.remove("override");
+            inp.classList.toggle("unset", !pay.set);
+          }
+          if (!pay.set) rowSet = false;
+          rowTotal += pay.amount;
+          per[who] += pay.amount;
+          totals[who] += pay.amount;
+        });
+        const tr = document.querySelector('tr[data-id="' + r.id + '"]');
+        tr.classList.toggle("nomatch", !rowSet);
+        tr.querySelector('[data-row="ws"]').textContent = money(ws);
+        tr.querySelector('[data-row="tot"]').textContent = rowSet ? money(rowTotal) : "needs rule";
+        const dc = cost ? rowTotal : markupVal();
+        const net = cost ? ws : ws - rowTotal;
+        tr.querySelector('[data-row="dc"]').textContent = rowSet ? money(dc) : "—";
+        const pctCell = tr.querySelector('[data-row="pct"]');
+        pctCell.textContent = rowSet ? pctOf(rowTotal, ws) : "—";
+        pctCell.classList.toggle("hi", rowSet && rowTotal / ws > 0.5);
+        tr.querySelector('[data-row="net"]').textContent = rowSet ? money(net) : "—";
+        if (!rowSet) totals.missing++; else { totals.feeSet += r.fee; totals.wsSet += ws; totals.nSet++; per.wsSet += ws; per.feeSet += r.fee; per.dc += dc; totals.dc += dc; }
+        per.fee += r.fee; per.ws += ws; per.tot += rowTotal;
+        totals.fee += r.fee; totals.ws += ws; totals.tot += rowTotal;
+      }));
+      const foot = document.querySelector('tfoot[data-sched="' + s.id + '"]');
+      foot.querySelector('[data-tot="fee"]').textContent = money(per.fee);
+      foot.querySelector('[data-tot="ws"]').textContent = money(per.ws);
+      foot.querySelector('[data-tot="dc"]').textContent = money(per.dc);
+      PEOPLE.forEach(p => { foot.querySelector('[data-tot="' + p.key + '"]').textContent = money(per[p.key]); });
+      foot.querySelector('[data-tot="tot"]').textContent = money(per.tot);
+      foot.querySelector('[data-tot="pct"]').textContent = pctOf(per.tot, per.wsSet);
+      foot.querySelector('[data-tot="net"]').textContent = money(cost ? per.wsSet : per.wsSet - per.tot);
+    });
+
+    // The other funding mode, for side-by-side comparison in the summary tiles.
+    const mk = markupVal();
+    const netHere = cost ? totals.wsSet : totals.wsSet - totals.tot;
+    const netOther = cost ? (totals.feeSet + mk * totals.nSet) - totals.tot : totals.feeSet;
+    const dcOther = cost ? mk * totals.nSet : totals.tot;
+    const excl = totals.missing ? " · programs without a rule excluded" : "";
+
+    document.getElementById("statPct").textContent = cost ? "0%" : pctOf(totals.tot, totals.wsSet);
+    document.getElementById("statWas").innerHTML = cost
+      ? "nothing comes out of the fee · the load equals <b>" + pctOf(totals.tot, totals.feeSet) + "</b> of it" + excl
+      : "was <b>" + pctOf(totals.tot, totals.feeSet) + "</b> on the original Vantage fees" + excl;
+    document.getElementById("statFee").textContent = money(totals.ws);
+    document.getElementById("statFeeWas").textContent = cost ? "one of each program · unchanged from Vantage" : "one of each program · " + money(totals.fee) + " before markup";
+    document.getElementById("statDealer").textContent = money(totals.dc);
+    document.getElementById("statDealerOther").textContent = cost
+      ? "would be " + money(dcOther) + " with the " + money(mk) + " markup"
+      : "would be " + money(dcOther) + " if added to product cost";
+    document.getElementById("statPaid").textContent = money(totals.tot);
+    document.getElementById("statSplit").textContent = PEOPLE.map(p => p.name + " " + money(totals[p.key])).join(" · ");
+    document.getElementById("statNet").textContent = money(netHere);
+    document.getElementById("statNetOther").textContent = (cost
+      ? "would be " + money(netOther) + " with the " + money(mk) + " markup"
+      : "would be " + money(netOther) + " if added to product cost") + (totals.missing ? " · " + totals.missing + " program" + (totals.missing > 1 ? "s" : "") + " still need a rule" : "");
+  }
+
+  function wire() {
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+      radio.addEventListener("change", () => { state.mode = radio.value; save(); render(); });
+    });
+    document.getElementById("markup").addEventListener("input", e => {
+      state.markup = e.target.value === "" ? 0 : Number(e.target.value);
+      save(); render();
+    });
+
+    document.getElementById("tierTable").addEventListener("input", e => {
+      const inp = e.target;
+      if (!inp.dataset || !inp.dataset.tier) return;
+      const fee = inp.dataset.tier, who = inp.dataset.who;
+      state.tiers[fee] = state.tiers[fee] || {};
+      state.tiers[fee][who] = inp.value === "" ? null : Number(inp.value);
+      save(); render();
+    });
+
+    const sheet = document.getElementById("sheet");
+    sheet.addEventListener("input", e => {
+      const inp = e.target;
+      if (!inp.dataset || !inp.dataset.who) return;
+      const who = inp.dataset.who, id = inp.dataset.id;
+      const raw = inp.value.replace(/[^0-9.]/g, "");
+      if (raw === "") {
+        if (state.overrides[id]) { delete state.overrides[id][who]; if (!Object.keys(state.overrides[id]).length) delete state.overrides[id]; }
+      } else {
+        state.overrides[id] = state.overrides[id] || {};
+        state.overrides[id][who] = Number(raw);
+      }
+      save();
+      const keep = inp.value;
+      render();
+      inp.value = keep;
+      inp.classList.toggle("override", raw !== "");
+    });
+    sheet.addEventListener("change", () => render());
+
+    document.getElementById("resetBtn").addEventListener("click", () => { state.overrides = {}; save(); render(); });
+    document.getElementById("resetTiersBtn").addEventListener("click", () => { state.tiers = clone(PLAN_TIERS); state.markup = PLAN_MARKUP; save(); render(); });
+  }
+
+  load();
+  buildTiers();
+  build();
+  wire();
+  document.getElementById(isCost() ? "modeCost" : "modeMarkup").checked = true;
+  render();
+})();
+</script>

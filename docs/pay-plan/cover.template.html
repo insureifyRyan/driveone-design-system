@@ -1,0 +1,64 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+  @page { size: Letter landscape; margin: 0.5in; }
+  body { font-family: Inter, "Segoe UI", Arial, sans-serif; color: #1a2233; margin: 0; font-size: 13px; }
+  .mast { background: linear-gradient(100deg,#0b1626 0%,#163055 55%,#0b1626 100%); color:#fff; border-radius:6px; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .v { font-weight:700; font-size:28px; letter-spacing:.06em; } .v span { color:#7fb4ff; }
+  .meta { font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.85; text-align:right; }
+  h1 { font-size:22px; margin:22px 0 4px; } .sub { color:#5b6678; margin:0 0 18px; }
+  .cols { display:grid; grid-template-columns: 1.1fr 1fr; gap: 28px; }
+  h2 { font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#5b6678; margin:0 0 8px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th { background:#dbe8f7; font-size:11.5px; padding:6px 8px; border:1px solid #cfd7e3; }
+  td { padding:6px 8px; border:1px solid #cfd7e3; text-align:center; font-variant-numeric: tabular-nums; }
+  td:first-child, th:first-child { text-align:left; font-weight:600; }
+  .a { color:#1d6fd6; font-weight:700 } .b { color:#0f7a4d; font-weight:700 }
+  ul { margin: 8px 0 0; padding-left: 18px; } li { margin-bottom: 6px; }
+  .sig { margin-top: 26px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .sig div { border-top:1px solid #1a2233; padding-top:6px; font-size:11px; color:#5b6678; }
+  .foot { margin-top: 18px; font-size: 10.5px; color:#5b6678; text-align:center; }
+</style></head><body>
+<div class="mast"><div><span class="v"><span>V</span>ANTAGE</span> <span style="font-size:11px;letter-spacing:.12em;opacity:.8;margin-left:8px">ADMINISTRATION SERVICES, LP</span></div><div class="meta">Warranty Solutions<br>Sales Pay Plan · For approval · 11/19/2026</div></div>
+<h1>Warranty Solutions Pay Plan</h1>
+<p class="sub">Paul and Ken (Sales Reps) and Ryan are paid a flat amount per contract by product tier, based on the Vantage marketing fee schedule WS1126 (11/2026). Two ways to fund it are shown; the detail pages follow.</p>
+<div class="cols">
+  <div>
+    <h2>Payout per contract by tier</h2>
+    <table>
+      <tr><th>Vantage fee</th><th>Paul</th><th>Ken</th><th>Ryan</th><th>Total paid</th><th>A: WS fee +{{MARKUP}}</th><th>A: Net to WS</th><th>B: Added to cost</th><th>B: Net to WS</th></tr>
+{{TIER_ROWS}}
+    </table>
+    <h2 style="margin-top:16px">Totals, one of each of the 26 programs</h2>
+    <table>
+      <tr><th></th><th>Scenario A<br>Markup on WS fee (+{{MARKUP}})</th><th>Scenario B<br>Commission added to product cost</th></tr>
+      <tr><td>Total WS fee</td><td>{{A_FEE}}</td><td>{{B_FEE}}</td></tr>
+      <tr><td>Added to dealer cost</td><td>{{A_DEALER}}</td><td>{{B_DEALER}}</td></tr>
+      <tr><td>Paid to Paul, Ken, Ryan</td><td>{{A_PAID}}</td><td>{{B_PAID}}</td></tr>
+      <tr><td>Net to Warranty Solutions</td><td class="a">{{A_NET}}</td><td class="b">{{B_NET}}</td></tr>
+      <tr><td>Commission taken from WS fee</td><td>{{A_PCT}}</td><td>0%</td></tr>
+    </table>
+  </div>
+  <div>
+    <h2>Scenario A · Markup on the WS fee</h2>
+    <ul>
+      <li>Every product's fee rises by a flat {{MARKUP}}. Commissions come out of the new fee.</li>
+      <li>Dealer sees a small, uniform increase. WS keeps the difference after payouts.</li>
+      <li>Overall commission falls from {{WAS_PCT}} of the original fee to {{A_PCT}} of the new fee.</li>
+      {{NEG_NOTE}}
+    </ul>
+    <h2 style="margin-top:16px">Scenario B · Commission added to product cost</h2>
+    <ul>
+      <li>WS fee stays exactly at the Vantage amount. The three payouts are added to the product's cost.</li>
+      <li>WS nets the full Vantage fee on every contract; nothing is carved out.</li>
+      <li>Dealer increase varies by product: $3 on the $8 and $10 items, $9 on $15, $15 on $25 and $30, $21 on $35 and on the Preferred Care Advantage 2 - 7 Year exception.</li>
+    </ul>
+    <h2 style="margin-top:16px">Decision requested</h2>
+    <ul>
+      <li>Approve the per-tier payout amounts to Paul, Ken, and Ryan.</li>
+      <li>Choose Scenario A or Scenario B for funding the payouts.</li>
+    </ul>
+    <div class="sig"><div>Prepared by</div><div>Approved by</div><div>Date</div></div>
+  </div>
+</div>
+<div class="foot">8834 N. Capital of Texas Hwy. · Suite 250 · Austin, Texas · 78759 · 855-955-ROAD (7623) · www.vtg-services.com · WS1126</div>
+</body></html>

@@ -196,9 +196,9 @@
       </table>
     </div>
     <div class="actions">
-      <p class="note">Tiers are keyed to the Vantage fee so a product keeps its rule when the markup changes. Type a dollar amount into any Paul, Ken, or Ryan cell in the schedules below to override one program; overridden cells show a blue outline.</p>
+      <p class="note">Tiers are keyed to the Vantage fee so a product keeps its rule when the markup changes. Type a dollar amount into any Paul, Ken, or Ryan cell in the schedules below to override one program; overridden cells show a blue outline. Plan exception: Preferred Care Advantage, 2 - 7 Year term, pays $7 each.</p>
       <span style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" id="resetBtn">Clear program overrides</button>
+        <button type="button" id="resetBtn">Reset program overrides to plan</button>
         <button type="button" id="resetTiersBtn">Reset tiers to plan</button>
       </span>
     </div>
@@ -237,6 +237,10 @@
     35: { paul: 7, ken: 7, ryan: 7 },
   };
   const PLAN_MARKUP = 5;
+  // Program-level exceptions to the tier rule, keyed by program id.
+  const PLAN_OVERRIDES = {
+    "pca-27": { paul: 7, ken: 7, ryan: 7 },   // Preferred Care Advantage, 2 - 7 Year term
+  };
 
   // Source: Vantage Administration Services, Marketing Fee Schedule prepared for Warranty Solutions, 11/2026 (WS1126).
   const SCHEDULES = [
@@ -297,8 +301,8 @@
     }
   ];
 
-  const STORE_KEY = "ws-pay-plan-v7";
-  const state = { mode: "markup", markup: PLAN_MARKUP, tiers: clone(PLAN_TIERS), overrides: {} };
+  const STORE_KEY = "ws-pay-plan-v8";
+  const state = { mode: "markup", markup: PLAN_MARKUP, tiers: clone(PLAN_TIERS), overrides: clone(PLAN_OVERRIDES) };
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   function load() {
@@ -574,7 +578,7 @@
     });
     sheet.addEventListener("change", () => render());
 
-    document.getElementById("resetBtn").addEventListener("click", () => { state.overrides = {}; save(); render(); });
+    document.getElementById("resetBtn").addEventListener("click", () => { state.overrides = clone(PLAN_OVERRIDES); save(); render(); });
     document.getElementById("resetTiersBtn").addEventListener("click", () => { state.tiers = clone(PLAN_TIERS); state.markup = PLAN_MARKUP; save(); render(); });
   }
 

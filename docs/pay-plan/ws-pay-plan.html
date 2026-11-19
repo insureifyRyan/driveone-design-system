@@ -95,6 +95,10 @@
   table.tiers tr.missing td.feecol::after { content: " · needs rule"; font: 500 11px var(--font-ui); color: var(--warn); }
   table.tiers .num { width: 68px; padding: 4px 6px; border-radius: 4px; }
   .rules .note { color: var(--muted); font-size: 12px; margin: 0; }
+  .chip { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); background: var(--input-bg); }
+  .chip[data-tone="ok"] { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+  .chip[data-tone="busy"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .chip[data-tone="warn"] { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
   .rules .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
   button { font: 500 12px var(--font-ui); padding: 6px 12px; border-radius: 5px; border: 1px solid var(--rule); background: var(--input-bg); color: var(--fg); cursor: pointer; }
   button:hover { border-color: var(--accent); color: var(--accent); }
@@ -196,8 +200,9 @@
       </table>
     </div>
     <div class="actions">
-      <p class="note">Tiers are keyed to the Vantage fee so a product keeps its rule when the markup changes. Type a dollar amount into any Paul, Ken, or Ryan cell in the schedules below to override one program; overridden cells show a blue outline. Plan exception: Preferred Care Advantage, 2 - 7 Year term, pays $7 each.</p>
-      <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <p class="note">Tiers are keyed to the Vantage fee so a product keeps its rule when the markup changes. Type a dollar amount into any Paul, Ken, or Ryan cell in the schedules below to override one program; overridden cells show a blue outline. Changes save to the shared plan, so everyone with access sees the same rates. Plan exception: Preferred Care Advantage, 2 - 7 Year term, pays $7 each.</p>
+      <span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="chip" id="syncChip">Local only</span>
         <button type="button" id="resetBtn">Reset program overrides to plan</button>
         <button type="button" id="resetTiersBtn">Reset tiers to plan</button>
       </span>
@@ -316,7 +321,73 @@
       if (s && s.overrides) state.overrides = s.overrides;
     } catch (e) { /* storage unavailable; run with plan defaults */ }
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    queueRemoteSave();
+  }
+
+  // Shared plan store: the page's rates are kept in the artifact database so every
+  // viewer sees the same plan and Claude can read the current rates back.
+  const PLAN_DOC = "plan/current";
+  let planDoc = null, remoteTimer = null, remoteBusy = false, remoteDirty = false, lastRemoteJson = "";
+  const snapshotOf = () => ({ mode: state.mode, markup: state.markup, tiers: state.tiers, overrides: state.overrides });
+  function setSync(text, tone) {
+    const el = document.getElementById("syncChip");
+    if (!el) return;
+    el.textContent = text; el.dataset.tone = tone || "";
+  }
+  function queueRemoteSave() {
+    if (!planDoc) return;
+    remoteDirty = true;
+    setSync("Saving…", "busy");
+    clearTimeout(remoteTimer);
+    remoteTimer = setTimeout(flushRemote, 600);
+  }
+  async function flushRemote() {
+    if (!planDoc || remoteBusy || !remoteDirty) return;
+    remoteBusy = true; remoteDirty = false;
+    const body = snapshotOf();
+    const json = JSON.stringify(body);
+    try {
+      if (json !== lastRemoteJson) { await planDoc.set({ ...body, savedAt: new Date().toISOString() }); lastRemoteJson = json; }
+      setSync("Saved to shared plan", "ok");
+    } catch (e) {
+      setSync(e && e.code === "invalid_argument" ? "View only: edits stay in this browser" : "Could not save to shared plan", "warn");
+    } finally {
+      remoteBusy = false;
+      if (remoteDirty) flushRemote();
+    }
+  }
+  function applyRemote(data) {
+    if (data.mode === "markup" || data.mode === "cost") state.mode = data.mode;
+    if (typeof data.markup === "number") state.markup = data.markup;
+    if (data.tiers && typeof data.tiers === "object") Object.keys(PLAN_TIERS).forEach(f => { if (f in data.tiers) state.tiers[f] = data.tiers[f]; });
+    if (data.overrides && typeof data.overrides === "object") state.overrides = data.overrides;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+    document.getElementById(isCost() ? "modeCost" : "modeMarkup").checked = true;
+    render();
+  }
+  async function connectStore() {
+    setSync("Connecting to shared plan…", "busy");
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+    if (!db) { setSync("Shared plan unavailable: edits stay in this browser", "warn"); return; }
+    const ref = db.doc(PLAN_DOC);
+    const timer = setTimeout(() => setSync("Shared plan not reachable yet", "warn"), 10000);
+    ref.onSnapshot(snap => {
+      if (!snap.metadata.fromCache) clearTimeout(timer);
+      if (snap.exists) {
+        const data = snap.data();
+        const json = JSON.stringify({ mode: data.mode, markup: data.markup, tiers: data.tiers, overrides: data.overrides });
+        if (json !== lastRemoteJson && json !== JSON.stringify(snapshotOf())) { lastRemoteJson = json; planDoc = ref; applyRemote(data); }
+        else { lastRemoteJson = json; planDoc = ref; }
+        if (!snap.metadata.hasPendingWrites) setSync("Saved to shared plan", "ok");
+      } else if (!snap.metadata.fromCache && !planDoc) {
+        // No shared plan yet: seed it with what this browser holds.
+        planDoc = ref; remoteDirty = true; flushRemote();
+      }
+    }, err => { clearTimeout(timer); planDoc = null; setSync("Shared plan unavailable: edits stay in this browser", "warn"); });
+  }
 
   const money = n => "$" + (Math.round(n * 100) / 100).toFixed(2);
   const pctOf = (part, whole) => whole > 0 ? (Math.round(part / whole * 1000) / 10) + "%" : "";
@@ -588,5 +659,6 @@
   wire();
   document.getElementById(isCost() ? "modeCost" : "modeMarkup").checked = true;
   render();
+  connectStore();
 })();
 </script>

@@ -14,8 +14,19 @@ Template: `reports/ferrario-ford/program-report-<YYYY-MM>.html` in this repo
 Published artifact: https://claude.ai/artifact/WCXBksKfHQsAa7cxuXqeeN
 (republish by passing that `url`; a publish without it makes a new link).
 
-## Section order (large to small, keep it)
+## Section order (results first, then large to small)
 
+0. How the emails are doing. Added 20 Nov 2026 at Ryan's request for a
+   performance report: four tiles (people emailed, delivered %, clicked to
+   price, contracts sold), one table per audience (people, emails, delivered %,
+   bad addresses, spam reports, opt-outs, drive-by marked Paused while it is),
+   four plain bullets on what it means, a "next two weeks" table dated from the
+   cadence (sendDay 0, 3, 7, 12, 18, 25, 32, 40, 48, 60 in the copy decks), and
+   the ask to forward customers who already hold a contract. Count people by
+   their TRUE audience: the 72 drive-by owners misrouted into the service drive
+   campaign on 18–19 Nov (`status = 'held_cross_bucket'`) belong in the
+   drive-by row. Clicks: use Resend `unique_clicked` per sending domain and say
+   that clicks inside a minute of delivery are usually link scanners.
 1. What the lot cameras showed. Static figures from Captured's June to August
    reconciliation (`recon.xlsx`, kept out of the repo): four tiles, the
    funnel table, one chart (visits by week). Only changes when a new Captured

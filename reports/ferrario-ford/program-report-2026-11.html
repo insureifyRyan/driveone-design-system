@@ -53,6 +53,12 @@
   .pill { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; padding: 2px 8px; border-radius: 3px; border: 1px solid currentColor; }
   .pill.live { color: var(--ok); }
   .pill.ramp { color: var(--warn); }
+  .pill.pause { color: var(--warn); }
+  tr.total td { font-weight: 600; border-bottom: 0; }
+  .grid.g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 640px) { .grid.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  td.aud { white-space: nowrap; }
+  @media print { th, td { padding: 7px 6px; font-size: 12.5px; } th { font-size: 10px; letter-spacing: .6px; } .scroll, table, .tile, .note { break-inside: avoid; } h2, h3 { break-after: avoid; } }
   ul { margin: 0 0 12px; padding-left: 20px; max-width: 70ch; }
   li { margin-bottom: 6px; }
   .note { background: var(--soft); border-left: 3px solid var(--red); padding: 12px 16px; margin: 14px 0; max-width: 70ch; }
@@ -75,11 +81,57 @@
 <div class="wrap title">
   <div class="eyebrow">Monthly program report</div>
   <h1>Where the Ferrario Ford service contract program stands</h1>
-  <p class="sub">Prepared for Ferrario Ford, 2472 Corning Rd, Elmira NY. Figures as of Wednesday 11 November 2026, 10:00 pm Eastern.</p>
+  <p class="sub">Prepared for Ferrario Ford, 2472 Corning Rd, Elmira NY. Figures as of Friday 20 November 2026, 9:30 am Eastern.</p>
 </div>
 
 <div class="wrap">
   <section class="first">
+    <div class="eyebrow">First eight days</div>
+    <h2>How the emails are doing</h2>
+    <p class="lead">The first emails went out on Thursday 12 November. In eight days 1,054 emails have reached 774 people across the three groups. Delivery is healthy and nobody has bought yet, which is where a ten-email, 60-day series normally sits in its first week: most people have had two or three emails so far, and the two that usually sell, the $0 deductible at Ferrario and the 0% payment plan, go out from 24 November and 1 December.</p>
+    <div class="grid g4">
+      <div class="tile"><div class="n">774</div><div class="k">People emailed</div><div class="d">1,054 emails since 12 November.</div></div>
+      <div class="tile"><div class="n">94%</div><div class="k">Delivered</div><div class="d">The rest were dead or mistyped addresses, removed automatically.</div></div>
+      <div class="tile"><div class="n">7</div><div class="k">Clicked through to their price</div><div class="d">Nobody has started checkout yet.</div></div>
+      <div class="tile"><div class="n">0</div><div class="k">Contracts sold</div><div class="d">Too early to read: most people are on email 2 or 3 of 10.</div></div>
+    </div>
+    <div class="scroll" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Audience</th><th class="num">People</th><th class="num">Emails</th><th class="num">Delivered</th><th class="num">Bad addresses</th><th class="num">Spam reports</th><th class="num">Opt-outs</th></tr></thead>
+      <tbody>
+        <tr><td class="aud"><strong>Service drive</strong></td><td class="num">442</td><td class="num">606</td><td class="num">93%</td><td class="num">37</td><td class="num">2</td><td class="num">0</td></tr>
+        <tr><td class="aud"><strong>Recall visitors</strong></td><td class="num">32</td><td class="num">67</td><td class="num">98%</td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+        <tr><td class="aud"><strong>Drive-by</strong> <span class="pill pause">Paused</span></td><td class="num">300</td><td class="num">381</td><td class="num">94%</td><td class="num">21</td><td class="num">2</td><td class="num">1</td></tr>
+        <tr class="total"><td class="aud">All groups</td><td class="num">774</td><td class="num">1,054</td><td class="num">94%</td><td class="num">59</td><td class="num">4</td><td class="num">1</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <h3 style="margin-top:20px">What this tells us</h3>
+    <ul>
+      <li><strong>It is too early to judge sales.</strong> Response benchmarks are measured over the full ten emails. The strongest arguments in the series land in the next two weeks, and the remaining 574 service drive customers have not had their first email yet.</li>
+      <li><strong>The lists are mostly clean.</strong> About 6% of addresses on file no longer work. Each one is removed the first time it fails and is never emailed again.</li>
+      <li><strong>Complaints are low but not zero.</strong> Four people out of 774 marked an email as spam and one unsubscribed. All five are off every list for good.</li>
+      <li><strong>The drive-by group is paused, on purpose.</strong> These owners have never been in the store, and their addresses failed at a higher rate than your service customers'. Sending stopped on 18 November so the remaining addresses can be checked before anything else goes out under the Ferrario name. The 300 already emailed finish their series.</li>
+    </ul>
+    <p class="fine">Seven people clicked the price button, some more than once. A few clicks arrived within a minute of delivery, which is typical of workplace email filters checking links, so the number of people who actually looked at their price is likely a little lower.</p>
+
+    <h3 style="margin-top:20px">Next two weeks</h3>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>When</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>From Tue 24 Nov</td><td>The first group gets email 4: a covered repair done at Ferrario costs $0.</td></tr>
+        <tr><td>From Tue 1 Dec</td><td>Email 5: the 0% payment plan, no credit check. Historically the strongest email in the series.</td></tr>
+        <tr><td>Through early Dec</td><td>The remaining 574 service drive customers receive their first email, about 90 a day, Tuesday to Friday.</td></tr>
+        <tr><td>Each week</td><td>New service visits from Capture Data Services are quoted and added automatically.</td></tr>
+        <tr><td>After address checks</td><td>The drive-by group restarts slowly, at five new people a day.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note"><strong>One thing that helps.</strong> If a customer tells your service desk they already have a service contract, from you or anywhere else, and it is not recorded in your system, forward their name or email to DriveOne. They come off every list the same day.</div>
+  </section>
+
+  <section>
     <div class="eyebrow">Where the lists come from</div>
     <h2>What the lot cameras showed</h2>
     <p class="lead">Everything in this report starts with one source: the plate cameras at the store and the email campaigns Capture Data Services built on them. Captured emailed 10,256 vehicle owners identified from plate captures. The cameras then recorded who actually came onto the lot. Those people are the recall group; the people emailed who never appeared are the drive-by group.</p>
@@ -152,11 +204,11 @@
 
   <section>
     <h2>Where those people are now</h2>
-    <p class="lead">Three groups are now in the program, each with its own quote, its own email series and its own pace. Every person gets a real price for their own vehicle before the first email goes out.</p>
+    <p class="lead">Three groups are in the program, each with its own quote, its own email series and its own pace. Every person gets a real price for their own vehicle before the first email goes out.</p>
     <div class="grid">
-      <div class="tile"><div class="n">1,926</div><div class="k">Drive-by owners with a VIN</div><div class="d">283 quoted so far, 50 more an hour. 654 are recent enough to be eligible.</div></div>
-      <div class="tile"><div class="n">1,064</div><div class="k">Service drive customers</div><div class="d">In the email sequence. First emails Thursday 12 November.</div></div>
-      <div class="tile"><div class="n">165</div><div class="k">Recall visitors</div><div class="d">164 quoted. 56 are recent enough to be eligible.</div></div>
+      <div class="tile"><div class="n">1,926</div><div class="k">Drive-by owners with a VIN</div><div class="d">All quoted. 654 recent enough to be eligible; 300 emailed before sending paused.</div></div>
+      <div class="tile"><div class="n">1,064</div><div class="k">Service drive customers</div><div class="d">1,050 in the email series. 442 emailed so far, the rest by early December.</div></div>
+      <div class="tile"><div class="n">165</div><div class="k">Recall visitors</div><div class="d">164 quoted. 32 eligible and not already in another group, all emailed.</div></div>
     </div>
   </section>
 
@@ -170,27 +222,27 @@
           <td><strong>Service drive</strong></td>
           <td>Customers with a service visit in your records and no service contract on file. Quotes created from the visit.</td>
           <td class="num">1,244</td><td class="num">1,064</td><td class="num">1,098</td>
-          <td>Start Thu 12 Nov, about 90 new people a day through 4 Dec</td>
+          <td>Started 12 Nov. 442 emailed so far; about 90 new people a day into early December</td>
           <td><span class="pill live">Live</span></td>
         </tr>
         <tr>
           <td><strong>Recall visitors</strong></td>
           <td>People Captured emailed whose vehicle the lot cameras then recorded on the premises, in for recall work. No quote existed.</td>
           <td class="num">165</td><td class="num">56</td><td class="num">164</td>
-          <td>Start Thu 12 Nov, up to 45 new people a day</td>
+          <td>Started 12 Nov. All 32 eligible people emailed</td>
           <td><span class="pill live">Live</span></td>
         </tr>
         <tr>
           <td><strong>Drive-by</strong></td>
           <td>Owners identified from plate captures and emailed by Captured, with a VIN, never recorded on the lot and not in your service records.</td>
-          <td class="num">1,926</td><td class="num">654</td><td class="num">283</td>
-          <td>Start Thu 12 Nov, 10 new people a day, rising as the sending domain earns reputation</td>
-          <td><span class="pill ramp">Live, ramping</span></td>
+          <td class="num">1,926</td><td class="num">654</td><td class="num">1,906</td>
+          <td>Started 12 Nov. 300 emailed; new sends paused 18 Nov while addresses are checked</td>
+          <td><span class="pill pause">Paused</span></td>
         </tr>
       </tbody>
     </table>
     </div>
-    <p class="fine" style="margin-top:10px">"On the list" for the drive-by group counts only people with a VIN. A further 7,654 of the people Captured emailed had no VIN link, so they cannot be quoted. "Quoted" for the drive-by group grows by about 50 an hour until the list is done, roughly two days.</p>
+    <p class="fine" style="margin-top:10px">"On the list" for the drive-by group counts only people with a VIN. A further 7,654 of the people Captured emailed had no VIN link, so they cannot be quoted. "Quoted" includes older vehicles that are not eligible to be emailed.</p>
   </section>
 
   <section>
@@ -240,6 +292,8 @@
         <tr><td>10 to 11 Nov</td><td>Relaunched at the new pricing with the full service drive list of 1,098. Every October quote was replaced with a fresh one.</td></tr>
         <tr><td>11 Nov</td><td>Recall and drive-by lists reconciled against your service records, loaded, and quoting started. Both email series approved and switched on.</td></tr>
         <tr><td>12 Nov onward</td><td>First emails to all three groups. Tuesday to Friday only, 9 am to 4 pm Eastern, never more than 200 a day to the service drive group.</td></tr>
+        <tr><td>18 Nov</td><td>Drive-by sends paused so the remaining addresses can be checked. Service drive and recall groups continue.</td></tr>
+        <tr><td>20 Nov</td><td>1,054 emails to 774 people. 94% delivered, 7 click-throughs to a price, no sales yet.</td></tr>
       </tbody>
     </table>
     </div>
@@ -261,11 +315,11 @@
     <p>These are planning ranges, not forecasts. They apply published vehicle service contract response rates for direct-to-consumer and affinity email programs to the number of people who will actually be emailed, and they assume the full ten-email series runs. Conversion on a cold list is historically about half that of a known customer, which is why the drive-by range is lower.</p>
     <div class="scroll">
     <table>
-      <thead><tr><th>Audience</th><th class="num">People emailed</th><th>Benchmark response</th><th class="num">Contracts, low</th><th class="num">Contracts, high</th></tr></thead>
+      <thead><tr><th>Audience</th><th class="num">People emailed</th><th>Benchmark response</th><th class="num">Contracts, low</th><th class="num">Contracts, high</th><th class="num">Sold so far</th></tr></thead>
       <tbody>
-        <tr><td><strong>Service drive</strong></td><td class="num">1,064</td><td>1% to 2% of people emailed</td><td class="num">11</td><td class="num">21</td></tr>
-        <tr><td><strong>Recall visitors</strong></td><td class="num">56</td><td>1% to 2% of people emailed</td><td class="num">1</td><td class="num">1</td></tr>
-        <tr><td><strong>Drive-by</strong></td><td class="num">654</td><td>0.5% to 1% of people emailed</td><td class="num">3</td><td class="num">7</td></tr>
+        <tr><td><strong>Service drive</strong></td><td class="num">1,064</td><td>1% to 2% of people emailed</td><td class="num">11</td><td class="num">21</td><td class="num">0</td></tr>
+        <tr><td><strong>Recall visitors</strong></td><td class="num">56</td><td>1% to 2% of people emailed</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+        <tr><td><strong>Drive-by</strong></td><td class="num">654</td><td>0.5% to 1% of people emailed</td><td class="num">3</td><td class="num">7</td><td class="num">0</td></tr>
       </tbody>
     </table>
     </div>

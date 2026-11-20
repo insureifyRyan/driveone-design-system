@@ -50,6 +50,26 @@ not sold-customer nurture. The dealership is the sender; DriveOne is the provide
 
 ## STATUS: FERRARIO RESTARTED 9 Nov 2026
 
+**20 Nov 2026, 13:00 UTC, INCIDENT: THE SERVICE DRIVE INTAKE SWEPT UP THE CAMERA
+BUCKETS.** Raising the service drive cohort cap to 5000 on 18 Nov let the hourly 01
+(`AJYWBfCCu66B6x4n`) enrol 664 more people at 21:23 UTC: 19 genuine older visits (May
+to July, dealt from 2 Dec) and 645 recall/drive-by people whose quotes the audience
+engine had created in Elevate (same shape as a visit, `created_at` 11–13 Nov). The
+service intake only ever excluded its own earlier enrolments, never siblings or
+`vsc_audience`. On 19 Nov 02 sent 78 of them the service drive Email 1 ("you were in
+with us on 12/13 November"), 13 of whom had already had the drive-by Email 1.
+Contained 20 Nov 12:50 UTC: the 645 rows set to `status = 'held_cross_bucket'` (never
+claimed by 02; left in place for attribution; delete or leave). Fixed in the
+generator: every file now has `FAMILY`/`SIBLINGS`, and the service intake excludes
+anyone enrolled under a sibling id and any VIN/email present in `vsc_audience` for the
+root id. Deployed to the live service drive 01. Lesson for the handoff: a cap is not
+an eligibility rule; the 1,098 cap had been hiding this hole since the buckets went
+live. Also in Tim Morford's 19 Nov reply (thread "Fresh data please for Ferrario"):
+Captured will send the service data "around today"; a Ferrario customer complained
+she was marketed to while already holding a warranty, and Captured says the
+warranty flag depends on the dealership recording it.
+
+
 **18 Nov 2026, 21:10 UTC, SERVICE VISITS COME FROM CAPTURED WEEKLY.** Ryan: Captured
 pulls the dealership's service visits and loads them into Elevate weekly, and has not
 done so since the August import, so the service drive intake has enrolled nobody

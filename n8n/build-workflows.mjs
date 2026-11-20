@@ -424,6 +424,16 @@ const COMMERCIAL_PATTERN = COMMERCIAL_TERMS.map((t) => `\\m${t}\\M`).join('|');
 //     "serviced on" can still be rendered without a date;
 //   - nobody already enrolled in ANY campaign on this partner, by email or VIN,
 //     is admitted, so the same person cannot be quoted twice under two names.
+// Every campaign file on the same partner is "us": one person is marketed by one
+// campaign only, whichever file enrolled them first.
+const FAMILY = ALL_DEALERS
+  .filter((d) => d.supabase && DEALER.supabase && d.supabase.partner_id === DEALER.supabase.partner_id)
+  .map((d) => d.id);
+const SIBLINGS = FAMILY.filter((id) => id !== DEALER.id);
+// The root rooftop's id, under which vsc_audience rows are loaded for the family.
+const AUDIENCE_ROOT_ID = (ALL_DEALERS.find((d) => FAMILY.includes(d.id) && d.intake && d.intake.audienceBucket) || {}).intake?.audienceDealerId
+  || FAMILY.find((id) => !ALL_DEALERS.find((d) => d.id === id).intake?.audienceBucket) || DEALER.id;
+
 const AUDIENCE = DEALER.intake && DEALER.intake.audienceBucket
   ? {
       bucket: DEALER.intake.audienceBucket,
@@ -572,6 +582,30 @@ const INTAKE_SQL_SERVICE = [
   '      where s.dealer_id = $1',
   "        and s.customer_key = encode(sha256(($1 || ':' || lower(trim(c.email)))::bytea), 'hex')",
   '    )',
+  // SIBLING CAMPAIGNS AND CAMERA-SOURCED QUOTES ARE NOT SERVICE VISITS.
+  //
+  // The audience engine creates a quote in Elevate for every camera-sourced
+  // person it prices, in the same shape as a dealership visit. On 18 Nov 2026
+  // the service drive cohort cap was raised and this query, which had only
+  // ever excluded its own earlier enrolments, swept 645 recall and drive-by
+  // people into the service drive campaign and sent 78 of them a "you were in
+  // with us on 12 November" email about a visit that never happened. Both
+  // guards below are unconditional for a file with siblings on its partner.
+  ...(SIBLINGS.length ? [
+    '    -- never someone another campaign on this partner already holds',
+    '    and not exists (',
+    '      select 1 from vsc_enrollment e',
+    `      where e.dealer_id = any(array[${SIBLINGS.map((d) => `'${d}'`).join(', ')}])`,
+    '        and (lower(e.email) = lower(trim(c.email)) or upper(e.vin) = upper(cv.vin))',
+    '    )',
+    '    -- never a camera-sourced person: their quote was created by the audience',
+    '    -- engine, not by a service visit, and the buckets own them',
+    '    and not exists (',
+    '      select 1 from vsc_audience a',
+    `      where a.dealer_id = '${AUDIENCE_ROOT_ID}'`,
+    '        and (upper(a.vin) = upper(cv.vin) or lower(trim(a.email)) = lower(trim(c.email)))',
+    '    )',
+  ] : []),
   '),',
   '',
   '-- One row per PERSON, carrying their freshest visit.',

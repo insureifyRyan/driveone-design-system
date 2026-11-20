@@ -58,7 +58,7 @@
   .grid.g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (min-width: 640px) { .grid.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   td.aud { white-space: nowrap; }
-  @media print { th, td { padding: 7px 6px; font-size: 12.5px; } th { font-size: 10px; letter-spacing: .6px; } .scroll, table, .tile, .note { break-inside: avoid; } h2, h3 { break-after: avoid; } }
+  @media print { th, td { padding: 7px 6px; font-size: 12.5px; } th { font-size: 10px; letter-spacing: .6px; } .scroll, table, .tile, .note { break-inside: avoid; } h2, h3 { break-after: avoid; } section.proposal { break-before: page; } }
   ul { margin: 0 0 12px; padding-left: 20px; max-width: 70ch; }
   li { margin-bottom: 6px; }
   .note { background: var(--soft); border-left: 3px solid var(--red); padding: 12px 16px; margin: 14px 0; max-width: 70ch; }
@@ -129,6 +129,49 @@
     </table>
     </div>
     <div class="note"><strong>One thing that helps.</strong> If a customer tells your service desk they already have a service contract, from you or anywhere else, and it is not recorded in your system, forward their name or email to DriveOne. They come off every list the same day.</div>
+  </section>
+
+  <section class="proposal">
+    <div class="eyebrow">A proposal for Ferrario Ford</div>
+    <h2>Two programs that would reach the customers we cannot quote today</h2>
+    <p class="lead">Platinum covers vehicles up to 12 model years old and stops at the F-150 class. That leaves real customers out. Of the service drive customers we can email, <strong>151, about one in eight, receive nothing at all</strong>, because their vehicle is too old or too heavy for Platinum. Another 109 recall visitors are in the same position. Two additional programs would let us put a real price in front of 219 of them, and the gap reopens with every weekly load of new service visits.</p>
+    <div class="grid g4">
+      <div class="tile"><div class="n">219</div><div class="k">Customers we could quote</div><div class="d">149 service drive, 70 recall visitors. None are being emailed today.</div></div>
+      <div class="tile"><div class="n">214</div><div class="k">Fit Powertrain Plus</div><div class="d">Older and higher-mileage vehicles, up to 25 model years and 250,000 miles.</div></div>
+      <div class="tile"><div class="n">29</div><div class="k">Heavy trucks</div><div class="d">F-250 and up, RAM and GM 2500 and up. 24 from your service drive.</div></div>
+      <div class="tile"><div class="n">1 in 8</div><div class="k">Service customers left out</div><div class="d">The share of each weekly service load that Platinum cannot quote.</div></div>
+    </div>
+    <div class="scroll" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Audience</th><th class="num">Not quoted today</th><th class="num">Powertrain Plus</th><th class="num">Heavy truck</th><th class="num">Either program</th></tr></thead>
+      <tbody>
+        <tr><td class="aud"><strong>Service drive</strong></td><td class="num">151</td><td class="num">146</td><td class="num">24</td><td class="num">149</td></tr>
+        <tr><td class="aud"><strong>Recall visitors</strong></td><td class="num">109</td><td class="num">68</td><td class="num">5</td><td class="num">70</td></tr>
+        <tr class="total"><td class="aud">Total</td><td class="num">260</td><td class="num">214</td><td class="num">29</td><td class="num">219</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="fine" style="margin-top:8px">Counts only people we can email: a working address, no contract on file, not opted out, not already in a Platinum series. The drive-by list is left out because it is paused. Most one-ton trucks fit both programs, so "Either program" is less than the two columns added together. Recall visitor mileage is estimated from model year, as the camera record carries no odometer reading; a further 38 recall visitors in 2002 to 2009 vehicles would also qualify if their real mileage is under 250,000.</p>
+
+    <h3 style="margin-top:20px">1. Powertrain Plus, for older and high-mileage vehicles</h3>
+    <ul>
+      <li><strong>What it covers.</strong> The parts that cost the most to fix: engine, transmission and transfer case. Administered by Ascent Administration Services, the same administrator as Platinum.</li>
+      <li><strong>Who it fits.</strong> Cars, SUVs and pickups up to one ton, up to 25 model years old and up to 250,000 miles at sale. The service drive customers it would reach average a 2014 model with about 129,000 miles.</li>
+      <li><strong>Why it suits your drive.</strong> The deductible is $0 when the repair is done at Ferrario Ford, and customers within 50 miles of the store bring covered repairs back to your service department.</li>
+      <li><strong>Price point.</strong> Terms from 12 months or 12,000 miles up to 60 months or 60,000 miles, at a lower price than Platinum. It is also a natural second offer for the 1,002 Platinum customers in the series who do not buy at the Platinum price.</li>
+    </ul>
+    <p class="fine">Claim limits apply per component. Commercial-use, modified and salvage-title vehicles are excluded, as are diesel trucks with the CP4 fuel pump and a short list of exotic and performance models.</p>
+
+    <h3 style="margin-top:20px">2. A heavy truck program, above the F-150 class</h3>
+    <ul>
+      <li><strong>Who it fits.</strong> F-250, F-350 and Super Duty, RAM 2500 and 3500, Silverado and Sierra 2500 and 3500, and larger. Today these customers are removed from every list before anything is sent.</li>
+      <li><strong>What we see.</strong> 24 heavy trucks on your service drive, all 2014 or newer, 3 of them above one ton. These are some of the most expensive vehicles to repair that come through your service department.</li>
+      <li><strong>Why a separate program.</strong> Diesel trucks with the CP4 fuel pump are excluded from Powertrain Plus, and trucks above one ton fit neither product. A heavy truck program closes that gap.</li>
+    </ul>
+
+    <h3 style="margin-top:20px">What we are asking</h3>
+    <p>Approval to add both programs to the Ferrario Ford program on the same terms as Platinum: co-branded emails from your service address, online checkout, the $0 deductible at your store, and every sale posted to Ferrario Ford as the selling dealer. Once approved, DriveOne adds both to your rating, quotes these customers and gives each program its own email series. No new list or setup work is needed from the store.</p>
+    <div class="note"><strong>Planning range.</strong> At the same 1% to 2% benchmark used below, today's 219 customers would produce about 2 to 4 contracts over a full ten-email series. The bigger value is ongoing: roughly one in eight of every future weekly service load would get an offer instead of nothing.</div>
   </section>
 
   <section>
@@ -252,7 +295,7 @@
       <li>The vehicle is model year 2014 or newer. This is the largest filter on the two new lists: the recall visitors have a median model year of 2012, and the drive-by list the same, so most of those vehicles are simply too old to cover.</li>
       <li>There is no vehicle service contract already on file.</li>
       <li>We have a working email address, and the person has not opted out, bounced, or marked a previous email as spam.</li>
-      <li>The vehicle is not a heavy-duty truck. Nothing above the F-150 class is rated in this program (F-250 and up, RAM 2500 and up, GM 2500 and 3500), so those customers never receive an email.</li>
+      <li>The vehicle is not a heavy-duty truck. Nothing above the F-150 class is rated in this program today (F-250 and up, RAM 2500 and up, GM 2500 and 3500), so those customers never receive an email. The proposal above would change that.</li>
       <li>Nobody receives two series. A person who appears in more than one list is emailed once, in the first group they qualified for.</li>
     </ul>
   </section>

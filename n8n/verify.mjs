@@ -623,7 +623,7 @@ check('the scorecard cannot report a number it never read', () => {
   const engagement = sql.match(/from vsc_email_event[\s\S]*?(?=\)\s*as\s)/g) || [];
   assert(engagement.length > 0, 'no engagement subquery found');
   engagement.forEach((q, i) => {
-    assert(/join vsc_send_log/.test(q) && /l\.dealer_id = \$1/.test(q) && /l\.campaign_id = \$2/.test(q),
+    assert(/join vsc_send_log/.test(q) && /l\.dealer_id = (\$1|m\.dealer_id)/.test(q) && /l\.campaign_id = (\$2|m\.campaign_id)/.test(q),
       `engagement subquery ${i + 1} does not join vsc_send_log on dealer and campaign, so it counts other campaigns' mail`);
   });
 

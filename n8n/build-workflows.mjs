@@ -2419,6 +2419,34 @@ const SCORECARD_FROM = (DEALER.campaign && DEALER.campaign.scorecardFrom)
   || 'DriveOne Campaign <alerts@kovara.ai>';
 const COHORT_TARGET = (DEALER.supabase && DEALER.supabase.cohort_target) || 0;
 
+// ONE SCORECARD PER DEALERSHIP, NOT PER AUDIENCE (23 Nov 2026). Ryan received
+// three Monday scorecards for Ferrario, one per campaign file, and asked for one
+// report in one email. When several campaign files share a partner (a FAMILY),
+// the root rooftop's 07 reports every member side by side, one column each plus
+// a total, and each sibling's 07 is generated with its trigger disabled so a
+// redeploy cannot bring the duplicate emails back. A dealer with one campaign
+// file is unchanged.
+const SC_COMBINED = FAMILY.length > 1;
+const SC_ROOT = SC_COMBINED && DEALER.id === AUDIENCE_ROOT_ID;
+const SC_SUPERSEDED = SC_COMBINED && !SC_ROOT;
+const SC_DEALER_NAME = (DEALER.dealer && (DEALER.dealer.displayName || DEALER.dealer.name)) || WF_LABEL;
+const sqlText = (v) => v == null ? 'null::text' : "'" + String(v).replace(/'/g, "''") + "'::text";
+const SC_MEMBERS = SC_ROOT
+  ? FAMILY.map((id) => ALL_DEALERS.find((d) => d.id === id))
+      .map((d) => ({
+        id: d.id,
+        campaignId: (d.campaign && d.campaign.id) || CAMPAIGN_ID,
+        label: (d.campaign && d.campaign.scorecardColumn) || d.workflowLabel || d.id,
+        order: (d.campaign && d.campaign.scorecardOrder) || 99,
+        audDealer: d.intake && d.intake.audienceBucket ? (d.intake.audienceDealerId || d.id) : null,
+        audBucket: d.intake && d.intake.audienceBucket ? d.intake.audienceBucket : null,
+        paused: !!(d.supabase && d.supabase.initial_cohort === 0),
+        cohortTarget: (d.supabase && d.supabase.cohort_target) || 0,
+      }))
+      .sort((x, y) => x.order - y.order)
+  : [];
+
+
 const scorecardCode = `
 // One row in, one email out. Every figure below comes from a column this
 // campaign actually writes, so a zero here means zero happened, not zero
@@ -2602,19 +2630,198 @@ const subject = num(r.purchased_7d) > 0
 return [{ json: { subject, html } }];
 `.trim();
 
+// Per campaign the query reads $1/$2. For the family root it runs the same
+// columns once per member: a VALUES list of members, every $1/$2 rewritten
+// to that member's dealer and campaign, and the audience columns read from the
+// member's own list. One row per audience comes out, in column order.
+function scorecardSql(sql) {
+  if (!SC_ROOT) return sql;
+  const values = SC_MEMBERS.map((m, i) => '(' + [
+    i + 1, sqlText(m.label), sqlText(m.id), sqlText(m.campaignId), sqlText(m.audDealer), sqlText(m.audBucket),
+    m.paused ? 'true' : 'false', m.cohortTarget,
+  ].join(', ') + ')').join(',\n  ');
+  const dyn = [
+    '  (select count(*) from vsc_audience where dealer_id = m.aud_dealer and bucket = m.aud_bucket',
+    '     and quote_id is not null) as audience_quoted,',
+    '  (select count(*) from vsc_audience where dealer_id = m.aud_dealer and bucket = m.aud_bucket',
+    "     and quote_id is null and status_at_load = 'NEW' and quote_attempts < 3) as audience_unquoted,",
+    '  (select count(*) from vsc_audience where dealer_id = m.aud_dealer and bucket = m.aud_bucket',
+    '     and quote_id is null and quote_attempts >= 3) as audience_parked,',
+  ].join('\n');
+  const zero = '  0 as audience_quoted,\n  0 as audience_unquoted,\n  0 as audience_parked,';
+  if (!sql.includes(zero)) throw new Error('scorecardSql: audience placeholder not found');
+  const body = sql.replace(zero, dyn)
+    .replace(/\$1/g, 'm.dealer_id').replace(/\$2/g, 'm.campaign_id')
+    .replace(/as clicked_total;\s*$/, [
+      'as clicked_total,',
+      '  m.label as label,',
+      '  (m.aud_bucket is not null) as has_list,',
+      '  m.paused as paused,',
+      '  m.cohort_target as cohort_target,',
+      '  m.ord as ord',
+      'from m',
+      'order by m.ord;',
+    ].join('\n'));
+  if (/\$[12]\b/.test(body) || !/from m\norder by m\.ord;$/.test(body)) throw new Error('scorecardSql: rewrite incomplete');
+  return 'with m(ord, label, dealer_id, campaign_id, aud_dealer, aud_bucket, paused, cohort_target) as (values\n  '
+    + values + '\n)\n' + body;
+}
+
+const combinedScorecardCode = `
+// One email for the whole dealership: one column per audience, plus a total.
+// Every figure comes from a column the query names (verify checks this), so a
+// zero means zero happened, not zero measured.
+const rows = $input.all().map((i) => i.json);
+const num = (v) => Number(v || 0);
+const n = (v) => num(v).toLocaleString("en-US");
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const pct = (part, whole) => num(whole) === 0 ? null
+  : Math.round(1000 * num(part) / num(whole)) / 10;
+const money = (v) => "$" + num(v).toLocaleString("en-US", { maximumFractionDigits: 0 });
+
+const TZ = ${JSON.stringify(DEALER.sending.timezone)};
+const DEALER_NAME = ${JSON.stringify(SC_DEALER_NAME)};
+const fmt = (d) => new Intl.DateTimeFormat("en-US",
+  { timeZone: TZ, month: "short", day: "numeric" }).format(d);
+const now = new Date();
+const period = fmt(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)) + " to " + fmt(now);
+
+// The total column: every numeric field summed, then the two that are not sums
+// put right. Average emails received is weighted by who is still active.
+const t = { label: "All", has_list: true, paused: false };
+for (const r of rows) {
+  for (const [k, v] of Object.entries(r)) {
+    if (k === "label" || k === "has_list" || k === "paused") continue;
+    t[k] = num(t[k]) + num(v);
+  }
+}
+const activeAll = rows.reduce((a, r) => a + num(r.active_now), 0);
+t.avg_step = activeAll === 0 ? 0
+  : rows.reduce((a, r) => a + num(r.avg_step) * num(r.active_now), 0) / activeAll;
+const cols = rows.concat([t]);
+
+const cell = "padding:7px 10px;border-bottom:1px solid #e3e8ef;font:13px Arial;text-align:right;white-space:nowrap";
+const headCell = (c) => "<th style='padding:7px 10px;border-bottom:2px solid #0B1B3F;font:bold 12px Arial;color:#0B1B3F;text-align:right;vertical-align:bottom'>"
+  + esc(c.label)
+  + (c.paused === true || c.paused === "true" ? "<br><span style='font:11px Arial;color:#B4600F;font-weight:normal'>new sends paused</span>" : "")
+  + "</th>";
+const line = (label, fn) => "<tr><td style='padding:7px 10px 7px 0;border-bottom:1px solid #e3e8ef;font:13px Arial;color:#1c1d1f'>" + esc(label) + "</td>"
+  + cols.map((c, i) => "<td style='" + cell + ";color:" + (i === cols.length - 1 ? "#0B1B3F;font-weight:bold" : "#1c1d1f") + "'>" + esc(fn(c)) + "</td>").join("")
+  + "</tr>";
+const section = (title) => "<tr><td colspan='" + (cols.length + 1) + "' style='padding:16px 0 5px;font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold'>"
+  + esc(title.toUpperCase()) + "</td></tr>";
+const listOnly = (r, v) => (r.has_list === true || r.has_list === "true" || num(r.has_list) > 0) ? n(v) : "\\u2013";
+
+// Anything that wants a human, named by audience.
+const flags = [];
+for (const r of rows) {
+  const who = r.label + ": ";
+  const paused = r.paused === true || r.paused === "true";
+  if (num(r.sent_7d) === 0 && num(r.active_now) > 0) flags.push(who + "no emails went out this week. If that is not intended, workflow 02 is the place to look.");
+  if (num(r.send_errors) > 0) flags.push(who + n(r.send_errors) + " enrolment(s) carry a send error and will keep retrying.");
+  if (num(r.pricing_errors) > 0 || num(r.unpriced) > 0) flags.push(who + n(r.unpriced) + " enrolment(s) have no price, so they are not being emailed"
+    + (num(r.pricing_errors) > 0 ? "; " + n(r.pricing_errors) + " carry a pricing error" : "") + ".");
+  if (num(r.held_commercial) > 0) flags.push(who + n(r.held_commercial) + " vehicle(s) held for commercial surcharge review.");
+  if (num(r.sent_7d) > 0 && num(r.delivered_7d) === 0) flags.push(who + "mail was sent but nothing recorded as delivered. Check the Resend webhook into workflow 03.");
+  const bounceRate = pct(r.bounced_total, r.sent_total);
+  if (bounceRate !== null && bounceRate > 3) flags.push(who + "bounce rate is " + bounceRate + "% of all mail sent. Above about 3% costs sender reputation.");
+  if (num(r.complained_total) > 0) {
+    const cRate = pct(r.complained_total, r.sent_total);
+    flags.push(who + n(r.complained_total) + " spam complaint(s) to date" + (cRate !== null ? ", " + cRate + "% of mail sent" : "") + ". Providers start throttling around 0.3%.");
+  }
+  if (num(r.untrackable_7d) > 0) flags.push(who + n(r.untrackable_7d) + " send(s) this week carry no provider record and are left out of the delivery rate.");
+  if (paused) {
+    flags.push(who + "new enrolments are paused on purpose. People already enrolled finish their series.");
+  } else {
+    // Only the service drive has an eligible-customer target. A camera list's
+    // cohort_target is the whole list, most of it too old to email, so a
+    // "still to be added" line there would count people who never will be.
+    const remaining = num(r.cohort_target) - num(r.enrolled_total);
+    const isList = r.has_list === true || r.has_list === "true";
+    if (!isList && num(r.cohort_target) > 0 && remaining > 0) flags.push(who + "another " + n(remaining) + " eligible customers are still to be added, in planned steps.");
+  }
+}
+const flagHtml = flags.length
+  ? "<div style='margin-top:20px;border-left:3px solid #D81E24;background:#FDECEE;padding:11px 14px'>"
+    + "<p style='margin:0 0 7px;font:bold 13px Arial;color:#0B1B3F'>Worth a look</p>"
+    + "<ul style='margin:0;padding-left:18px;font:13px Arial;color:#1c1d1f'>"
+    + flags.map((f) => "<li style='margin-bottom:4px'>" + esc(f) + "</li>").join("")
+    + "</ul></div>"
+  : "<p style='margin-top:20px;font:13px Arial;color:#6b7c90'>Nothing needs attention this week.</p>";
+
+const sequenceLine =
+  num(t.reached_email_5) > 0
+    ? n(t.reached_email_5) + " of " + n(t.active_now) + " active customers have now seen the 0% financing email, the strongest offer in the run."
+    : num(t.reached_email_4) > 0
+      ? n(t.reached_email_4) + " of " + n(t.active_now) + " active customers have reached the $0 deductible email. The 0% financing email is still ahead of them."
+      : "Most customers are still in the first two emails of ten. The $0 deductible and 0% financing emails land on days 12 and 18.";
+
+const soldHtml = num(t.purchased_total) > 0
+  ? "<div style='margin:0 0 18px;border-left:3px solid #0B1B3F;background:#F4F7FB;padding:12px 15px'>"
+    + "<p style='margin:0;font:bold 15px Arial;color:#0B1B3F'>" + n(t.purchased_total) + " contract"
+    + (num(t.purchased_total) === 1 ? "" : "s") + " sold, " + money(t.revenue_total) + " written</p></div>"
+  : "";
+
+const html = "<div style='font:14px Arial;color:#1c1d1f;max-width:720px'>"
+  + "<p style='font:11px Arial;letter-spacing:1.4px;color:#9E1318;font-weight:bold;margin:0 0 4px'>WEEKLY SCORECARD, ALL AUDIENCES</p>"
+  + "<p style='margin:0 0 2px;font:bold 19px Arial;color:#0B1B3F'>" + esc(DEALER_NAME) + "</p>"
+  + "<p style='margin:0 0 16px;font:13px Arial;color:#6b7c90'>" + esc(period) + "</p>"
+  + soldHtml
+  + "<p style='margin:0 0 16px;font:14px Arial;line-height:1.5'>" + esc(sequenceLine) + "</p>"
+  + "<table style='border-collapse:collapse;width:100%'>"
+  + "<tr><th style='border-bottom:2px solid #0B1B3F'></th>" + cols.map(headCell).join("") + "</tr>"
+  + section("This week")
+  + line("Emails sent", (r) => n(r.sent_7d))
+  + line("Delivered", (r) => { const p = pct(r.delivered_7d, r.trackable_7d); return p === null ? "\\u2013" : p + "%"; })
+  + line("Clicked the quote", (r) => n(r.clicked_7d))
+  + line("Contracts sold", (r) => n(r.purchased_7d))
+  + line("Asked to stop", (r) => n(r.unsubscribed_7d))
+  + line("Marked as spam", (r) => n(r.complained_7d))
+  + line("Bad addresses", (r) => n(r.bounced_7d))
+  + section("Program to date")
+  + line("Still in the series", (r) => n(r.active_now))
+  + line("Average emails received (of 10)", (r) => num(r.avg_step).toFixed(1))
+  + line("Emails sent", (r) => n(r.sent_total))
+  + line("Clicked the quote", (r) => n(r.clicked_total))
+  + line("Contracts sold", (r) => n(r.purchased_total))
+  + line("Written premium", (r) => money(r.revenue_total))
+  + line("Bad addresses removed", (r) => n(r.bounced_total))
+  + line("Spam reports", (r) => n(r.complained_total))
+  + line("Opt-outs", (r) => n(r.unsubscribed_total))
+  + section("Quoting the camera lists")
+  + line("Quoted", (r) => listOnly(r, r.audience_quoted))
+  + line("Still to quote", (r) => listOnly(r, r.audience_unquoted))
+  + line("Could not be quoted", (r) => listOnly(r, r.audience_parked))
+  + "</table>"
+  + flagHtml
+  + "<p style='margin-top:22px;font:11px Arial;color:#9aa6b5;line-height:1.5'>"
+  + "Delivery is a share of emails traceable to a provider record. Opens are deliberately not reported: Apple Mail pre-fetches images, "
+  + "so an open figure measures the mail client as much as the reader. Clicks count distinct emails clicked, and some arrive from "
+  + "workplace link scanners within a minute of delivery. Each person is emailed by one audience only."
+  + "</p></div>";
+
+const subject = num(t.purchased_7d) > 0
+  ? "[" + DEALER_NAME + "] " + n(t.purchased_7d) + " contract" + (num(t.purchased_7d) === 1 ? "" : "s") + " sold this week"
+  : "[" + DEALER_NAME + "] Weekly scorecard: " + n(t.sent_7d) + " emails to " + n(t.active_now) + " customers, all audiences";
+
+return [{ json: { subject, html } }];
+`.trim();
+
+
 const scorecardNodes = [
   node('Weekly Scorecard Trigger', 'scheduleTrigger', 1.2, [-620, 0], {
     // Monday 08:10 dealer local. Ten past rather than on the hour because every
     // other scheduled job in the world fires on the hour.
     rule: { interval: [{ field: 'cronExpression', expression: '10 8 * * 1' }] },
-  }),
+  }, SC_SUPERSEDED ? { disabled: true } : {}),
 
   setNode('Campaign Config', [-380, 0], [
     ['dealer_id', DEALER.id],
     ['campaign_id', CAMPAIGN_ID],
   ]),
 
-  pgNode('Gather Numbers', [-120, 0], [
+  pgNode('Gather Numbers', [-120, 0], scorecardSql([
     '-- One row, every figure. Scalar subqueries rather than joins so that a',
     '-- metric with no rows yet returns 0 instead of dropping the whole row,',
     '-- which is how a scorecard silently loses a line it used to have.',
@@ -2758,9 +2965,9 @@ const scorecardNodes = [
     '     join vsc_send_log l on l.provider_message_id = e.provider_message_id',
     '       and l.dealer_id = $1 and l.campaign_id = $2',
     "    where e.event = 'email.clicked') as clicked_total;",
-  ].join('\n'), '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
+  ].join('\n')), SC_ROOT ? undefined : '={{ $json.dealer_id }}, {{ $json.campaign_id }}'),
 
-  codeNode('Compose Scorecard', [140, 0], scorecardCode),
+  codeNode('Compose Scorecard', [140, 0], SC_ROOT ? combinedScorecardCode : scorecardCode),
 
   node('Send Scorecard', 'httpRequest', 4.2, [400, 0], {
     method: 'POST',
@@ -2777,7 +2984,7 @@ const scorecardNodes = [
 ];
 
 writeFileSync(join(ROOT, `${WF_DIR}/07-scorecard.json`),
-  JSON.stringify(workflow('DriveOne VSC 07 Weekly Scorecard (' + WF_LABEL + ')', scorecardNodes, connect([
+  JSON.stringify(workflow('DriveOne VSC 07 Weekly Scorecard (' + (SC_ROOT ? SC_DEALER_NAME + ', all audiences' : WF_LABEL) + ')' + (SC_SUPERSEDED ? ' [retired: in the ' + AUDIENCE_ROOT_ID + ' scorecard]' : ''), scorecardNodes, connect([
     ['Weekly Scorecard Trigger', 'Campaign Config'],
     ['Campaign Config', 'Gather Numbers'],
     ['Gather Numbers', 'Compose Scorecard'],

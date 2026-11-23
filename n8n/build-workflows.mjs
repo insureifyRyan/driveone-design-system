@@ -2713,42 +2713,29 @@ const section = (title) => "<tr><td colspan='" + (cols.length + 1) + "' style='p
   + esc(title.toUpperCase()) + "</td></tr>";
 const listOnly = (r, v) => (r.has_list === true || r.has_list === "true" || num(r.has_list) > 0) ? n(v) : "\\u2013";
 
-// Anything that wants a human, named by audience.
-const flags = [];
+// DEALER-FACING NOTES ONLY (23 Nov 2026). This email goes to the dealership,
+// so it carries context a dealer can use, never our operations alerts. Pricing
+// errors, bounce and complaint rates, missing sends and webhook health are
+// internal: they were removed from this box at Ryan's instruction and belong
+// in an internal channel, not in front of the client.
+const notes = [];
 for (const r of rows) {
-  const who = r.label + ": ";
   const paused = r.paused === true || r.paused === "true";
-  if (num(r.sent_7d) === 0 && num(r.active_now) > 0) flags.push(who + "no emails went out this week. If that is not intended, workflow 02 is the place to look.");
-  if (num(r.send_errors) > 0) flags.push(who + n(r.send_errors) + " enrolment(s) carry a send error and will keep retrying.");
-  if (num(r.pricing_errors) > 0 || num(r.unpriced) > 0) flags.push(who + n(r.unpriced) + " enrolment(s) have no price, so they are not being emailed"
-    + (num(r.pricing_errors) > 0 ? "; " + n(r.pricing_errors) + " carry a pricing error" : "") + ".");
-  if (num(r.held_commercial) > 0) flags.push(who + n(r.held_commercial) + " vehicle(s) held for commercial surcharge review.");
-  if (num(r.sent_7d) > 0 && num(r.delivered_7d) === 0) flags.push(who + "mail was sent but nothing recorded as delivered. Check the Resend webhook into workflow 03.");
-  const bounceRate = pct(r.bounced_total, r.sent_total);
-  if (bounceRate !== null && bounceRate > 3) flags.push(who + "bounce rate is " + bounceRate + "% of all mail sent. Above about 3% costs sender reputation.");
-  if (num(r.complained_total) > 0) {
-    const cRate = pct(r.complained_total, r.sent_total);
-    flags.push(who + n(r.complained_total) + " spam complaint(s) to date" + (cRate !== null ? ", " + cRate + "% of mail sent" : "") + ". Providers start throttling around 0.3%.");
-  }
-  if (num(r.untrackable_7d) > 0) flags.push(who + n(r.untrackable_7d) + " send(s) this week carry no provider record and are left out of the delivery rate.");
+  const isList = r.has_list === true || r.has_list === "true";
   if (paused) {
-    flags.push(who + "new enrolments are paused on purpose. People already enrolled finish their series.");
-  } else {
-    // Only the service drive has an eligible-customer target. A camera list's
-    // cohort_target is the whole list, most of it too old to email, so a
-    // "still to be added" line there would count people who never will be.
+    notes.push(r.label + ": new sends are paused while the remaining addresses are checked. Customers already emailed finish their series.");
+  } else if (!isList) {
     const remaining = num(r.cohort_target) - num(r.enrolled_total);
-    const isList = r.has_list === true || r.has_list === "true";
-    if (!isList && num(r.cohort_target) > 0 && remaining > 0) flags.push(who + "another " + n(remaining) + " eligible customers are still to be added, in planned steps.");
+    if (num(r.cohort_target) > 0 && remaining > 0) notes.push(r.label + ": another " + n(remaining) + " customers are still to receive their first email, added in planned steps.");
   }
 }
-const flagHtml = flags.length
-  ? "<div style='margin-top:20px;border-left:3px solid #D81E24;background:#FDECEE;padding:11px 14px'>"
-    + "<p style='margin:0 0 7px;font:bold 13px Arial;color:#0B1B3F'>Worth a look</p>"
+const flagHtml = notes.length
+  ? "<div style='margin-top:20px;border-left:3px solid #0B1B3F;background:#F4F7FB;padding:11px 14px'>"
+    + "<p style='margin:0 0 7px;font:bold 13px Arial;color:#0B1B3F'>Notes</p>"
     + "<ul style='margin:0;padding-left:18px;font:13px Arial;color:#1c1d1f'>"
-    + flags.map((f) => "<li style='margin-bottom:4px'>" + esc(f) + "</li>").join("")
+    + notes.map((f) => "<li style='margin-bottom:4px'>" + esc(f) + "</li>").join("")
     + "</ul></div>"
-  : "<p style='margin-top:20px;font:13px Arial;color:#6b7c90'>Nothing needs attention this week.</p>";
+  : "";
 
 const sequenceLine =
   num(t.reached_email_5) > 0

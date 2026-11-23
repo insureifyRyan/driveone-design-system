@@ -58,6 +58,40 @@ Every DriveOne Direct campaign, ad set, pixel and custom audience lives on `8333
 Calling `list_meta_custom_audiences` without the account id returns "0 audiences", which reads
 like the audience was deleted. It was not. It is on the other account.
 
+**State as of 23 Nov 2026: traffic fall flattened. The audience proxy is no longer valid.**
+
+**Still dark, 12 days** (last delivery 11 Nov). Cap not reset, nothing in the account changed.
+
+**The traffic decline STEPPED DOWN and then held; it is not collapsing.** 74 (15 Nov) went to 92
+(22 Nov). Accurate statement: dark-Sunday PageViews fell from roughly 270 to 330 in late Oct to
+roughly 75 to 95 in mid Nov and have stayed there. On 16 Nov this was called "collapsing", which
+was too strong; softened on 23 Nov. **Do not re-escalate the language without new evidence.**
+
+| Sunday | Ads | PageViews | Quote starts | Leads |
+|---|---|---|---|---|
+| 4 Oct | running | 434 | 5 | 0 |
+| 18 Oct | off 9 days | 326 | 7 | 1 |
+| 25 Oct | off 16 days | 268 | 6 | 1 |
+| 8 Nov | running | 150 | 6 | 1 |
+| 15 Nov | off 3 days | 74 | 0 | 0 |
+| 22 Nov | off 10 days | 92 | 4 | 2 |
+
+**THE DOD AUDIENCE IS NO LONGER A USABLE PROXY for new-visitor volume.** Growth went +1,200,
++1,000, +700, +200 (13,200 on 23 Nov), which looks like confirmation of fewer visitors, but the
+audience was created in late Aug and its retention window should now be rolling off, so the net
+figure is arrivals minus expiries and understates arrivals. Report the number; **do not treat its
+deceleration as evidence.** Saying a proxy has stopped being valid beats quoting it anyway.
+
+**Late Nov seasonality is an unseparable confound.** 22 Nov was the Sunday before Thanksgiving.
+Name it rather than reading a holiday dip as further decline.
+
+**The sampling limit has been reached.** A ten-hour window, one day a week, one tool, cannot settle
+this. Only server-side analytics can, and Ryan has been asked twice.
+
+**Delivery status is not evidence of delivery.** Meta reported this campaign's Delivery as ACTIVE
+through all three blackouts, including after 12 days of zero spend. Only summed daily spend is
+evidence. This is why the outages went unnoticed for weeks.
+
 **State as of 16 Nov 2026: $1,000 cap CONFIRMED. Site traffic may be collapsing.**
 
 **THE CAP IS SETTLED, not an inference.** The Nov run (1 to 11 Nov) totalled **exactly $1,000.00**
@@ -388,7 +422,7 @@ Meta's reporting feed runs roughly two days behind.
 
 | Audience | ID | Size |
 |---|---|---|
-| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), 11,300 (2 Nov), 12,300 (9 Nov), **13,000 (16 Nov)** |
+| DOD (website) | `120248478043290575` | 1,000 (27 Aug), 1,300 (31 Aug), 1,600 (2 Sep), 2,100 (7 Sep), 3,200 (14 Sep), 4,400 (21 Sep), 5,000 (28 Sep), 6,500 (5 Oct), 8,400 (12 Oct), 9,000 (19 Oct), 10,200 (26 Oct), 11,300 (2 Nov), 12,300 (9 Nov), 13,000 (16 Nov), **13,200 (23 Nov)** |
 | Instagram page engagement 365 days | `120248684422660575` | 1,000 (display floor) |
 | Facebook Page Engagement 365 Days | `120248684420180575` | 1,000 (display floor) |
 
